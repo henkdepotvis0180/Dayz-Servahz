@@ -59,7 +59,7 @@ Het zijn eigen beginroutes: loop ze lokaal na op obstakels; terrein, gevechten e
 
 **5× loot is vijfmaal de economiedoelen, geen garantie op vijfmaal zoveel spullen per huis.** Spawnposities, tiers, events en CE-limieten blijven gelden. `nominal=0`, voertuigevents, zombies en dieren worden niet vervijfvoudigd. De eigen Expansion-bouwloot heeft vaste ruime aantallen in `building_types.xml` en wordt niet nogmaals vermenigvuldigd. Op bestaande werelden vult de economie geleidelijk bij; de installer verwijdert je wereld nooit om dit te versnellen.
 
-**Meer militaire gear:** `MilitaryLootMultiplier` is standaard `2`, boven op `LootMultiplier: 5`. Elk actief itemtype met een `Military`-usage krijgt dus een doel/minimum van 10× vanilla, inclusief militaire wapens, munitie en kleding die zo zijn gemarkeerd. Items met meerdere usages krijgen dezelfde verhoging ook op hun overige bestaande locaties. Tiers en speciale eventregels blijven behouden: zeldzame wapens worden niet ineens burgerloot. Zet de extra factor op `1` voor gewone 5× loot. Oude lokale configuraties krijgen het nieuwe veld automatisch, met behoud van wachtwoorden en paden.
+**Meer militaire gear:** `MilitaryLootMultiplier` is standaard `2`, boven op `LootMultiplier: 5`. Elk actief itemtype met een `Military`-usage krijgt dus een doel/minimum van 10× vanilla, inclusief militaire wapens, munitie en kleding die zo zijn gemarkeerd. Items met meerdere usages krijgen dezelfde verhoging ook op hun overige bestaande locaties. In de gewone stand blijven tiers en speciale eventregels behouden. De teststand kan met `TestMilitaryEverywhere` normale militaire loot ook voor burgerlocaties/tier 1–4 toestaan; speciale eventloot blijft apart. Zet de extra factor op `1` voor gewone 5× loot. Oude lokale configuraties krijgen het nieuwe veld automatisch, met behoud van wachtwoorden en paden.
 
 De AI-benadering werkt binnen de ingestelde patrouillegebieden. Afstanden zijn detectielimieten, geen garantie dat een bot je door muren ziet of direct naar je toe loopt. De bots worden niet overal op de kaart om je personage gespawnd.
 
@@ -74,6 +74,7 @@ Gebruik **`04-Teststand.cmd`** met de server gestopt om de lokale instellingen b
 | `LootMultiplier` | 8: gewone lootdoelen 8× vanilla |
 | `MilitaryLootMultiplier` | 3 extra: militaire lootdoelen totaal 24× vanilla |
 | `LootDamageMax` | 0.10: nieuwe CE-loot met 0–10% beginschade |
+| `TestMilitaryEverywhere` | true: normale militaire loot ook op burgerlocaties en tiers 1–4 |
 
 Deze knop voert de installer ook uit. Daarna kun je meteen `02-Start-server.cmd` gebruiken. Hij bewaart vooraf de lokale configuratie onder `.local/Backups/server-before-testmode-*.json`. Paden, wachtwoorden en overige instellingen blijven behouden. Het resultaat blijft ingesteld totdat je de lokale waarden terugzet; het is geen tijdelijke schakelaar. Terugzetten: stop de server, kopieer de gewenste configuratiebackup naar `config/server.local.json` en voer `01-Instellen.cmd` uit. Configuratiebackups bevatten wachtwoorden: houd ze prive.
 
@@ -81,7 +82,11 @@ Deze knop voert de installer ook uit. Daarna kun je meteen `02-Start-server.cmd`
 
 De gewone installer gebruikt standaard `LootDamageMax: 0.15` als het veld nog ontbreekt. De schade-instelling wijzigt alleen `LootDamageMin`/`LootDamageMax` in de eigen missie `db/globals.xml`; andere globals en de Steam-standaardmissie blijven behouden. Dit betreft loot die de Central Economy nieuw spawnt, niet ieder item uit een zombie, AI-loadout of speciaal eventscript. Botuitrusting kan bovendien in een vuurgevecht beschadigd raken.
 
-**Bestaande beschadigde loot wordt niet gerepareerd.** Een herstart wist de economie niet. Nieuwe instellingen werken tijdens het geleidelijk bijvullen; de wereld hoeft niet te worden verwijderd. De hoeveelheid vrije lootposities, tiers en eventvoorwaarden blijft de feitelijke aantallen begrenzen, ook bij 24×. Test militaire spullen op militaire locaties. Het zichtbare serverlabel kan nog '5x Loot' bevatten: de werkelijke factoren staan in `config/server.local.json` en worden door de installer getoond; pas `Hostname` desgewenst aan.
+**Militaire loot op meer plekken:** de nieuwe teststand voegt voor actieve, normale Military-itemtypen de usages `Town`, `Village`, `Industrial`, `Farm`, `Police` en `Hunting` en tiers `Tier1` t/m `Tier4` toe. Daardoor kunnen bijvoorbeeld normale militaire wapens en kleding ook bij burgergebouwen in lagere tiers verschijnen. Dit is een uitbreiding van mogelijke spawnplekken, geen vaste kans per huis of garantie op een geweer in iedere kamer. Bestaande itemcategorieen, tags en beschikbare proxies bepalen waar een item echt past. `nominal=0`, crafted loot en `deloot=1`-eventloot krijgen deze locatie-uitbreiding niet.
+
+Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe veld aan te zetten; de oude teststand had alleen meer aantallen. Zet `TestMilitaryEverywhere` op `false` en voer `01-Instellen.cmd` uit om de originele locaties/tiers uit de standaardmissie te herstellen voor toekomstige spawns. Andere lootfactoren blijven dan op hun huidige waarden. Laat je lokale configuratie staan bij het vervangen van de map `scripts` uit de nieuwste ZIP.
+
+**Bestaande beschadigde loot wordt niet gerepareerd.** Een herstart wist de economie niet. Nieuwe instellingen werken tijdens het geleidelijk bijvullen; de wereld hoeft niet te worden verwijderd. De hoeveelheid vrije lootposities, tiers en eventvoorwaarden blijft de feitelijke aantallen begrenzen, ook bij 24×. In de gewone stand blijven militaire locaties nodig; met `TestMilitaryEverywhere: true` kunnen normale militaire items ook op de toegevoegde burgerlocaties verschijnen. Het zichtbare serverlabel kan nog '5x Loot' bevatten: de werkelijke factoren staan in `config/server.local.json` en worden door de installer getoond; pas `Hostname` desgewenst aan.
 
 ## Kaart en minimap
 
@@ -145,7 +150,7 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 
 | Bestand | Aanpassing |
 | --- | --- |
-| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax` en tijd |
+| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax`, `TestMilitaryEverywhere` en tijd |
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |

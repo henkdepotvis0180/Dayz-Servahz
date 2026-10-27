@@ -54,13 +54,13 @@ class PackageTests(unittest.TestCase):
                 '<type name="NoNominal"><lifetime>100</lifetime></type></types>'
             )
             tree = ET.parse(self.baseline / 'db/types.xml')
-            for name, nominal, minimum in [('MilitaryRifle', 2, 1), ('MilitaryDisabled', 0, 0)]:
+            for name, nominal, minimum, deloot, crafted in [('MilitaryRifle', 2, 1, '1', '0'), ('MilitaryDisabled', 0, 0, '0', '0'), ('MilitaryOrdinary', 3, 1, '0', '0'), ('MilitaryCrafted', 2, 1, '0', '1')]:
                 item = ET.SubElement(tree.getroot(), 'type', name=name)
                 ET.SubElement(item, 'nominal').text = str(nominal)
                 ET.SubElement(item, 'min').text = str(minimum)
                 ET.SubElement(item, 'usage', name='Military')
                 ET.SubElement(item, 'value', name='Tier4')
-                ET.SubElement(item, 'flags', deloot='1')
+                ET.SubElement(item, 'flags', deloot=deloot, crafted=crafted)
             tree.write(self.baseline / 'db/types.xml')
             (self.baseline / "cfgeconomycore.xml").write_text(
                 '<economycore><classes><rootclass name="Default"/></classes>'
@@ -172,6 +172,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(current['LootMultiplier'], 8)
             self.assertEqual(current['MilitaryLootMultiplier'], 3)
             self.assertEqual(current['LootDamageMax'], 0.10)
+            self.assertIs(current['TestMilitaryEverywhere'], True)
             for field in ('AdminPassword', 'ServerPassword', 'ServerPath', 'WorkshopPath'):
                 self.assertEqual(current[field], settings[field])
             before = ET.parse(self.baseline / 'db/types.xml').findall('type')
@@ -181,6 +182,20 @@ class PackageTests(unittest.TestCase):
                 if nominal > 0:
                     factor = 24 if base.find("usage[@name='Military']") is not None else 8
                     self.assertEqual(int(generated.findtext('nominal')), nominal * factor)
+                flags = base.find('flags')
+                ordinary = nominal > 0 and base.find("usage[@name='Military']") is not None and (flags is None or (flags.get('deloot') != '1' and flags.get('crafted') != '1'))
+                if ordinary:
+                    usages = [n.get('name') for n in generated.findall('usage')]
+                    tiers = [n.get('name') for n in generated.findall('value')]
+                    self.assertEqual(len(usages), len(set(usages)))
+                    self.assertEqual(len(tiers), len(set(tiers)))
+                    self.assertTrue({'Military', 'Town', 'Village', 'Industrial', 'Farm', 'Police', 'Hunting'} <= set(usages))
+                    self.assertTrue({'Tier1', 'Tier2', 'Tier3', 'Tier4'} <= set(tiers))
+                else:
+                    for tag in ('usage', 'value'):
+                        self.assertEqual([n.attrib for n in base.findall(tag)], [n.attrib for n in generated.findall(tag)])
+                if flags is not None:
+                    self.assertEqual(flags.attrib, generated.find('flags').attrib)
             globals_xml = ET.parse(self.mission / 'db/globals.xml')
             self.assertEqual(float(globals_xml.find("var[@name='LootDamageMax']").get('value')), 0.10)
             self.assertEqual(float(globals_xml.find("var[@name='LootDamageMin']").get('value')), 0)
@@ -193,6 +208,13 @@ class PackageTests(unittest.TestCase):
         backups = list((self.package / '.local/Backups').glob('server-before-testmode-*.json'))
         self.assertEqual(len(backups), 2)
         self.assertTrue(any(p.read_bytes() == previous for p in backups))
+        current['TestMilitaryEverywhere'] = False
+        self.local.write_text(json.dumps(current))
+        self.install()
+        restored = ET.parse(self.mission / 'db/types.xml').findall('type')
+        for base, generated in zip(before, restored):
+            for tag in ('usage', 'value'):
+                self.assertEqual([n.attrib for n in base.findall(tag)], [n.attrib for n in generated.findall(tag)])
 
     def test_invalid_loot_damage_is_rejected(self):
         self.install()

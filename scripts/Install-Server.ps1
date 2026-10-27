@@ -24,10 +24,14 @@ try {
     if ($settings.PSObject.Properties.Name -notcontains 'LootDamageMax') {
         $settings | Add-Member -MemberType NoteProperty -Name LootDamageMax -Value 0.15
     }
+    if ($settings.PSObject.Properties.Name -notcontains 'TestMilitaryEverywhere') {
+        $settings | Add-Member -MemberType NoteProperty -Name TestMilitaryEverywhere -Value $false
+    }
     if ($TestMode) {
         $settings.LootMultiplier = 8
         $settings.MilitaryLootMultiplier = 3
         $settings.LootDamageMax = 0.10
+        $settings.TestMilitaryEverywhere = $true
     }
     if ($ServerPath) { $settings.ServerPath = $ServerPath }
     if ($WorkshopPath) { $settings.WorkshopPath = $WorkshopPath }
@@ -117,7 +121,7 @@ try {
             Copy-Item -LiteralPath $_.FullName -Destination $keys -Force
         }
     }
-    $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier
+    $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier -MilitaryEverywhere:$settings.TestMilitaryEverywhere
     $globals = Join-Path $layout.Mission 'db/globals.xml'
     if (!(Test-Path -LiteralPath $globals)) { Copy-Item -LiteralPath (Join-Path $baseline 'db/globals.xml') -Destination $globals }
     Set-LootCondition -Path $globals -MaximumDamage $settings.LootDamageMax
@@ -135,6 +139,7 @@ try {
     Write-Host "Klaar: $count vanilla-loottypen op $($settings.LootMultiplier)x. Missie: servahz.chernarusplus"
     Write-Host "Military-loot: extra $($settings.MilitaryLootMultiplier)x (totaal $($settings.LootMultiplier * $settings.MilitaryLootMultiplier)x vanilla)."
     Write-Host "Nieuwe CE-loot: maximale beginschade $($settings.LootDamageMax). Bestaande items worden niet gerepareerd."
+    if ($settings.TestMilitaryEverywhere) { Write-Host 'Teststand: normale militaire loot ook in steden, dorpen, industrie, boerderijen, politie en jachtgebieden; tiers 1-4.' }
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

@@ -10,6 +10,7 @@
   "LootMultiplier": 5,
   "MilitaryLootMultiplier": 2,
   "LootDamageMax": 0.15,
+  "TestMilitaryEverywhere": false,
   "DayAcceleration": 6,
   "NightAcceleration": 4
 }

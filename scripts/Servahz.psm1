@@ -20,6 +20,10 @@ function Read-ServerSettings {
     if ($s.PSObject.Properties.Name -notcontains 'LootDamageMax') {
         $s | Add-Member -MemberType NoteProperty -Name LootDamageMax -Value 0.15
     }
+    if ($s.PSObject.Properties.Name -notcontains 'TestMilitaryEverywhere') {
+        $s | Add-Member -MemberType NoteProperty -Name TestMilitaryEverywhere -Value $false
+    }
+    if ($s.TestMilitaryEverywhere -isnot [bool]) { throw 'TestMilitaryEverywhere moet true of false zijn, zonder quotes.' }
     foreach ($name in @('GamePort', 'QueryPort')) {
         $port = $s.$name
         if ($port -isnot [int] -and $port -isnot [long]) { throw "$name moet een geheel getal zijn." }
@@ -147,7 +151,7 @@ function Set-LootCondition {
 }
 
 function Set-LootMultiplier {
-    param([string]$Source, [string]$Destination, [double]$Multiplier, [double]$MilitaryMultiplier = 2)
+    param([string]$Source, [string]$Destination, [double]$Multiplier, [double]$MilitaryMultiplier = 2, [switch]$MilitaryEverywhere)
     # Always read the installed vanilla baseline, never the previous generated 5x file.
     [xml]$xml = Get-Content -LiteralPath $Source -Raw
     $count = 0
@@ -155,7 +159,29 @@ function Set-LootMultiplier {
         $nominal = $type.SelectSingleNode('nominal')
         if ($null -eq $nominal -or [int]$nominal.InnerText -le 0) { continue }
         $factor = $Multiplier
-        if ($null -ne $type.SelectSingleNode('usage[@name="Military"]')) { $factor *= $MilitaryMultiplier }
+        if ($null -ne $type.SelectSingleNode('usage[@name="Military"]')) {
+            $factor *= $MilitaryMultiplier
+            $flags = $type.SelectSingleNode('flags')
+            # Keep event-only and crafted loot rules intact, even in test mode.
+            $eventOnly = $null -ne $flags -and $flags.GetAttribute('deloot') -eq '1'
+            $crafted = $null -ne $flags -and $flags.GetAttribute('crafted') -eq '1'
+            if ($MilitaryEverywhere -and !$eventOnly -and !$crafted) {
+                foreach ($usage in @('Town', 'Village', 'Industrial', 'Farm', 'Police', 'Hunting')) {
+                    if ($null -eq $type.SelectSingleNode('usage[@name="' + $usage + '"]')) {
+                        $node = $xml.CreateElement('usage')
+                        $node.SetAttribute('name', $usage)
+                        $type.AppendChild($node) | Out-Null
+                    }
+                }
+                foreach ($tier in @('Tier1', 'Tier2', 'Tier3', 'Tier4')) {
+                    if ($null -eq $type.SelectSingleNode('value[@name="' + $tier + '"]')) {
+                        $node = $xml.CreateElement('value')
+                        $node.SetAttribute('name', $tier)
+                        $type.AppendChild($node) | Out-Null
+                    }
+                }
+            }
+        }
         $nominal.InnerText = [string][int][Math]::Ceiling([int]$nominal.InnerText * $factor)
         $min = $type.SelectSingleNode('min')
         if ($null -ne $min -and [int]$min.InnerText -gt 0) {
