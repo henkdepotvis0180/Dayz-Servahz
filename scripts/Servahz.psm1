@@ -47,7 +47,13 @@ function Read-ServerSettings {
 }
 
 function Get-ModManifest {
-    return @(Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/mods.json') -Raw | ConvertFrom-Json)
+    # Windows PowerShell 5.1 emits a JSON array as one pipeline object.
+    # Wrapping that pipeline in @() leaves a nested array: .Folder then
+    # expands all names into one space-separated string instead of mod paths.
+    $mods = Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/mods.json') -Raw | ConvertFrom-Json
+    foreach ($mod in $mods) {
+        Write-Output $mod
+    }
 }
 
 function Get-ServerLayout {
@@ -67,7 +73,7 @@ function Get-ServerLayout {
 function Assert-ServerStopped {
     # Conservative: never change missions or mods while a DayZ server is running.
     if (@(Get-Process -Name DayZServer_x64 -ErrorAction SilentlyContinue).Count -gt 0) {
-        throw 'Sluit de DayZ-server eerst normaal af (Ctrl+C in het servervenster).'
+        throw 'Sluit de DayZ-server eerst normaal af: in-game #login met AdminPassword en daarna #shutdown.'
     }
 }
 

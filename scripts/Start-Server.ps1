@@ -12,7 +12,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Configuratiecontrole mislukt.' }
     $arguments = Get-LaunchArguments $settings $layout
     Write-Host "Server starten. Lokaal verbinden: 127.0.0.1:$($settings.GamePort)"
-    Write-Host 'Stop normaal met Ctrl+C in het DayZ-servervenster. Sluit dit wachtvenster pas daarna.'
+    Write-Host 'Stop in-game met #login (je AdminPassword) en daarna #shutdown. Wacht tot het serverproces afsluit.'
     $process = Start-Process -FilePath (Join-Path $layout.Server 'DayZServer_x64.exe') -WorkingDirectory $layout.Server -ArgumentList $arguments -PassThru
     # Do not promise readiness from a PID: the separate checker queries A2S_INFO.
     $process.WaitForExit()

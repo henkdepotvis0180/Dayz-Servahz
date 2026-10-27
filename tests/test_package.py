@@ -258,12 +258,51 @@ Write-Utf8File (Join-Path $PSScriptRoot 'arguments.json') (ConvertTo-Json @(Get-
         mods = [arg for arg in arguments if arg.startswith('"-mod=')]
         self.assertEqual(len(mods), 1)
         self.assertTrue(mods[0].endswith('"'))
+        self.assertEqual(mods[0][len('"-mod='):-1].split(';'),
+                         [str(self.server / 'Servahz/Mods' / mod['Folder']) for mod in self.mods])
         for mod in self.mods:
             self.assertIn(str(self.server / 'Servahz/Mods' / mod['Folder']), mods[0])
         config = (self.server / 'Servahz/serverDZ.cfg').read_text()
         self.assertIn('template = "servahz.chernarusplus";', config)
         self.assertIn('verifySignatures = 2;', config)
         self.assertIn('enableCfgGameplayFile = 1;', config)
+
+    def test_windows_powershell_json_array_pipeline_shape(self):
+        # Reproduce 5.1 ConvertFrom-Json's single-array pipeline output on PS7.
+        self.install()
+        probe = self.package / 'scripts/Probe-JsonArray.ps1'
+        probe.write_text('''
+$ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
+& (Get-Module Servahz) {
+    function script:ConvertFrom-Json {
+        param([Parameter(ValueFromPipeline = $true)][string]$InputObject)
+        process {
+            $parsed = Microsoft.PowerShell.Utility\\ConvertFrom-Json -InputObject $InputObject
+            Write-Output -NoEnumerate $parsed
+        }
+    }
+}
+$mods = @(Get-ModManifest)
+if ($mods.Count -ne 7) { throw 'Expected seven individual mod objects' }
+foreach ($mod in $mods) {
+    if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
+}
+if (!(Get-PSDrive -Name F -ErrorAction SilentlyContinue)) {
+    New-PSDrive -Name F -PSProvider FileSystem -Root $PSScriptRoot | Out-Null
+}
+$layout = [pscustomobject]@{ Runtime = 'F:\\steam installatie\\DayZServer\\Servahz'; Config = 'test.cfg'; Profiles = 'test profiles' }
+$s = [pscustomobject]@{ GamePort = 2302 }
+Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json @(Get-LaunchArguments $s $layout))
+''')
+        self.run_ps('Probe-JsonArray.ps1')
+        args = json.loads((probe.parent / 'legacy-arguments.json').read_text())
+        mod_arg = next(arg for arg in args if arg.startswith('"-mod='))
+        paths = mod_arg[len('"-mod='):-1].split(';')
+        self.assertEqual(len(paths), len(self.mods))
+        for path, mod in zip(paths, self.mods):
+            self.assertTrue(path.endswith(mod['Folder']))
+            self.assertEqual(path.count('steam installatie'), 1)
 
     def test_ai_admin_merge_and_backup(self):
         self.install()

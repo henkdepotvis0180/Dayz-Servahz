@@ -108,7 +108,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Set-Firewall.p
 
 ## Aanpassen en bijwerken
 
-**Stop normaal met Ctrl+C in het DayZ-servervenster** en wacht tot het proces weg is. Instellen en backups weigeren zolang een `DayZServer_x64`-proces draait. Gebruik dit pakket niet gelijktijdig met een andere serverinstantie.
+**Stop normaal via de in-game chat:** verstuur `#login jouwAdminPassword` (gebruik de lokale waarde van `AdminPassword`) en daarna `#shutdown`. Wacht tot het serverproces weg is. Instellen en backups weigeren zolang een `DayZServer_x64`-proces draait. Gebruik dit pakket niet gelijktijdig met een andere serverinstantie.
 
 Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 
@@ -151,6 +151,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 | Probleem | Controle |
 | --- | --- |
 | Ontbrekende PBO, verkeerde versie/signature | Alle zeven mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Launcher toont modnamen als een gecombineerde regel | Gebruik de nieuwste scripts; Windows PowerShell 5.1 gaf eerder een geneste modlijst door. In het RPT moeten modpaden met puntkomma's gescheiden zijn, met voor elke mod zijn eigen pad |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
 | Oude Steam-schijf ontbreekt | De installer slaat onbereikbare Steam-bibliotheken over. Controleer bij een expliciet pad `ServerPath`/`WorkshopPath` of de schijf is aangesloten |
