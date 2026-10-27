@@ -29,10 +29,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 | Onderdeel | Instelling |
 | --- | --- |
 | Map / spelers | Chernarus, 12 slots, eerste en derde persoon |
-| Loot | Vanilla `nominal` en `min` ×5, vanaf de geinstalleerde standaardmissie |
+| Loot | Vanilla `nominal` en `min` ×5; Military-loot extra ×2, dus standaard ×10 |
 | AI | Zes routes; maximaal vier actieve groepen, samen hoogstens 12 bots |
 | Moeilijkheid | Nauwkeurigheid 0,15–0,35, 65% uitgaande schade, normale gezondheid; bots zijn lootbaar |
-| AI-spawning | Spelers circa 250–900 m van de patrouille; despawn buiten 1100 m |
+| AI-spawning | Spelers circa 125–900 m van de patrouille; despawn buiten 1100 m |
+| AI-benadering | Patrouilles joggen; dreigingen tot 450 m, geluidsonderzoek tot 350 m |
 | AI-herhaling | Respawninstelling 20 minuten; despawnvertraging 5 minuten |
 | Bouwen | Expansion-muren, vloeren, trappen, ramps, codesloten, safes; vanilla bouwen blijft mogelijk |
 | Bouwgemak | Geen verplicht territory, soepelere plaatsingschecks, eenvoudige vlag en snapping |
@@ -43,6 +44,10 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 Patrouilles liggen rond **Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy en Krasnostav airfield**. Ze gebruiken de vijandige `West`-faction en de door Expansion aangemaakte `WestLoadout`. Ze verschijnen niet allemaal permanent. Dit zijn eigen beginroutes: loop ze lokaal na op obstakels. Waypoint-hoogte 0 wordt door Expansion op het terrein geplaatst.
 
 **5× loot is vijfmaal de economiedoelen, geen garantie op vijfmaal zoveel spullen per huis.** Spawnposities, tiers, events en CE-limieten blijven gelden. `nominal=0`, voertuigevents, zombies en dieren worden niet vervijfvoudigd. De eigen Expansion-bouwloot heeft vaste ruime aantallen in `building_types.xml` en wordt niet nogmaals vermenigvuldigd. Op bestaande werelden vult de economie geleidelijk bij; de installer verwijdert je wereld nooit om dit te versnellen.
+
+**Meer militaire gear:** `MilitaryLootMultiplier` is standaard `2`, boven op `LootMultiplier: 5`. Elk actief itemtype met een `Military`-usage krijgt dus een doel/minimum van 10× vanilla, inclusief militaire wapens, munitie en kleding die zo zijn gemarkeerd. Items met meerdere usages krijgen dezelfde verhoging ook op hun overige bestaande locaties. Tiers en speciale eventregels blijven behouden: zeldzame wapens worden niet ineens burgerloot. Zet de extra factor op `1` voor gewone 5× loot. Oude lokale configuraties krijgen het nieuwe veld automatisch, met behoud van wachtwoorden en paden.
+
+De AI-benadering werkt binnen de zes bestaande patrouillegebieden. Afstanden zijn detectielimieten, geen garantie dat een bot je door muren ziet of direct naar je toe loopt. De bots worden niet overal op de kaart om je personage gespawnd.
 
 Traders, geld, helicopters, quests en oneindige stamina zijn geen onderdeel van deze configuratie. Laad niet tegelijk de Expansion Bundle: die bevat dezelfde modules.
 
@@ -96,7 +101,7 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 
 | Bestand | Aanpassing |
 | --- | --- |
-| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, lootfactor en tijd |
+| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier` en tijd |
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/servahz_ce/building_types.xml` | Bouwloot en levensduur gebouwde onderdelen |
@@ -137,7 +142,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 | Oude Steam-schijf ontbreekt | De installer slaat onbereikbare Steam-bibliotheken over. Controleer bij een expliciet pad `ServerPath`/`WorkshopPath` of de schijf is aangesloten |
 | Querycontrole faalt | Server laten laden; querypoort en logs controleren; eerst lokaal proberen |
 | Query werkt, verbinden niet | Gamepoort, clientmods, BattlEye en gamebuild controleren |
-| Geen bots | Nader een patrouillegebied vanaf meer dan 250 m en wacht; controleer loadouts en logs |
+| Geen bots | Nader een patrouillegebied vanaf meer dan 125 m en wacht; controleer loadouts en logs |
 | JSON-fout | Bronconfig repareren, opnieuw instellen; versievelden niet willekeurig aanpassen |
 | Hoge CPU/RAM-belasting | Minder actieve AI, lagere lootfactor en/of minder spelers |
 

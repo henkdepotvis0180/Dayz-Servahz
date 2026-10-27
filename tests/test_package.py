@@ -52,6 +52,15 @@ class PackageTests(unittest.TestCase):
                 '<type name="Car"><nominal>0</nominal><min>0</min></type>'
                 '<type name="NoNominal"><lifetime>100</lifetime></type></types>'
             )
+            tree = ET.parse(self.baseline / 'db/types.xml')
+            for name, nominal, minimum in [('MilitaryRifle', 2, 1), ('MilitaryDisabled', 0, 0)]:
+                item = ET.SubElement(tree.getroot(), 'type', name=name)
+                ET.SubElement(item, 'nominal').text = str(nominal)
+                ET.SubElement(item, 'min').text = str(minimum)
+                ET.SubElement(item, 'usage', name='Military')
+                ET.SubElement(item, 'value', name='Tier4')
+                ET.SubElement(item, 'flags', deloot='1')
+            tree.write(self.baseline / 'db/types.xml')
             (self.baseline / "cfgeconomycore.xml").write_text(
                 '<economycore><classes><rootclass name="Default"/></classes>'
                 '<ce folder="other"><file name="other.xml" type="types"/></ce></economycore>'
@@ -103,12 +112,13 @@ class PackageTests(unittest.TestCase):
         for base, boosted in zip(before, after):
             nominal = base.find("nominal")
             if nominal is not None and int(nominal.text) > 0:
-                self.assertEqual(int(boosted.findtext("nominal")), int(nominal.text) * 5)
+                factor = 10 if base.find("usage[@name='Military']") is not None else 5
+                self.assertEqual(int(boosted.findtext("nominal")), int(nominal.text) * factor)
                 if base.find("min") is not None:
-                    self.assertEqual(int(boosted.findtext("min")), int(base.findtext("min")) * 5)
+                    self.assertEqual(int(boosted.findtext("min")), int(base.findtext("min")) * factor)
             else:
                 self.assertEqual(ET.tostring(base), ET.tostring(boosted))
-            for field in ("lifetime", "restock", "quantmin", "quantmax", "flags"):
+            for field in ("lifetime", "restock", "quantmin", "quantmax", "flags", "usage", "value"):
                 if base.find(field) is not None:
                     self.assertEqual(ET.tostring(base.find(field)), ET.tostring(boosted.find(field)))
         (self.mission / "storage_1").mkdir()
@@ -123,6 +133,27 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(len(core.findall("./ce[@folder='servahz_ce']")), 1)
         self.assertTrue(list((self.server / "Servahz/Backups").glob("config-*")))
         self.run_ps("Test-Server.ps1", "-StaticOnly")
+
+    def test_military_settings_migration_and_retuning(self):
+        self.install()
+        settings = json.loads(self.local.read_text())
+        admin = settings['AdminPassword']
+        del settings['MilitaryLootMultiplier']
+        settings['ServerPassword'] = 'keep-this-test-password'
+        self.local.write_text(json.dumps(settings))
+        self.install()
+        settings = json.loads(self.local.read_text())
+        self.assertEqual(settings['MilitaryLootMultiplier'], 2)
+        self.assertEqual(settings['AdminPassword'], admin)
+        self.assertEqual(settings['ServerPassword'], 'keep-this-test-password')
+        settings['MilitaryLootMultiplier'] = 1
+        self.local.write_text(json.dumps(settings))
+        self.install()
+        baseline = ET.parse(self.baseline / 'db/types.xml')
+        output = ET.parse(self.mission / 'db/types.xml')
+        for before, after in zip(baseline.findall('type'), output.findall('type')):
+            if int(before.findtext('nominal', '0')) > 0:
+                self.assertEqual(int(after.findtext('nominal')), int(before.findtext('nominal')) * 5)
 
     def test_missing_mod_does_not_create_mission(self):
         shutil.rmtree(self.workshop / self.mods[-1]["Id"])
@@ -277,12 +308,16 @@ class ConfigTests(unittest.TestCase):
     def test_patrol_budget_and_building_types(self):
         settings = ROOT / "config/mission/expansion/settings"
         ai = json.loads((settings / "AIPatrolSettings.json").read_text())
+        self.assertEqual(ai['MinDistRadius'], 125)
+        self.assertGreater(ai['ThreatDistanceLimit'], 250)
+        self.assertGreater(ai['NoiseInvestigationDistanceLimit'], 150)
         patrols = ai["Patrols"]
         self.assertEqual(len(patrols), 6)
         self.assertEqual(len({p["Name"] for p in patrols}), len(patrols))
         self.assertLessEqual(ai["LoadBalancingCategories"]["Global"][0]["MaxPatrols"] *
                              max(p["NumberOfAI"] for p in patrols), 12)
         for patrol in patrols:
+            self.assertEqual(patrol['Speed'], 'JOG')
             self.assertEqual(patrol["Loadout"], "WestLoadout")
             self.assertGreaterEqual(len(patrol["Waypoints"]), 2)
             for x, y, z in patrol["Waypoints"]:

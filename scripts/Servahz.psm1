@@ -14,6 +14,9 @@ function Read-ServerSettings {
     param([string]$Path = (Join-Path $script:PackageRoot 'config/server.local.json'))
     if (!(Test-Path -LiteralPath $Path)) { throw 'Voer eerst 01-Instellen.cmd uit.' }
     $s = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($s.PSObject.Properties.Name -notcontains 'MilitaryLootMultiplier') {
+        $s | Add-Member -MemberType NoteProperty -Name MilitaryLootMultiplier -Value 2
+    }
     foreach ($name in @('GamePort', 'QueryPort')) {
         $port = $s.$name
         if ($port -isnot [int] -and $port -isnot [long]) { throw "$name moet een geheel getal zijn." }
@@ -22,7 +25,7 @@ function Read-ServerSettings {
     if ($s.QueryPort -ge $s.GamePort -and $s.QueryPort -le ($s.GamePort + 3)) {
         throw 'QueryPort moet buiten GamePort t/m GamePort+3 liggen.'
     }
-    foreach ($name in @('MaxPlayers', 'LootMultiplier', 'DayAcceleration', 'NightAcceleration')) {
+    foreach ($name in @('MaxPlayers', 'LootMultiplier', 'MilitaryLootMultiplier', 'DayAcceleration', 'NightAcceleration')) {
         $number = $s.$name
         if ($number -isnot [int] -and $number -isnot [long] -and $number -isnot [double] -and $number -isnot [decimal]) {
             throw "$name moet een getal zijn."
@@ -31,6 +34,7 @@ function Read-ServerSettings {
     }
     if ($s.MaxPlayers -lt 1 -or $s.MaxPlayers -gt 60 -or $s.MaxPlayers % 1 -ne 0) { throw 'MaxPlayers moet een geheel getal tussen 1 en 60 zijn.' }
     if ($s.LootMultiplier -lt 1 -or $s.LootMultiplier -gt 10) { throw 'LootMultiplier moet tussen 1 en 10 liggen.' }
+    if ($s.MilitaryLootMultiplier -lt 1 -or $s.MilitaryLootMultiplier -gt 5) { throw 'MilitaryLootMultiplier moet tussen 1 en 5 liggen.' }
     if ($s.DayAcceleration -lt 1 -or $s.DayAcceleration -gt 24 -or $s.NightAcceleration -lt 1 -or $s.NightAcceleration -gt 64) {
         throw 'DayAcceleration moet 1-24 en NightAcceleration moet 1-64 zijn.'
     }
@@ -121,17 +125,19 @@ function Save-ManagedBackup {
 }
 
 function Set-LootMultiplier {
-    param([string]$Source, [string]$Destination, [double]$Multiplier)
+    param([string]$Source, [string]$Destination, [double]$Multiplier, [double]$MilitaryMultiplier = 2)
     # Always read the installed vanilla baseline, never the previous generated 5x file.
     [xml]$xml = Get-Content -LiteralPath $Source -Raw
     $count = 0
     foreach ($type in $xml.SelectNodes('/types/type')) {
         $nominal = $type.SelectSingleNode('nominal')
         if ($null -eq $nominal -or [int]$nominal.InnerText -le 0) { continue }
-        $nominal.InnerText = [string][int][Math]::Ceiling([int]$nominal.InnerText * $Multiplier)
+        $factor = $Multiplier
+        if ($null -ne $type.SelectSingleNode('usage[@name="Military"]')) { $factor *= $MilitaryMultiplier }
+        $nominal.InnerText = [string][int][Math]::Ceiling([int]$nominal.InnerText * $factor)
         $min = $type.SelectSingleNode('min')
         if ($null -ne $min -and [int]$min.InnerText -gt 0) {
-            $min.InnerText = [string][int][Math]::Ceiling([int]$min.InnerText * $Multiplier)
+            $min.InnerText = [string][int][Math]::Ceiling([int]$min.InnerText * $factor)
         }
         $count++
     }

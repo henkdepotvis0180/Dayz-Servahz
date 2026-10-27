@@ -12,6 +12,10 @@ try {
         Copy-Item -LiteralPath (Join-Path $root 'config/server.example.json') -Destination $localConfig
     }
     $settings = Get-Content -LiteralPath $localConfig -Raw | ConvertFrom-Json
+    # Migrate existing local settings without replacing paths or passwords.
+    if ($settings.PSObject.Properties.Name -notcontains 'MilitaryLootMultiplier') {
+        $settings | Add-Member -MemberType NoteProperty -Name MilitaryLootMultiplier -Value 2
+    }
     if ($ServerPath) { $settings.ServerPath = $ServerPath }
     if ($WorkshopPath) { $settings.WorkshopPath = $WorkshopPath }
     foreach ($name in @('ServerPath', 'WorkshopPath')) {
@@ -99,7 +103,7 @@ try {
             Copy-Item -LiteralPath $_.FullName -Destination $keys -Force
         }
     }
-    $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier
+    $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier
     Set-EconomyInclude (Join-Path $layout.Mission 'cfgeconomycore.xml')
     Set-EasyBuilding (Join-Path $layout.Mission 'cfggameplay.json')
     $missionConfig = Join-Path $root 'config/mission'
@@ -112,6 +116,7 @@ try {
     New-Item -ItemType Directory -Path $layout.Profiles -Force | Out-Null
     Write-ServerConfig $settings $layout.Config
     Write-Host "Klaar: $count vanilla-loottypen op $($settings.LootMultiplier)x. Missie: servahz.chernarusplus"
+    Write-Host "Military-loot: extra $($settings.MilitaryLootMultiplier)x (totaal $($settings.LootMultiplier * $settings.MilitaryLootMultiplier)x vanilla)."
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

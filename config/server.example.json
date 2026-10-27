@@ -8,6 +8,7 @@
   "GamePort": 2302,
   "QueryPort": 27016,
   "LootMultiplier": 5,
+  "MilitaryLootMultiplier": 2,
   "DayAcceleration": 6,
   "NightAcceleration": 4
 }
