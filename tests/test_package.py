@@ -571,7 +571,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 12) { throw 'Expected twelve individual mod objects' }
+if ($mods.Count -ne 13) { throw 'Expected thirteen individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -645,7 +645,7 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
 class ConfigTests(unittest.TestCase):
     def test_new_mods_loot_attachments_and_no_duplicate_types(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
-        self.assertEqual([m['Id'] for m in mods[-3:]], ['2670506982', '2663169692', '2792985069'])
+        self.assertEqual([m['Id'] for m in mods[9:12]], ['2670506982', '2663169692', '2792985069'])
         extra = ET.parse(ROOT / 'config/mission/servahz_ce/extra_types.xml')
         names = [n.get('name') for n in extra.findall('type')]
         self.assertEqual(len(names), 46)
@@ -689,6 +689,8 @@ class ConfigTests(unittest.TestCase):
 
     def test_navigation_manifest_preset_and_settings(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
+        self.assertEqual(mods[-1], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
+        self.assertFalse(any('bleedtrail' in m['Name'].lower() for m in mods))
         navigation = [m for m in mods if m['Id'] == '2792984722']
         self.assertEqual(len(navigation), 1)
         self.assertEqual(navigation[0]['Name'], 'DayZ-Expansion-Navigation')

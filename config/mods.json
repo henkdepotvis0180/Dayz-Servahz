@@ -58,5 +58,10 @@
     "Name": "DayZ-Expansion-Weapons",
     "Id": "2792985069",
     "Folder": "@ExpansionWeapons"
+  },
+  {
+    "Name": "GoreZ",
+    "Id": "1648967877",
+    "Folder": "@GoreZ"
   }
 ]

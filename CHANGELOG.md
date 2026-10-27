@@ -4,6 +4,19 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.11.0] — 2026-10-27
+
+### Compleet pakket met GoreZ, lootuitbreiding en minder sprintverbruik
+
+- GoreZ toegevoegd als dertiende mod op host en clients: bloedeffecten, bloedsporen/-plassen en vliegen bij lichamen. Geen aparte BleedTrail toevoegen; GoreZ bevat deze functionaliteit al.
+- Eén cumulatieve Windows-ZIP bevat alles uit 0.9.0 (barricades, MMG-rugzakken, Expansion-wapens en ruimere/snellere testloot) en 0.10.0 (75% minder verbruik bij rechtop sprinten), inclusief alle eerdere bouw- en botinstellingen. Oude ZIPs zijn niet nodig.
+- Alleen GoreZ toegevoegd uit de laatste suggesties; geen Windstride of Survivor Missions. Modcode wordt via Steam geleverd.
+- Lokale configuratie, wachtwoorden, profielen en wereldsaves blijven behouden; geen wipe.
+
+**Bijwerken in één keer:** stop de server en maak een wereldbackup. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json`, `Mods.html` en `04-Teststand.cmd` in je bestaande pakketmap. Behoud `config/server.local.json` en je saves. Abonneer host en spelers op alle ontbrekende mods uit `Mods.html`, wacht op Steam en importeer de preset. Voer **`04-Teststand.cmd`** uit en start met `02-Start-server.cmd`. Vanaf vóór 0.9.0 zijn naast GoreZ ook Building Fortifications, MMG en Expansion Weapons nodig.
+
+**Controle:** pakkettests voor alle dertien modpaden/preset, behoud van saves/wachtwoorden, lootkoppelingen, bijvullen, botbudgetten, bouwinstellingen en sprintverbruik. GoreZ-effecten, daadwerkelijke modcompatibiliteit, prestaties en persistentie lokaal in-game controleren.
+
 ## [0.10.0] — 2026-10-27
 
 ### Minder stamina voor lange afstanden

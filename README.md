@@ -6,15 +6,30 @@ Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion A
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
 
+## Eén compleet pakket (v0.11.0)
+
+Deze ZIP bevat **alle wijzigingen uit 0.9.0 en 0.10.0, plus GoreZ**: barricades, MMG-rugzakken, Expansion-wapens met magazijnen/munitie, ruimere en sneller bijgevulde testloot, de bestaande RaG-bouwinstellingen en 43 ingestelde bots, én 75% minder stamina voor rechtop sprinten. Je hoeft geen oude ZIPs achtereenvolgens te installeren. Windstride en Survivor Missions zijn niet toegevoegd.
+
+[GoreZ](https://steamcommunity.com/sharedfiles/filedetails/?id=1648967877) voegt bloedeffecten, bloedplassen/-sporen en vliegen bij lichamen toe. Host en alle spelers laden nu **dertien mods** uit `Mods.html`. Installeer **geen aparte BleedTrail** naast GoreZ; die functionaliteit zit al in GoreZ. De modbestanden zelf worden via Steam geleverd, niet in deze ZIP.
+
+**Bestaande installatie in één keer bijwerken:**
+
+1. Stop de server en maak een wereldbackup met `scripts/Backup-World.ps1`.
+2. Pak deze ZIP apart uit. Vervang in je bestaande pakketmap `scripts`, `config/mission`, `config/profiles`, `config/mods.json`, `Mods.html` en `04-Teststand.cmd`. Behoud **`config/server.local.json`**, je servermissie en alle saves/profielen.
+3. Abonneer host en spelers via `Mods.html` op alle ontbrekende mods, wacht op Steam en importeer de nieuwe preset. Kom je van vóór 0.9.0, dan zijn ook Building Fortifications, MMG en Expansion Weapons nieuw.
+4. Voer **`04-Teststand.cmd`** uit. Deze past de complete configuratie toe, inclusief sneller bijvullen en de stamina-aanpassing. Start met **`02-Start-server.cmd`** en controleer met **`03-Controleren.cmd`**.
+
+Geen wipe nodig. Pakkettests controleren installatie, modpaden, loot- en stamina-instellingen en behoud van saves/wachtwoorden. GoreZ-effecten, samenwerking met de huidige DayZ-versie en je andere mods, prestaties en herstartpersistentie moeten lokaal in-game worden gecontroleerd.
+
 ## Snel beginnen
 
 1. Pak dit pakket volledig uit op je Windows-pc, bijvoorbeeld naar `C:\DayZ-Servahz`. Bewaar deze map: de knoppen gebruiken de lokale configuratie hierin.
 2. Installeer **Steam → Bibliotheek → Tools → DayZ Server**, app-ID **223350**. De host en spelers hebben ook DayZ nodig. Start DayZ eenmaal om launcher en BattlEye te laten installeren.
-3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **twaalf** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
+3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **dertien** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
 4. Sluit een eventueel draaiende DayZ-server. Dubbelklik **`01-Instellen.cmd`**. De installer zoekt de Steam-bibliotheken en maakt `config/server.local.json` met jouw paden en een willekeurig adminwachtwoord.
 5. Open `config/server.local.json` in Kladblok. Vul voor een prive-server `ServerPassword` in, sla op en voer **`01-Instellen.cmd`** nogmaals uit. Gebruik een ander wachtwoord dan `AdminPassword`. Dit lokale bestand wordt door Git genegeerd.
 6. Dubbelklik **`02-Start-server.cmd`**. Laat het servervenster open en wacht enkele minuten. De eerste start maakt Expansion-profielen en de lootwereld aan. Voer **`03-Controleren.cmd`** uit voor configuratie- en querycontrole.
-7. Open de DayZ Launcher met alle twaalf mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
+7. Open de DayZ Launcher met alle dertien mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
 
 Windows kan gedownloade scripts blokkeren. Gebruik zo nodig **Eigenschappen → Blokkering opheffen** op de ZIP en pak opnieuw uit. De `.cmd`-knoppen gebruiken alleen voor hun eigen PowerShell-proces `ExecutionPolicy Bypass`; ze veranderen geen permanente Windows-instelling. Instellen vereist normaal geen administratorrechten als de Steam-map beschrijfbaar is.
 
@@ -106,7 +121,7 @@ Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe vel
 
 **Voor jouw ruime teststand: voer na het bijwerken `04-Teststand.cmd` opnieuw uit.** Alleen de nieuwe bestanden kopiëren schakelt het nieuwe veld `TestFastRestock` niet in. Je huidige saves en wachtwoorden blijven behouden. De hoeveelheid loot in je bestaande wereld is hier niet rechtstreeks gemeten; onderstaande wijzigingen nemen bekende CE-beperkingen weg, maar geven geen garantie op een item in iedere kamer.
 
-De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Host en alle spelers laden nu **twaalf mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
+De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Host en alle spelers laden nu **dertien mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
 
 **Nieuwe lootselectie:**
 
@@ -153,11 +168,11 @@ Bronnen: [Bohemia CE-configuratie](https://community.bistudio.com/wiki/DayZ:Cent
 - Controleer bij toetsconflicten **Options → Controls → Expansion**. Bestaande client-keybindings kunnen afwijken van de standaard.
 - Groepsgenoten en bots worden niet automatisch op de kaart getoond; deze configuratie levert geen groepsmod of radar.
 
-**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle twaalf mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
+**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle dertien mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
 
 ## Makkelijker bouwen met RaG (v0.8.0)
 
-**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **twaalf mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
+**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **dertien mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
 
 **Update:** stop de server en maak een wereldbackup. Abonneer je op beide RaG-mods en wacht op Steam. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html` in je pakketmap. Behoud `config/server.local.json`, je missie en saves. Voer `01-Instellen.cmd` uit (of `04-Teststand.cmd` voor testloot), importeer de nieuwe preset en start opnieuw. Geen wipe nodig.
 
@@ -205,7 +220,7 @@ Test eerst op de host, daarna met een tweede pc in je LAN, daarna van buitenaf.
 
    Dit zijn de standaardpoorten. Het pakket reserveert `GamePort` t/m `GamePort+3`; pas bij andere poorten ook de routerregels aan. Er is geen TCP- of RCon-forward nodig. Het firewallscript wijzigt alleen zijn eigen `DayZ-Servahz-UDP`-regel, nooit de router.
 
-4. Vrienden importeren `Mods.html`, laden de twaalf mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
+4. Vrienden importeren `Mods.html`, laden de dertien mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
 5. Laat iemand buiten je LAN testen: sommige routers ondersteunen geen NAT-loopback. Een TCP-poortchecker test deze UDP-server niet.
 
 LAN werkt, internet niet? Vergelijk het WAN-adres van je router met je publieke IPv4. **CGNAT**, bijvoorbeeld een WAN-adres in `100.64.0.0/10`, of dubbele NAT kan inkomende verbindingen blokkeren. Vraag je provider om publiek IPv4 of configureer beide routers/bridge mode. Een mesh-VPN zoals Tailscale is een alternatief; host en vrienden moeten dat zelf installeren, dit pakket configureert het niet.
@@ -263,7 +278,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 
 | Probleem | Controle |
 | --- | --- |
-| Ontbrekende PBO, verkeerde versie/signature | Alle twaalf mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Ontbrekende PBO, verkeerde versie/signature | Alle dertien mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | Launcher toont modnamen als een gecombineerde regel | Gebruik de nieuwste scripts; Windows PowerShell 5.1 gaf eerder een geneste modlijst door. In het RPT moeten modpaden met puntkomma's gescheiden zijn, met voor elke mod zijn eigen pad |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
@@ -279,7 +294,7 @@ Begin voor een kleine groep met een recente CPU, SSD en ongeveer **16 GB RAM in 
 ## Lokale acceptatiecontrole
 
 - `03-Controleren.cmd` slaagt: configuratie/modbestanden kloppen en de verwachte servernaam antwoordt op A2S_INFO. Dat bewijst nog geen speelbaarheid.
-- Je kunt met alle twaalf mods inloggen, bewegen en loot oprapen.
+- Je kunt met alle dertien mods inloggen, bewegen en loot oprapen.
 - AI verschijnt bij Balota/Stary/NWAF; bewegen, vechten en looten werken. Controleer routes op obstakels.
 - **M** toont de kaart met je positie; **N vasthouden** toont GPS/minimap en kort N wisselt modus.
 - Een Expansion-kit plaatsen, bouwen en een codeslot gebruiken werkt.
