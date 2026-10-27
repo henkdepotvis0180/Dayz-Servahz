@@ -77,6 +77,7 @@ Gebruik **`04-Teststand.cmd`** met de server gestopt om de lokale instellingen b
 | `MilitaryLootMultiplier` | 3 extra: militaire lootdoelen totaal 24× vanilla |
 | `LootDamageMax` | 0.10: nieuwe CE-loot met 0–10% beginschade |
 | `TestMilitaryEverywhere` | true: normale militaire loot ook op burgerlocaties en tiers 1–4 |
+| `TestSuppliesEverywhere` | true: extra wapens, munitie, magazijnen en bouwvoorraad op alle 17 locatiecategorieën en tiers 1–4 |
 
 Deze knop voert de installer ook uit. Daarna kun je meteen `02-Start-server.cmd` gebruiken. Hij bewaart vooraf de lokale configuratie onder `.local/Backups/server-before-testmode-*.json`. Paden, wachtwoorden en overige instellingen blijven behouden. Het resultaat blijft ingesteld totdat je de lokale waarden terugzet; het is geen tijdelijke schakelaar. Terugzetten: stop de server, kopieer de gewenste configuratiebackup naar `config/server.local.json` en voer `01-Instellen.cmd` uit. Configuratiebackups bevatten wachtwoorden: houd ze prive.
 
@@ -86,7 +87,11 @@ De gewone installer gebruikt standaard `LootDamageMax: 0.15` als het veld nog on
 
 **Militaire loot op meer plekken:** de nieuwe teststand voegt voor actieve, normale Military-itemtypen de usages `Town`, `Village`, `Industrial`, `Farm`, `Police` en `Hunting` en tiers `Tier1` t/m `Tier4` toe. Daardoor kunnen bijvoorbeeld normale militaire wapens en kleding ook bij burgergebouwen in lagere tiers verschijnen. Dit is een uitbreiding van mogelijke spawnplekken, geen vaste kans per huis of garantie op een geweer in iedere kamer. Bestaande itemcategorieen, tags en beschikbare proxies bepalen waar een item echt past. `nominal=0`, crafted loot en `deloot=1`-eventloot krijgen deze locatie-uitbreiding niet.
 
-Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe veld aan te zetten; de oude teststand had alleen meer aantallen. Zet `TestMilitaryEverywhere` op `false` en voer `01-Instellen.cmd` uit om de originele locaties/tiers uit de standaardmissie te herstellen voor toekomstige spawns. Andere lootfactoren blijven dan op hun huidige waarden. Laat je lokale configuratie staan bij het vervangen van de map `scripts` uit de nieuwste ZIP.
+**Extra testvoorraad (v0.7.0):** `TestSuppliesEverywhere` verdubbelt boven op de huidige factoren de doelen/minima van actieve normale wapens (CE-categorie `weapons`), losse munitie, munitiedozen, magazijnen en geselecteerde bouwvoorraad. Gewone wapens/munitie worden in de teststand zo 16× en militaire varianten 48× vanilla. Spijkerdozen, metaalplaten, draad, prikkeldraad, touw, ducttape, bouwgereedschap en codesloten vallen hieronder. De eigen Expansion-bouwkits, safes en codesloten krijgen 2× hun pakketdoelen. Planken en elk van de drie Expansion-lumberformaten krijgen als expliciete testuitzondering een doel van 160 en minimum van 80, met vloerposities als mogelijke spawnplek. Boomstammen, geplaatste bouwwerken, overige crafted items, uitgeschakelde wapens en speciale eventloot worden niet als gewone testloot aangezet.
+
+Deze voorraad krijgt alle 17 usages die de gecontroleerde Chernarus-data gebruikt: `Coast`, `ContaminatedArea`, `Farm`, `Firefighter`, `Historical`, `Hunting`, `Industrial`, `Lunapark`, `Medic`, `Military`, `Office`, `Police`, `Prison`, `School`, `SeasonalEvent`, `Town` en `Village`. Dit omvat ook medische gebouwen, brandweer, kantoren, scholen, gevangenis, kust en pretpark. Bestaande categorieën en tags blijven gelden; alleen planken/lumber krijgen zo nodig `tools` en `floor`. Werkelijke spawns hangen af van beschikbare geschikte posities, actieve locaties en CE-limieten. Er worden geen eventlocaties of extra wapentypen door scripts aangemaakt. De hoge testdoelen kunnen meer serverbelasting geven.
+
+Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe veld aan te zetten. Oude lokale configuraties krijgen `TestSuppliesEverywhere: false` als het ontbreekt; alleen `01-Instellen.cmd` schakelt de uitbreiding dus niet vanzelf in. Zet **beide** velden `TestSuppliesEverywhere` en `TestMilitaryEverywhere` op `false` en voer `01-Instellen.cmd` uit om de originele locaties/tiers en de gewone pakketbouwloot te herstellen voor toekomstige spawns. Andere lootfactoren blijven dan op hun huidige waarden. Laat je lokale configuratie staan bij het vervangen van de map `scripts` uit de nieuwste ZIP.
 
 **Bestaande beschadigde loot wordt niet gerepareerd.** Een herstart wist de economie niet. Nieuwe instellingen werken tijdens het geleidelijk bijvullen; de wereld hoeft niet te worden verwijderd. De hoeveelheid vrije lootposities, tiers en eventvoorwaarden blijft de feitelijke aantallen begrenzen, ook bij 24×. In de gewone stand blijven militaire locaties nodig; met `TestMilitaryEverywhere: true` kunnen normale militaire items ook op de toegevoegde burgerlocaties verschijnen. Het zichtbare serverlabel kan nog '5x Loot' bevatten: de werkelijke factoren staan in `config/server.local.json` en worden door de installer getoond; pas `Hostname` desgewenst aan.
 
@@ -152,7 +157,7 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 
 | Bestand | Aanpassing |
 | --- | --- |
-| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax`, `TestMilitaryEverywhere` en tijd |
+| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax`, `TestMilitaryEverywhere`, `TestSuppliesEverywhere` en tijd |
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |

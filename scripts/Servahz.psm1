@@ -20,9 +20,13 @@ function Read-ServerSettings {
     if ($s.PSObject.Properties.Name -notcontains 'LootDamageMax') {
         $s | Add-Member -MemberType NoteProperty -Name LootDamageMax -Value 0.15
     }
+    if ($s.PSObject.Properties.Name -notcontains 'TestSuppliesEverywhere') {
+        $s | Add-Member -MemberType NoteProperty -Name TestSuppliesEverywhere -Value $false
+    }
     if ($s.PSObject.Properties.Name -notcontains 'TestMilitaryEverywhere') {
         $s | Add-Member -MemberType NoteProperty -Name TestMilitaryEverywhere -Value $false
     }
+    if ($s.TestSuppliesEverywhere -isnot [bool]) { throw 'TestSuppliesEverywhere moet true of false zijn, zonder quotes.' }
     if ($s.TestMilitaryEverywhere -isnot [bool]) { throw 'TestMilitaryEverywhere moet true of false zijn, zonder quotes.' }
     foreach ($name in @('GamePort', 'QueryPort')) {
         $port = $s.$name
@@ -191,6 +195,56 @@ function Set-LootMultiplier {
     }
     Save-Xml $xml $Destination
     return $count
+}
+
+function Set-TestSupplies {
+    param([string]$Path)
+    # Called only on freshly generated vanilla/Expansion types, never on last run's output.
+    [xml]$xml = Get-Content -LiteralPath $Path -Raw
+    $usages = @('Coast', 'ContaminatedArea', 'Farm', 'Firefighter', 'Historical',
+        'Hunting', 'Industrial', 'Lunapark', 'Medic', 'Military', 'Office', 'Police',
+        'Prison', 'School', 'SeasonalEvent', 'Town', 'Village')
+    $building = @('NailBox', 'MetalPlate', 'MetalWire', 'BarbedWire', 'Rope',
+        'DuctTape', 'Hammer', 'Hatchet', 'HandSaw', 'Hacksaw', 'Shovel', 'Pickaxe',
+        'WoodAxe', 'SledgeHammer', 'Pliers', 'CombinationLock', 'CombinationLock4')
+    # Deliberate test-only exceptions: raw materials, never placed structures or kits.
+    $materials = @('WoodenPlank', 'ExpansionLumber1', 'ExpansionLumber1_5', 'ExpansionLumber3')
+    foreach ($type in $xml.SelectNodes('/types/type')) {
+        $name = $type.GetAttribute('name')
+        $nominal = $type.SelectSingleNode('nominal')
+        $flags = $type.SelectSingleNode('flags')
+        if ($null -eq $nominal -or $null -eq $flags -or $flags.GetAttribute('deloot') -eq '1') { continue }
+        if ($name -in $materials) {
+            $nominal.InnerText = '160'
+            $type.SelectSingleNode('min').InnerText = '80'
+            $flags.SetAttribute('crafted', '0')
+            $category = $xml.CreateElement('category')
+            $category.SetAttribute('name', 'tools')
+            if ($null -eq $type.SelectSingleNode('category')) { $type.AppendChild($category) | Out-Null }
+            $tag = $xml.CreateElement('tag')
+            $tag.SetAttribute('name', 'floor')
+            if ($null -eq $type.SelectSingleNode('tag')) { $type.AppendChild($tag) | Out-Null }
+        } else {
+            if ([int]$nominal.InnerText -le 0 -or $flags.GetAttribute('crafted') -eq '1') { continue }
+            $weapon = $null -ne $type.SelectSingleNode('category[@name="weapons"]')
+            $ammo = $name -match '^(Ammo_|AmmoBox_|Mag_)'
+            $expansion = $name -match '^Expansion(CodeLock|SafeMini|SafeMedium|SafeLarge|WallKit|FloorKit|RampKit|StairKit|WoodPillarKit)$'
+            if (!$weapon -and !$ammo -and !$expansion -and $name -notin $building) { continue }
+            $nominal.InnerText = [string]([int]$nominal.InnerText * 2)
+            $min = $type.SelectSingleNode('min')
+            if ($null -ne $min) { $min.InnerText = [string]([int]$min.InnerText * 2) }
+        }
+        foreach ($pair in @(@('usage', $usages), @('value', @('Tier1', 'Tier2', 'Tier3', 'Tier4')))) {
+            foreach ($value in $pair[1]) {
+                if ($null -eq $type.SelectSingleNode($pair[0] + '[@name="' + $value + '"]')) {
+                    $node = $xml.CreateElement($pair[0])
+                    $node.SetAttribute('name', $value)
+                    $type.AppendChild($node) | Out-Null
+                }
+            }
+        }
+    }
+    Save-Xml $xml $Path
 }
 
 function Save-Xml {

@@ -161,6 +161,10 @@ class PackageTests(unittest.TestCase):
 
     def test_testmode_loot_quality_backup_and_world_preservation(self):
         self.install()
+        saved = json.loads(self.local.read_text())
+        saved['ServerPassword'] = 'preserve-private-password'
+        saved.pop('TestSuppliesEverywhere', None)
+        self.local.write_text(json.dumps(saved))
         previous = self.local.read_bytes()
         settings = json.loads(previous)
         (self.mission / 'storage_1').mkdir()
@@ -173,6 +177,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(current['MilitaryLootMultiplier'], 3)
             self.assertEqual(current['LootDamageMax'], 0.10)
             self.assertIs(current['TestMilitaryEverywhere'], True)
+            self.assertIs(current['TestSuppliesEverywhere'], True)
             for field in ('AdminPassword', 'ServerPassword', 'ServerPath', 'WorkshopPath'):
                 self.assertEqual(current[field], settings[field])
             before = ET.parse(self.baseline / 'db/types.xml').findall('type')
@@ -181,21 +186,12 @@ class PackageTests(unittest.TestCase):
                 nominal = int(base.findtext('nominal', '0'))
                 if nominal > 0:
                     factor = 24 if base.find("usage[@name='Military']") is not None else 8
-                    self.assertEqual(int(generated.findtext('nominal')), nominal * factor)
-                flags = base.find('flags')
-                ordinary = nominal > 0 and base.find("usage[@name='Military']") is not None and (flags is None or (flags.get('deloot') != '1' and flags.get('crafted') != '1'))
-                if ordinary:
-                    usages = [n.get('name') for n in generated.findall('usage')]
-                    tiers = [n.get('name') for n in generated.findall('value')]
-                    self.assertEqual(len(usages), len(set(usages)))
-                    self.assertEqual(len(tiers), len(set(tiers)))
-                    self.assertTrue({'Military', 'Town', 'Village', 'Industrial', 'Farm', 'Police', 'Hunting'} <= set(usages))
-                    self.assertTrue({'Tier1', 'Tier2', 'Tier3', 'Tier4'} <= set(tiers))
-                else:
-                    for tag in ('usage', 'value'):
-                        self.assertEqual([n.attrib for n in base.findall(tag)], [n.attrib for n in generated.findall(tag)])
-                if flags is not None:
-                    self.assertEqual(flags.attrib, generated.find('flags').attrib)
+                    self.assertGreaterEqual(int(generated.findtext('nominal')), nominal * factor)
+                for tag in ('usage', 'value'):
+                    values = [n.get('name') for n in generated.findall(tag)]
+                    self.assertEqual(len(values), len(set(values)))
+                if base.get('name') not in ('WoodenPlank',):
+                    self.assertEqual(base.find('flags').attrib if base.find('flags') is not None else {}, generated.find('flags').attrib if generated.find('flags') is not None else {})
             globals_xml = ET.parse(self.mission / 'db/globals.xml')
             self.assertEqual(float(globals_xml.find("var[@name='LootDamageMax']").get('value')), 0.10)
             self.assertEqual(float(globals_xml.find("var[@name='LootDamageMin']").get('value')), 0)
@@ -209,6 +205,7 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(len(backups), 2)
         self.assertTrue(any(p.read_bytes() == previous for p in backups))
         current['TestMilitaryEverywhere'] = False
+        current['TestSuppliesEverywhere'] = False
         self.local.write_text(json.dumps(current))
         self.install()
         restored = ET.parse(self.mission / 'db/types.xml').findall('type')
@@ -223,6 +220,86 @@ class PackageTests(unittest.TestCase):
         self.local.write_text(json.dumps(settings))
         result = self.install(ok=False)
         self.assertIn('LootDamageMax', result.stderr)
+
+    def test_supplies_locations_amounts_and_restore(self):
+        # Independent representative cases include civilian ammunition, disabled/event
+        # weapons, raw building material and unrelated loot. No real saves are used.
+        tree = ET.parse(self.baseline / 'db/types.xml')
+        cases = [('CivilRifle', 'weapons', 4, '0', '0'),
+                 ('TestMilitaryRifle', 'weapons', 2, '0', '0'),
+                 ('Ammo_Example', 'weapons', 10, '0', '0'),
+                 ('AmmoBox_Example', 'tools', 5, '0', '0'),
+                 ('Mag_Example', 'tools', 6, '0', '0'),
+                 ('EventRifle', 'weapons', 3, '1', '0'),
+                 ('DisabledRifle', 'weapons', 0, '0', '0'),
+                 ('CraftedRifle', 'weapons', 3, '0', '1'),
+                 ('UnrelatedFood', 'food', 10, '0', '0')]
+        # Replace/add just these test cases, retaining real CE data when requested.
+        for name, category, amount, event, crafted in cases:
+            item = ET.SubElement(tree.getroot(), 'type', name=name)
+            ET.SubElement(item, 'nominal').text = str(amount)
+            ET.SubElement(item, 'min').text = str(amount // 2)
+            ET.SubElement(item, 'flags', deloot=event, crafted=crafted)
+            ET.SubElement(item, 'category', name=category)
+            ET.SubElement(item, 'tag', name='shelves')
+            ET.SubElement(item, 'usage', name='Village')
+            if name == 'TestMilitaryRifle':
+                ET.SubElement(item, 'usage', name='Military')
+        if tree.find("type[@name='WoodenPlank']") is None:
+            item = ET.SubElement(tree.getroot(), 'type', name='WoodenPlank')
+            ET.SubElement(item, 'nominal').text = '0'
+            ET.SubElement(item, 'min').text = '0'
+            ET.SubElement(item, 'flags', deloot='0', crafted='1')
+        tree.write(self.baseline / 'db/types.xml')
+        baseline = (self.baseline / 'db/types.xml').read_bytes()
+        usages = {'Coast', 'ContaminatedArea', 'Farm', 'Firefighter', 'Historical',
+                  'Hunting', 'Industrial', 'Lunapark', 'Medic', 'Military', 'Office',
+                  'Police', 'Prison', 'School', 'SeasonalEvent', 'Town', 'Village'}
+        self.run_ps('Install-Server.ps1', '-ServerPath', self.server, '-WorkshopPath', self.workshop, '-TestMode')
+        generated = ET.parse(self.mission / 'db/types.xml')
+        for name, amount in [('CivilRifle', 64), ('Ammo_Example', 160),
+                             ('TestMilitaryRifle', 96),
+                             ('AmmoBox_Example', 80), ('Mag_Example', 96),
+                             ('WoodenPlank', 160), ('NailBox', int(tree.findtext("type[@name='NailBox']/nominal")) * 16)]:
+            item = generated.find(f"type[@name='{name}']")
+            self.assertEqual(int(item.findtext('nominal')), amount, name)
+            if name == 'TestMilitaryRifle':
+                self.assertEqual(int(item.findtext('min')), 48)
+            self.assertEqual({n.get('name') for n in item.findall('usage')}, usages)
+            self.assertEqual({n.get('name') for n in item.findall('value')}, {'Tier1', 'Tier2', 'Tier3', 'Tier4'})
+        for name in ('EventRifle', 'DisabledRifle', 'CraftedRifle', 'UnrelatedFood'):
+            item = generated.find(f"type[@name='{name}']")
+            self.assertEqual([n.get('name') for n in item.findall('usage')], ['Village'])
+            self.assertEqual(item.find('tag').get('name'), 'shelves')
+        building_file = self.mission / 'servahz_ce/building_types.xml'
+        building = ET.parse(building_file)
+        self.assertEqual(building.findtext("type[@name='ExpansionWallKit']/nominal"), '120')
+        self.assertEqual(building.findtext("type[@name='ExpansionLumber3']/nominal"), '160')
+        self.assertEqual(building.findtext("type[@name='ExpansionWall6x3']/nominal"), '0')
+        self.assertEqual({n.get('name') for n in building.findall("type[@name='ExpansionWallKit']/usage")}, usages)
+        first = (self.mission / 'db/types.xml').read_bytes(), building_file.read_bytes()
+        self.install()
+        self.assertEqual(first, ((self.mission / 'db/types.xml').read_bytes(), building_file.read_bytes()))
+        current = json.loads(self.local.read_text())
+        current['TestSuppliesEverywhere'] = False
+        current['TestMilitaryEverywhere'] = False
+        self.local.write_text(json.dumps(current))
+        self.install()
+        restored = ET.parse(self.mission / 'db/types.xml')
+        self.assertEqual(restored.findtext("type[@name='WoodenPlank']/nominal"), '0')
+        for original, result in zip(tree.findall('type'), restored.findall('type')):
+            for tag in ('usage', 'value', 'flags', 'category', 'tag'):
+                self.assertEqual([n.attrib for n in original.findall(tag)],
+                                 [n.attrib for n in result.findall(tag)])
+        self.assertEqual(building_file.read_bytes(), (ROOT / 'config/mission/servahz_ce/building_types.xml').read_bytes())
+        self.assertEqual((self.baseline / 'db/types.xml').read_bytes(), baseline)
+
+    def test_supplies_setting_requires_boolean(self):
+        self.install()
+        current = json.loads(self.local.read_text())
+        current['TestSuppliesEverywhere'] = 'true'
+        self.local.write_text(json.dumps(current))
+        self.assertIn('TestSuppliesEverywhere', self.install(ok=False).stderr)
 
     def test_missing_mod_does_not_create_mission(self):
         shutil.rmtree(self.workshop / self.mods[-1]["Id"])

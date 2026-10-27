@@ -24,6 +24,9 @@ try {
     if ($settings.PSObject.Properties.Name -notcontains 'LootDamageMax') {
         $settings | Add-Member -MemberType NoteProperty -Name LootDamageMax -Value 0.15
     }
+    if ($settings.PSObject.Properties.Name -notcontains 'TestSuppliesEverywhere') {
+        $settings | Add-Member -MemberType NoteProperty -Name TestSuppliesEverywhere -Value $false
+    }
     if ($settings.PSObject.Properties.Name -notcontains 'TestMilitaryEverywhere') {
         $settings | Add-Member -MemberType NoteProperty -Name TestMilitaryEverywhere -Value $false
     }
@@ -32,6 +35,7 @@ try {
         $settings.MilitaryLootMultiplier = 3
         $settings.LootDamageMax = 0.10
         $settings.TestMilitaryEverywhere = $true
+        $settings.TestSuppliesEverywhere = $true
     }
     if ($ServerPath) { $settings.ServerPath = $ServerPath }
     if ($WorkshopPath) { $settings.WorkshopPath = $WorkshopPath }
@@ -134,12 +138,17 @@ try {
         New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $target -Force
     }
+    if ($settings.TestSuppliesEverywhere) {
+        Set-TestSupplies (Join-Path $layout.Mission 'db/types.xml')
+        Set-TestSupplies (Join-Path $layout.Mission 'servahz_ce/building_types.xml')
+    }
     New-Item -ItemType Directory -Path $layout.Profiles -Force | Out-Null
     Write-ServerConfig $settings $layout.Config
     Write-Host "Klaar: $count vanilla-loottypen op $($settings.LootMultiplier)x. Missie: servahz.chernarusplus"
     Write-Host "Military-loot: extra $($settings.MilitaryLootMultiplier)x (totaal $($settings.LootMultiplier * $settings.MilitaryLootMultiplier)x vanilla)."
     Write-Host "Nieuwe CE-loot: maximale beginschade $($settings.LootDamageMax). Bestaande items worden niet gerepareerd."
     if ($settings.TestMilitaryEverywhere) { Write-Host 'Teststand: normale militaire loot ook in steden, dorpen, industrie, boerderijen, politie en jachtgebieden; tiers 1-4.' }
+    if ($settings.TestSuppliesEverywhere) { Write-Host 'Testvoorraad: dubbele doelen voor wapens, munitie en bouwvoorraad op alle 17 locatiecategorieen; planken en lumber als loot.' }
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {
