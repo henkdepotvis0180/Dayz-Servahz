@@ -1,0 +1,17 @@
+name: Server package tests
+on:
+  push:
+  pull_request:
+jobs:
+  windows-powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Integration tests with Windows PowerShell 5.1
+        shell: pwsh
+        run: |
+          $env:SERVAHZ_PWSH = (Get-Command powershell.exe).Source
+          python -m unittest discover -s tests -v

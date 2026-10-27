@@ -1,0 +1,4 @@
+config/server.local.json
+.local/
+*.zip
+__pycache__/

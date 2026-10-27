@@ -1,0 +1,13 @@
+{
+  "ServerPath": "",
+  "WorkshopPath": "",
+  "Hostname": "Servahz | Chernarus | AI | 5x Loot | Easy Build",
+  "ServerPassword": "",
+  "AdminPassword": "",
+  "MaxPlayers": 12,
+  "GamePort": 2302,
+  "QueryPort": 27016,
+  "LootMultiplier": 5,
+  "DayAcceleration": 6,
+  "NightAcceleration": 4
+}
