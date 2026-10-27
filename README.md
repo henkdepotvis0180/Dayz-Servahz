@@ -30,7 +30,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 | --- | --- |
 | Map / spelers | Chernarus, 12 slots, eerste en derde persoon |
 | Loot | Vanilla `nominal` en `min` ×5; Military-loot extra ×2, dus standaard ×10 |
-| AI | Zes routes; maximaal vier actieve groepen, samen hoogstens 12 bots |
+| AI | 13 routes, 28 bots verdeeld over de routes; maximaal 7 actieve groepen, hoogstens 16 patrouillebots |
 | Moeilijkheid | Nauwkeurigheid 0,15–0,35, 65% uitgaande schade, normale gezondheid; bots zijn lootbaar |
 | AI-spawning | Spelers circa 125–900 m van de patrouille; despawn buiten 1100 m |
 | AI-benadering | Patrouilles joggen; dreigingen tot 450 m, geluidsonderzoek tot 350 m |
@@ -42,13 +42,25 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 | Tijd | Dag 6× versneld, nacht extra 4× versneld |
 | Integriteit | BattlEye standaard actief, `verifySignatures=2`, gelijke gamebuild verplicht |
 
-Patrouilles liggen rond **Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy en Krasnostav airfield**. Ze gebruiken de vijandige `West`-faction en de door Expansion aangemaakte `WestLoadout`. Ze verschijnen niet allemaal permanent. Dit zijn eigen beginroutes: loop ze lokaal na op obstakels. Waypoint-hoogte 0 wordt door Expansion op het terrein geplaatst.
+De wereld heeft een mix van kleine vijandige patrouilles, neutrale overlevenden en bewakers:
+
+| Soort | Gebieden | Ingesteld | Maximaal actief |
+| --- | --- | --- | --- |
+| Vijandig (`West`/`East`) | Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy, Krasnostav airfield, Vybor, Novy Sobor | 8 groepen, samen 18 bots | 4 groepen, hoogstens 10 bots |
+| Overlevenden (`Civilian`) | Chernogorsk, Elektrozavodsk, Berezino | 3 groepen van 2 | 2 groepen, 4 bots |
+| Bewakers (`Guards`) | Berezino, Solnichniy | 2 groepen van 2 | 1 groep, 2 bots |
+
+Dit zijn **28 ingestelde bots**, maar hoogstens **16 gelijktijdig actieve patrouillebots** in zeven groepen. Ze spawnen alleen nabij spelers, dus bij een solospeler zijn meestal minder groepen actief. Zelf via het adminmenu gespawnde bots tellen niet mee voor deze patrouillelimieten. De wereld wordt drukker zonder de limiet van vier actieve vijandige groepen te verhogen.
+
+Overlevenden zijn normaal neutraal maar kunnen zichzelf verdedigen; bewakers kunnen agressief reageren als je wapens richt/heft of hen aanvalt. Bewakers zijn geen garantie op een veilige zone. West en East zijn verschillende vijandige factions en kunnen ook elkaar bevechten. De bestaande accuratesse, 65% uitgaande schade en respawntijd blijven behouden. De groepen gebruiken de bijbehorende standaardloadouts die Expansion zelf aanmaakt.
+
+Het zijn eigen beginroutes: loop ze lokaal na op obstakels; terrein, gevechten en zicht bepalen het daadwerkelijke gedrag. Waypoint-hoogte 0 wordt door Expansion op het terrein geplaatst. Voor deze uitbreiding zijn geen extra mods nodig: vervang met de server gestopt `config/mission/expansion/settings/AIPatrolSettings.json` in je pakketmap door de nieuwste versie, voer `01-Instellen.cmd` uit en start opnieuw. Je wereld hoeft hiervoor niet gewist te worden. De routes en ontmoetingen moeten daarna lokaal in-game worden gecontroleerd.
 
 **5× loot is vijfmaal de economiedoelen, geen garantie op vijfmaal zoveel spullen per huis.** Spawnposities, tiers, events en CE-limieten blijven gelden. `nominal=0`, voertuigevents, zombies en dieren worden niet vervijfvoudigd. De eigen Expansion-bouwloot heeft vaste ruime aantallen in `building_types.xml` en wordt niet nogmaals vermenigvuldigd. Op bestaande werelden vult de economie geleidelijk bij; de installer verwijdert je wereld nooit om dit te versnellen.
 
 **Meer militaire gear:** `MilitaryLootMultiplier` is standaard `2`, boven op `LootMultiplier: 5`. Elk actief itemtype met een `Military`-usage krijgt dus een doel/minimum van 10× vanilla, inclusief militaire wapens, munitie en kleding die zo zijn gemarkeerd. Items met meerdere usages krijgen dezelfde verhoging ook op hun overige bestaande locaties. Tiers en speciale eventregels blijven behouden: zeldzame wapens worden niet ineens burgerloot. Zet de extra factor op `1` voor gewone 5× loot. Oude lokale configuraties krijgen het nieuwe veld automatisch, met behoud van wachtwoorden en paden.
 
-De AI-benadering werkt binnen de zes bestaande patrouillegebieden. Afstanden zijn detectielimieten, geen garantie dat een bot je door muren ziet of direct naar je toe loopt. De bots worden niet overal op de kaart om je personage gespawnd.
+De AI-benadering werkt binnen de ingestelde patrouillegebieden. Afstanden zijn detectielimieten, geen garantie dat een bot je door muren ziet of direct naar je toe loopt. De bots worden niet overal op de kaart om je personage gespawnd.
 
 Traders, geld, helicopters, quests en oneindige stamina zijn geen onderdeel van deze configuratie. Laad niet tegelijk de Expansion Bundle: die bevat dezelfde modules.
 

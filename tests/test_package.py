@@ -388,13 +388,34 @@ class ConfigTests(unittest.TestCase):
         self.assertGreater(ai['ThreatDistanceLimit'], 250)
         self.assertGreater(ai['NoiseInvestigationDistanceLimit'], 150)
         patrols = ai["Patrols"]
-        self.assertEqual(len(patrols), 6)
+        self.assertEqual(len(patrols), 13)
+        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 28)
         self.assertEqual(len({p["Name"] for p in patrols}), len(patrols))
-        self.assertLessEqual(ai["LoadBalancingCategories"]["Global"][0]["MaxPatrols"] *
-                             max(p["NumberOfAI"] for p in patrols), 12)
+        caps = {name: rules[0]['MaxPatrols'] for name, rules in ai['LoadBalancingCategories'].items()}
+        from itertools import combinations
+        from collections import Counter
+        max_active = 0
+        max_hostile = 0
+        for size in range(1, caps['Global'] + 1):
+            for active in combinations(patrols, size):
+                counts = Counter(p['LoadBalancingCategory'] for p in active)
+                if any(count > caps[category] for category, count in counts.items()):
+                    continue
+                max_active = max(max_active, sum(p['NumberOfAI'] for p in active))
+                max_hostile = max(max_hostile, sum(p['NumberOfAI'] for p in active if p['LoadBalancingCategory'] == 'Hostile'))
+        self.assertEqual(max_active, 16)
+        self.assertLessEqual(max_hostile, 10)
+        self.assertEqual(Counter(p['LoadBalancingCategory'] for p in patrols),
+                         {'Hostile': 8, 'Survivor': 3, 'Guards': 2})
+        self.assertLessEqual(ai['DamageMultiplier'], 0.65)
+        self.assertLessEqual(ai['AccuracyMax'], 0.35)
+        loadouts = {'West': 'WestLoadout', 'East': 'EastLoadout', 'Civilian': 'SurvivorLoadout', 'Guards': 'PoliceLoadout'}
         for patrol in patrols:
-            self.assertEqual(patrol['Speed'], 'JOG')
-            self.assertEqual(patrol["Loadout"], "WestLoadout")
+            self.assertEqual(patrol['Speed'], 'JOG' if patrol['LoadBalancingCategory'] == 'Hostile' else 'WALK')
+            self.assertEqual(patrol['Loadout'], loadouts[patrol['Faction']])
+            self.assertEqual(patrol['NumberOfAIMax'], 0)
+            self.assertEqual(patrol['MinDistRadius'], -1)
+            self.assertEqual(patrol['MaxDistRadius'], -1)
             self.assertGreaterEqual(len(patrol["Waypoints"]), 2)
             for x, y, z in patrol["Waypoints"]:
                 self.assertTrue(0 < x < 15360 and 0 < z < 15360)
