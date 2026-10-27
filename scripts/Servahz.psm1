@@ -110,6 +110,7 @@ function Save-ManagedBackup {
     $dest = Join-Path $Layout.Runtime ('Backups/config-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
     foreach ($relative in @('db/types.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
             'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json',
+            'expansion/settings/MapSettings.json',
             'servahz_ce/building_types.xml')) {
         $source = Join-Path $Layout.Mission $relative
         if (Test-Path -LiteralPath $source) {

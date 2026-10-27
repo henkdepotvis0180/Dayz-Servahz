@@ -17,11 +17,15 @@ try {
     [xml]$building = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/building_types.xml') -Raw
     if ($types.SelectNodes('/types/type').Count -eq 0 -or $building.SelectNodes('/types/type').Count -eq 0) { throw 'Geen loottypen gevonden.' }
     if ($core.SelectNodes('/economycore/ce[@folder="servahz_ce"]/file[@name="building_types.xml" and @type="types"]').Count -ne 1) { throw 'Bouwloot is niet correct geregistreerd.' }
-    foreach ($relative in @('cfggameplay.json', 'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json')) {
+    foreach ($relative in @('cfggameplay.json', 'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json', 'expansion/settings/MapSettings.json')) {
         $null = Get-Content -LiteralPath (Join-Path $layout.Mission $relative) -Raw | ConvertFrom-Json
     }
     $patrols = Get-Content -LiteralPath (Join-Path $layout.Mission 'expansion/settings/AIPatrolSettings.json') -Raw | ConvertFrom-Json
     if (!$patrols.Enabled -or @($patrols.Patrols).Count -eq 0) { throw 'AI-patrouilles ontbreken of zijn uitgeschakeld.' }
+    $map = Get-Content -LiteralPath (Join-Path $layout.Mission 'expansion/settings/MapSettings.json') -Raw | ConvertFrom-Json
+    if (!$map.EnableMap -or !$map.EnableHUDGPS -or !$map.CanOpenMapWithKeyBinding -or $map.NeedGPSItemForKeyBinding -or $map.NeedMapItemForKeyBinding) {
+        throw 'Kaart/minimap is uitgeschakeld of vereist nog een kaart/GPS-item. Controleer MapSettings.json.'
+    }
     foreach ($mod in (Get-ModManifest)) {
         $path = Join-Path $layout.Runtime ('Mods/' + $mod.Folder)
         if (@(Get-ChildItem -LiteralPath (Join-Path $path 'Addons') -Filter '*.pbo').Count -eq 0) { throw "PBO ontbreekt: $($mod.Name)" }
@@ -34,7 +38,7 @@ try {
             }
         }
     }
-    Write-Host 'Configuratie, missie, AI, loot, modbestanden en sleutels: OK.'
+    Write-Host 'Configuratie, missie, AI, loot, kaart/minimap, modbestanden en sleutels: OK.'
     if (!$StaticOnly) {
         # Valve A2S_INFO, including challenge support. An open UDP port alone is not a check.
         $client = New-Object Net.Sockets.UdpClient

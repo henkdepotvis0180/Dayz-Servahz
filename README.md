@@ -1,6 +1,6 @@
 # Servahz — DayZ voor Windows, AI, 5× loot en makkelijk bouwen
 
-Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI en BaseBuilding. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
+Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
 
@@ -8,11 +8,11 @@ Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion A
 
 1. Pak dit pakket volledig uit op je Windows-pc, bijvoorbeeld naar `C:\DayZ-Servahz`. Bewaar deze map: de knoppen gebruiken de lokale configuratie hierin.
 2. Installeer **Steam → Bibliotheek → Tools → DayZ Server**, app-ID **223350**. De host en spelers hebben ook DayZ nodig. Start DayZ eenmaal om launcher en BattlEye te laten installeren.
-3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **zes** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
+3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **zeven** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
 4. Sluit een eventueel draaiende DayZ-server. Dubbelklik **`01-Instellen.cmd`**. De installer zoekt de Steam-bibliotheken en maakt `config/server.local.json` met jouw paden en een willekeurig adminwachtwoord.
 5. Open `config/server.local.json` in Kladblok. Vul voor een prive-server `ServerPassword` in, sla op en voer **`01-Instellen.cmd`** nogmaals uit. Gebruik een ander wachtwoord dan `AdminPassword`. Dit lokale bestand wordt door Git genegeerd.
 6. Dubbelklik **`02-Start-server.cmd`**. Laat het servervenster open en wacht enkele minuten. De eerste start maakt Expansion-profielen en de lootwereld aan. Voer **`03-Controleren.cmd`** uit voor configuratie- en querycontrole.
-7. Open de DayZ Launcher met alle zes mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
+7. Open de DayZ Launcher met alle zeven mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
 
 Windows kan gedownloade scripts blokkeren. Gebruik zo nodig **Eigenschappen → Blokkering opheffen** op de ZIP en pak opnieuw uit. De `.cmd`-knoppen gebruiken alleen voor hun eigen PowerShell-proces `ExecutionPolicy Bypass`; ze veranderen geen permanente Windows-instelling. Instellen vereist normaal geen administratorrechten als de Steam-map beschrijfbaar is.
 
@@ -38,6 +38,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 | Bouwen | Expansion-muren, vloeren, trappen, ramps, codesloten, safes; vanilla bouwen blijft mogelijk |
 | Bouwgemak | Geen verplicht territory, soepelere plaatsingschecks, eenvoudige vlag en snapping |
 | Bouwloot | Kits en codesloten in industrie/boerderijen, safes bij industrie/steden/militair |
+| Kaart / minimap | M voor kaart; N vasthouden voor GPS/minimap, N kort voor modus; zonder items |
 | Tijd | Dag 6× versneld, nacht extra 4× versneld |
 | Integriteit | BattlEye standaard actief, `verifySignatures=2`, gelijke gamebuild verplicht |
 
@@ -50,6 +51,18 @@ Patrouilles liggen rond **Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy en Krasno
 De AI-benadering werkt binnen de zes bestaande patrouillegebieden. Afstanden zijn detectielimieten, geen garantie dat een bot je door muren ziet of direct naar je toe loopt. De bots worden niet overal op de kaart om je personage gespawnd.
 
 Traders, geld, helicopters, quests en oneindige stamina zijn geen onderdeel van deze configuratie. Laad niet tegelijk de Expansion Bundle: die bevat dezelfde modules.
+
+## Kaart en minimap
+
+[DayZ-Expansion-Navigation](https://steamcommunity.com/sharedfiles/filedetails/?id=2792984722) is de zevende mod, vereist op server en clients. De afhankelijkheden CF, Dabs Framework en Expansion Core waren al aanwezig.
+
+- **M** opent de grote Expansion-kaart met je eigen positie.
+- **Houd N ingedrukt** om de GPS/minimap rechtsonder te tonen of verbergen. **Druk kort op N** om tussen kaart- en GPS-informatie te wisselen.
+- Een fysiek kaart-, GPS- of kompasitem is niet vereist. Persoonlijke markers en het HUD-kompas zijn ingeschakeld.
+- Controleer bij toetsconflicten **Options → Controls → Expansion**. Bestaande client-keybindings kunnen afwijken van de standaard.
+- Groepsgenoten en bots worden niet automatisch op de kaart getoond; deze configuratie levert geen groepsmod of radar.
+
+**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle zeven mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
 
 ## Bouwen in de game
 
@@ -82,7 +95,7 @@ Test eerst op de host, daarna met een tweede pc in je LAN, daarna van buitenaf.
 
    Dit zijn de standaardpoorten. Het pakket reserveert `GamePort` t/m `GamePort+3`; pas bij andere poorten ook de routerregels aan. Er is geen TCP- of RCon-forward nodig. Het firewallscript wijzigt alleen zijn eigen `DayZ-Servahz-UDP`-regel, nooit de router.
 
-4. Vrienden importeren `Mods.html`, laden de zes mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
+4. Vrienden importeren `Mods.html`, laden de zeven mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
 5. Laat iemand buiten je LAN testen: sommige routers ondersteunen geen NAT-loopback. Een TCP-poortchecker test deze UDP-server niet.
 
 LAN werkt, internet niet? Vergelijk het WAN-adres van je router met je publieke IPv4. **CGNAT**, bijvoorbeeld een WAN-adres in `100.64.0.0/10`, of dubbele NAT kan inkomende verbindingen blokkeren. Vraag je provider om publiek IPv4 of configureer beide routers/bridge mode. Een mesh-VPN zoals Tailscale is een alternatief; host en vrienden moeten dat zelf installeren, dit pakket configureert het niet.
@@ -104,6 +117,7 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 | `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier` en tijd |
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
+| `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |
 | `config/mission/servahz_ce/building_types.xml` | Bouwloot en levensduur gebouwde onderdelen |
 
 De installer vervangt de beheerde doelconfiguraties. Directe wijzigingen daarin verdwijnen bij opnieuw instellen: wijzig de bronbestanden hierboven. Overige Expansion-profielinstellingen blijven behouden. Verander `m_Version` niet zelf: dit zijn schema-versies.
@@ -136,7 +150,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 
 | Probleem | Controle |
 | --- | --- |
-| Ontbrekende PBO, verkeerde versie/signature | Alle zes mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Ontbrekende PBO, verkeerde versie/signature | Alle zeven mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
 | Oude Steam-schijf ontbreekt | De installer slaat onbereikbare Steam-bibliotheken over. Controleer bij een expliciet pad `ServerPath`/`WorkshopPath` of de schijf is aangesloten |
@@ -151,8 +165,9 @@ Begin voor een kleine groep met een recente CPU, SSD en ongeveer **16 GB RAM in 
 ## Lokale acceptatiecontrole
 
 - `03-Controleren.cmd` slaagt: configuratie/modbestanden kloppen en de verwachte servernaam antwoordt op A2S_INFO. Dat bewijst nog geen speelbaarheid.
-- Je kunt met alle zes mods inloggen, bewegen en loot oprapen.
+- Je kunt met alle zeven mods inloggen, bewegen en loot oprapen.
 - AI verschijnt bij Balota/Stary/NWAF; bewegen, vechten en looten werken. Controleer routes op obstakels.
+- **M** toont de kaart met je positie; **N vasthouden** toont GPS/minimap en kort N wisselt modus.
 - Een Expansion-kit plaatsen, bouwen en een codeslot gebruiken werkt.
 - Stop normaal, herstart en controleer personage, inventaris en gebouw.
 - Een vriend buiten je LAN kan verbinden en spelen.

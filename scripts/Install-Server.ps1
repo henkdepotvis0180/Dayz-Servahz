@@ -41,7 +41,7 @@ try {
         throw 'DayZ Server niet gevonden. Installeer DayZ Server via Steam > Bibliotheek > Tools. Of gebruik -ServerPath "D:\SteamLibrary\steamapps\common\DayZServer".'
     }
     if (!$settings.WorkshopPath) {
-        throw 'Workshop niet gevonden. Abonneer je op de zes mods in Mods.html, wacht op Steam-downloads, of geef -WorkshopPath op.'
+        throw 'Workshop niet gevonden. Abonneer je op alle mods in Mods.html, wacht op Steam-downloads, of geef -WorkshopPath op.'
     }
     $settings.ServerPath = [IO.Path]::GetFullPath($settings.ServerPath)
     $settings.WorkshopPath = [IO.Path]::GetFullPath($settings.WorkshopPath)

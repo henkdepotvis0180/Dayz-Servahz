@@ -132,6 +132,9 @@ class PackageTests(unittest.TestCase):
         core = ET.parse(self.mission / "cfgeconomycore.xml")
         self.assertEqual(len(core.findall("./ce[@folder='servahz_ce']")), 1)
         self.assertTrue(list((self.server / "Servahz/Backups").glob("config-*")))
+        map_path = self.mission / 'expansion/settings/MapSettings.json'
+        self.assertEqual(json.loads(map_path.read_text())['NeedGPSItemForKeyBinding'], 0)
+        self.assertTrue(list((self.server / 'Servahz/Backups').glob('config-*/mission/expansion/settings/MapSettings.json')))
         self.run_ps("Test-Server.ps1", "-StaticOnly")
 
     def test_military_settings_migration_and_retuning(self):
@@ -224,6 +227,15 @@ Write-Utf8File (Join-Path $PSScriptRoot 'libraries.json') (ConvertTo-Json -Input
         (self.server / "keys" / (self.mods[0]["Id"] + ".bikey")).write_text("WRONG")
         self.run_ps("Test-Server.ps1", "-StaticOnly", ok=False)
 
+    def test_static_check_detects_map_item_requirement(self):
+        self.install()
+        path = self.mission / 'expansion/settings/MapSettings.json'
+        data = json.loads(path.read_text())
+        data['NeedGPSItemForKeyBinding'] = 1
+        path.write_text(json.dumps(data))
+        result = self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False)
+        self.assertIn('Kaart/minimap', result.stderr)
+
     def test_script_syntax_config_and_launch_arguments(self):
         self.install()
         probe = self.package / 'scripts/Probe.ps1'
@@ -305,6 +317,31 @@ Write-Utf8File (Join-Path $PSScriptRoot 'arguments.json') (ConvertTo-Json @(Get-
 
 
 class ConfigTests(unittest.TestCase):
+    def test_navigation_manifest_preset_and_settings(self):
+        mods = json.loads((ROOT / 'config/mods.json').read_text())
+        navigation = [m for m in mods if m['Id'] == '2792984722']
+        self.assertEqual(len(navigation), 1)
+        self.assertEqual(navigation[0]['Name'], 'DayZ-Expansion-Navigation')
+        self.assertEqual(len({m['Id'] for m in mods}), len(mods))
+        self.assertEqual(len({m['Folder'] for m in mods}), len(mods))
+        from html.parser import HTMLParser
+        class Links(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.links = []
+            def handle_starttag(self, tag, attrs):
+                attrs = dict(attrs)
+                if tag == 'a' and attrs.get('data-type') == 'Link':
+                    self.links.append(attrs['href'])
+        preset = Links()
+        preset.feed((ROOT / 'Mods.html').read_text())
+        self.assertEqual(preset.links, [f"https://steamcommunity.com/sharedfiles/filedetails/?id={m['Id']}" for m in mods])
+        settings = json.loads((ROOT / 'config/mission/expansion/settings/MapSettings.json').read_text())
+        for name in ('EnableMap', 'CanOpenMapWithKeyBinding', 'EnableHUDGPS', 'ShowPlayerPosition'):
+            self.assertEqual(settings[name], 1)
+        for name in ('NeedGPSItemForKeyBinding', 'NeedMapItemForKeyBinding', 'NeedCompassItemForHUDCompass', 'NeedGPSItemForHUDCompass'):
+            self.assertEqual(settings[name], 0)
+
     def test_patrol_budget_and_building_types(self):
         settings = ROOT / "config/mission/expansion/settings"
         ai = json.loads((settings / "AIPatrolSettings.json").read_text())
