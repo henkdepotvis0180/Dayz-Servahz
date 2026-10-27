@@ -17,6 +17,9 @@ function Read-ServerSettings {
     if ($s.PSObject.Properties.Name -notcontains 'MilitaryLootMultiplier') {
         $s | Add-Member -MemberType NoteProperty -Name MilitaryLootMultiplier -Value 2
     }
+    if ($s.PSObject.Properties.Name -notcontains 'LootDamageMax') {
+        $s | Add-Member -MemberType NoteProperty -Name LootDamageMax -Value 0.15
+    }
     foreach ($name in @('GamePort', 'QueryPort')) {
         $port = $s.$name
         if ($port -isnot [int] -and $port -isnot [long]) { throw "$name moet een geheel getal zijn." }
@@ -25,7 +28,7 @@ function Read-ServerSettings {
     if ($s.QueryPort -ge $s.GamePort -and $s.QueryPort -le ($s.GamePort + 3)) {
         throw 'QueryPort moet buiten GamePort t/m GamePort+3 liggen.'
     }
-    foreach ($name in @('MaxPlayers', 'LootMultiplier', 'MilitaryLootMultiplier', 'DayAcceleration', 'NightAcceleration')) {
+    foreach ($name in @('MaxPlayers', 'LootMultiplier', 'MilitaryLootMultiplier', 'LootDamageMax', 'DayAcceleration', 'NightAcceleration')) {
         $number = $s.$name
         if ($number -isnot [int] -and $number -isnot [long] -and $number -isnot [double] -and $number -isnot [decimal]) {
             throw "$name moet een getal zijn."
@@ -35,6 +38,7 @@ function Read-ServerSettings {
     if ($s.MaxPlayers -lt 1 -or $s.MaxPlayers -gt 60 -or $s.MaxPlayers % 1 -ne 0) { throw 'MaxPlayers moet een geheel getal tussen 1 en 60 zijn.' }
     if ($s.LootMultiplier -lt 1 -or $s.LootMultiplier -gt 10) { throw 'LootMultiplier moet tussen 1 en 10 liggen.' }
     if ($s.MilitaryLootMultiplier -lt 1 -or $s.MilitaryLootMultiplier -gt 5) { throw 'MilitaryLootMultiplier moet tussen 1 en 5 liggen.' }
+    if ($s.LootDamageMax -lt 0 -or $s.LootDamageMax -gt 1) { throw 'LootDamageMax moet tussen 0 en 1 liggen.' }
     if ($s.DayAcceleration -lt 1 -or $s.DayAcceleration -gt 24 -or $s.NightAcceleration -lt 1 -or $s.NightAcceleration -gt 64) {
         throw 'DayAcceleration moet 1-24 en NightAcceleration moet 1-64 zijn.'
     }
@@ -114,7 +118,7 @@ function Get-SteamLibraries {
 function Save-ManagedBackup {
     param($Layout)
     $dest = Join-Path $Layout.Runtime ('Backups/config-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
-    foreach ($relative in @('db/types.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
+    foreach ($relative in @('db/types.xml', 'db/globals.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
             'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json',
             'expansion/settings/MapSettings.json',
             'servahz_ce/building_types.xml')) {
@@ -129,6 +133,17 @@ function Save-ManagedBackup {
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
         Copy-Item -LiteralPath $Layout.Config -Destination (Join-Path $dest 'serverDZ.cfg')
     }
+}
+
+function Set-LootCondition {
+    param([string]$Path, [double]$MaximumDamage)
+    [xml]$xml = Get-Content -LiteralPath $Path -Raw
+    $min = $xml.SelectSingleNode('/variables/var[@name="LootDamageMin"]')
+    $max = $xml.SelectSingleNode('/variables/var[@name="LootDamageMax"]')
+    if ($null -eq $min -or $null -eq $max) { throw 'LootDamageMin/Max ontbreekt in db/globals.xml. Controleer de standaardmissie.' }
+    $min.SetAttribute('value', '0.0')
+    $max.SetAttribute('value', $MaximumDamage.ToString([Globalization.CultureInfo]::InvariantCulture))
+    Save-Xml $xml $Path
 }
 
 function Set-LootMultiplier {

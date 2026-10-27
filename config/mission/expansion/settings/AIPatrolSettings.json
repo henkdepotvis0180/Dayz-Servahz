@@ -3,7 +3,7 @@
   "Enabled": 1,
   "FormationScale": 1.5,
   "DespawnTime": 300,
-  "RespawnTime": 1200,
+  "RespawnTime": 900,
   "MinDistRadius": 125,
   "MaxDistRadius": 900,
   "DespawnRadius": 1100,
@@ -22,28 +22,28 @@
       {
         "MinPlayers": 0,
         "MaxPlayers": 255,
-        "MaxPatrols": 7
+        "MaxPatrols": 12
       }
     ],
     "Hostile": [
       {
         "MinPlayers": 0,
         "MaxPlayers": 255,
-        "MaxPatrols": 4
+        "MaxPatrols": 6
       }
     ],
     "Survivor": [
       {
         "MinPlayers": 0,
         "MaxPlayers": 255,
-        "MaxPatrols": 2
+        "MaxPatrols": 4
       }
     ],
     "Guards": [
       {
         "MinPlayers": 0,
         "MaxPlayers": 255,
-        "MaxPatrols": 1
+        "MaxPatrols": 2
       }
     ]
   },
@@ -877,6 +877,262 @@
           13300,
           0,
           6390
+        ]
+      ]
+    },
+    {
+      "Name": "Servahz Kamensk",
+      "Persist": 0,
+      "Faction": "West",
+      "Formation": "Vee",
+      "FormationScale": 1.5,
+      "FormationLooseness": 1.0,
+      "Loadout": "WestLoadout",
+      "Units": [],
+      "NumberOfAI": 2,
+      "NumberOfAIMax": 0,
+      "Behaviour": "ALTERNATE",
+      "LootingBehaviour": "WEAPONS | BANDAGES",
+      "Speed": "JOG",
+      "UnderThreatSpeed": "SPRINT",
+      "DefaultStance": "STANDING",
+      "DefaultLookAngle": 0,
+      "CanBeLooted": 1,
+      "LootDropOnDeath": "",
+      "UnlimitedReload": 1,
+      "SniperProneDistanceThreshold": 0,
+      "AccuracyMin": -1,
+      "AccuracyMax": -1,
+      "ThreatDistanceLimit": -1,
+      "NoiseInvestigationDistanceLimit": -1,
+      "MaxFlankingDistance": -1,
+      "EnableFlankingOutsideCombat": -1,
+      "DamageMultiplier": -1,
+      "DamageReceivedMultiplier": -1,
+      "HeadshotResistance": 0,
+      "ShoryukenChance": 0,
+      "ShoryukenDamageMultiplier": 1,
+      "CanSpawnInContaminatedArea": 0,
+      "CanBeTriggeredByAI": 0,
+      "MinDistRadius": -1,
+      "MaxDistRadius": -1,
+      "DespawnRadius": -1,
+      "MinSpreadRadius": 0,
+      "MaxSpreadRadius": 0,
+      "Chance": 1.0,
+      "DespawnTime": -1,
+      "RespawnTime": -2,
+      "LoadBalancingCategory": "Hostile",
+      "ObjectClassName": "",
+      "WaypointInterpolation": "",
+      "UseRandomWaypointAsStartPoint": 0,
+      "Waypoints": [
+        [
+          7900,
+          0,
+          14600
+        ],
+        [
+          8050,
+          0,
+          14570
+        ],
+        [
+          7960,
+          0,
+          14490
+        ]
+      ]
+    },
+    {
+      "Name": "Servahz Myshkino",
+      "Persist": 0,
+      "Faction": "East",
+      "Formation": "Vee",
+      "FormationScale": 1.5,
+      "FormationLooseness": 1.0,
+      "Loadout": "EastLoadout",
+      "Units": [],
+      "NumberOfAI": 2,
+      "NumberOfAIMax": 0,
+      "Behaviour": "ALTERNATE",
+      "LootingBehaviour": "WEAPONS | BANDAGES",
+      "Speed": "JOG",
+      "UnderThreatSpeed": "SPRINT",
+      "DefaultStance": "STANDING",
+      "DefaultLookAngle": 0,
+      "CanBeLooted": 1,
+      "LootDropOnDeath": "",
+      "UnlimitedReload": 1,
+      "SniperProneDistanceThreshold": 0,
+      "AccuracyMin": -1,
+      "AccuracyMax": -1,
+      "ThreatDistanceLimit": -1,
+      "NoiseInvestigationDistanceLimit": -1,
+      "MaxFlankingDistance": -1,
+      "EnableFlankingOutsideCombat": -1,
+      "DamageMultiplier": -1,
+      "DamageReceivedMultiplier": -1,
+      "HeadshotResistance": 0,
+      "ShoryukenChance": 0,
+      "ShoryukenDamageMultiplier": 1,
+      "CanSpawnInContaminatedArea": 0,
+      "CanBeTriggeredByAI": 0,
+      "MinDistRadius": -1,
+      "MaxDistRadius": -1,
+      "DespawnRadius": -1,
+      "MinSpreadRadius": 0,
+      "MaxSpreadRadius": 0,
+      "Chance": 1.0,
+      "DespawnTime": -1,
+      "RespawnTime": -2,
+      "LoadBalancingCategory": "Hostile",
+      "ObjectClassName": "",
+      "WaypointInterpolation": "",
+      "UseRandomWaypointAsStartPoint": 0,
+      "Waypoints": [
+        [
+          1950,
+          0,
+          7500
+        ],
+        [
+          2040,
+          0,
+          7400
+        ],
+        [
+          2120,
+          0,
+          7480
+        ]
+      ]
+    },
+    {
+      "Name": "Servahz Gorka survivors",
+      "Persist": 0,
+      "Faction": "Civilian",
+      "Formation": "Vee",
+      "FormationScale": 1.5,
+      "FormationLooseness": 1.0,
+      "Loadout": "SurvivorLoadout",
+      "Units": [],
+      "NumberOfAI": 2,
+      "NumberOfAIMax": 0,
+      "Behaviour": "ALTERNATE",
+      "LootingBehaviour": "WEAPONS | BANDAGES",
+      "Speed": "WALK",
+      "UnderThreatSpeed": "SPRINT",
+      "DefaultStance": "STANDING",
+      "DefaultLookAngle": 0,
+      "CanBeLooted": 1,
+      "LootDropOnDeath": "",
+      "UnlimitedReload": 1,
+      "SniperProneDistanceThreshold": 0,
+      "AccuracyMin": -1,
+      "AccuracyMax": -1,
+      "ThreatDistanceLimit": -1,
+      "NoiseInvestigationDistanceLimit": -1,
+      "MaxFlankingDistance": -1,
+      "EnableFlankingOutsideCombat": -1,
+      "DamageMultiplier": -1,
+      "DamageReceivedMultiplier": -1,
+      "HeadshotResistance": 0,
+      "ShoryukenChance": 0,
+      "ShoryukenDamageMultiplier": 1,
+      "CanSpawnInContaminatedArea": 0,
+      "CanBeTriggeredByAI": 0,
+      "MinDistRadius": -1,
+      "MaxDistRadius": -1,
+      "DespawnRadius": -1,
+      "MinSpreadRadius": 0,
+      "MaxSpreadRadius": 0,
+      "Chance": 1.0,
+      "DespawnTime": -1,
+      "RespawnTime": -2,
+      "LoadBalancingCategory": "Survivor",
+      "ObjectClassName": "",
+      "WaypointInterpolation": "",
+      "UseRandomWaypointAsStartPoint": 0,
+      "Waypoints": [
+        [
+          9450,
+          0,
+          8850
+        ],
+        [
+          9550,
+          0,
+          8900
+        ],
+        [
+          9680,
+          0,
+          8830
+        ]
+      ]
+    },
+    {
+      "Name": "Servahz Novodmitrovsk survivors",
+      "Persist": 0,
+      "Faction": "Civilian",
+      "Formation": "Vee",
+      "FormationScale": 1.5,
+      "FormationLooseness": 1.0,
+      "Loadout": "SurvivorLoadout",
+      "Units": [],
+      "NumberOfAI": 2,
+      "NumberOfAIMax": 0,
+      "Behaviour": "ALTERNATE",
+      "LootingBehaviour": "WEAPONS | BANDAGES",
+      "Speed": "WALK",
+      "UnderThreatSpeed": "SPRINT",
+      "DefaultStance": "STANDING",
+      "DefaultLookAngle": 0,
+      "CanBeLooted": 1,
+      "LootDropOnDeath": "",
+      "UnlimitedReload": 1,
+      "SniperProneDistanceThreshold": 0,
+      "AccuracyMin": -1,
+      "AccuracyMax": -1,
+      "ThreatDistanceLimit": -1,
+      "NoiseInvestigationDistanceLimit": -1,
+      "MaxFlankingDistance": -1,
+      "EnableFlankingOutsideCombat": -1,
+      "DamageMultiplier": -1,
+      "DamageReceivedMultiplier": -1,
+      "HeadshotResistance": 0,
+      "ShoryukenChance": 0,
+      "ShoryukenDamageMultiplier": 1,
+      "CanSpawnInContaminatedArea": 0,
+      "CanBeTriggeredByAI": 0,
+      "MinDistRadius": -1,
+      "MaxDistRadius": -1,
+      "DespawnRadius": -1,
+      "MinSpreadRadius": 0,
+      "MaxSpreadRadius": 0,
+      "Chance": 1.0,
+      "DespawnTime": -1,
+      "RespawnTime": -2,
+      "LoadBalancingCategory": "Survivor",
+      "ObjectClassName": "",
+      "WaypointInterpolation": "",
+      "UseRandomWaypointAsStartPoint": 0,
+      "Waypoints": [
+        [
+          11500,
+          0,
+          14300
+        ],
+        [
+          11400,
+          0,
+          14400
+        ],
+        [
+          11600,
+          0,
+          14500
         ]
       ]
     }

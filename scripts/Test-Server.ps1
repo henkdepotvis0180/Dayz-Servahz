@@ -15,6 +15,14 @@ try {
     [xml]$types = Get-Content -LiteralPath (Join-Path $layout.Mission 'db/types.xml') -Raw
     [xml]$core = Get-Content -LiteralPath (Join-Path $layout.Mission 'cfgeconomycore.xml') -Raw
     [xml]$building = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/building_types.xml') -Raw
+    [xml]$globals = Get-Content -LiteralPath (Join-Path $layout.Mission 'db/globals.xml') -Raw
+    $damageMin = $globals.SelectSingleNode('/variables/var[@name="LootDamageMin"]')
+    $damageMax = $globals.SelectSingleNode('/variables/var[@name="LootDamageMax"]')
+    if ($null -eq $damageMin -or $null -eq $damageMax) { throw 'Lootconditie ontbreekt in db/globals.xml.' }
+    $culture = [Globalization.CultureInfo]::InvariantCulture
+    if ([double]::Parse($damageMin.GetAttribute('value'), $culture) -ne 0 -or [double]::Parse($damageMax.GetAttribute('value'), $culture) -ne $settings.LootDamageMax) {
+        throw 'Lootconditie is nog niet toegepast. Voer 01-Instellen.cmd opnieuw uit.'
+    }
     if ($types.SelectNodes('/types/type').Count -eq 0 -or $building.SelectNodes('/types/type').Count -eq 0) { throw 'Geen loottypen gevonden.' }
     if ($core.SelectNodes('/economycore/ce[@folder="servahz_ce"]/file[@name="building_types.xml" and @type="types"]').Count -ne 1) { throw 'Bouwloot is niet correct geregistreerd.' }
     foreach ($relative in @('cfggameplay.json', 'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json', 'expansion/settings/MapSettings.json')) {

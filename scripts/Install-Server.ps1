@@ -1,6 +1,6 @@
 #requires -Version 5.1
 [CmdletBinding()]
-param([string]$ServerPath, [string]$WorkshopPath)
+param([string]$ServerPath, [string]$WorkshopPath, [switch]$TestMode)
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
@@ -12,9 +12,22 @@ try {
         Copy-Item -LiteralPath (Join-Path $root 'config/server.example.json') -Destination $localConfig
     }
     $settings = Get-Content -LiteralPath $localConfig -Raw | ConvertFrom-Json
+    if ($TestMode) {
+        $backup = Join-Path $root ('.local/Backups/server-before-testmode-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '.json')
+        New-Item -ItemType Directory -Path (Split-Path $backup -Parent) -Force | Out-Null
+        Copy-Item -LiteralPath $localConfig -Destination $backup
+    }
     # Migrate existing local settings without replacing paths or passwords.
     if ($settings.PSObject.Properties.Name -notcontains 'MilitaryLootMultiplier') {
         $settings | Add-Member -MemberType NoteProperty -Name MilitaryLootMultiplier -Value 2
+    }
+    if ($settings.PSObject.Properties.Name -notcontains 'LootDamageMax') {
+        $settings | Add-Member -MemberType NoteProperty -Name LootDamageMax -Value 0.15
+    }
+    if ($TestMode) {
+        $settings.LootMultiplier = 8
+        $settings.MilitaryLootMultiplier = 3
+        $settings.LootDamageMax = 0.10
     }
     if ($ServerPath) { $settings.ServerPath = $ServerPath }
     if ($WorkshopPath) { $settings.WorkshopPath = $WorkshopPath }
@@ -52,6 +65,7 @@ try {
     $baseline = Join-Path $layout.Server 'mpmissions/dayzOffline.chernarusplus'
     foreach ($file in @('DayZServer_x64.exe', 'mpmissions/dayzOffline.chernarusplus/init.c',
             'mpmissions/dayzOffline.chernarusplus/db/types.xml',
+            'mpmissions/dayzOffline.chernarusplus/db/globals.xml',
             'mpmissions/dayzOffline.chernarusplus/cfgeconomycore.xml',
             'mpmissions/dayzOffline.chernarusplus/cfggameplay.json')) {
         if (!(Test-Path -LiteralPath (Join-Path $layout.Server $file))) { throw "Serverbestand ontbreekt: $file. Controleer de Steam-installatie." }
@@ -104,6 +118,9 @@ try {
         }
     }
     $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier
+    $globals = Join-Path $layout.Mission 'db/globals.xml'
+    if (!(Test-Path -LiteralPath $globals)) { Copy-Item -LiteralPath (Join-Path $baseline 'db/globals.xml') -Destination $globals }
+    Set-LootCondition -Path $globals -MaximumDamage $settings.LootDamageMax
     Set-EconomyInclude (Join-Path $layout.Mission 'cfgeconomycore.xml')
     Set-EasyBuilding (Join-Path $layout.Mission 'cfggameplay.json')
     $missionConfig = Join-Path $root 'config/mission'
@@ -117,6 +134,7 @@ try {
     Write-ServerConfig $settings $layout.Config
     Write-Host "Klaar: $count vanilla-loottypen op $($settings.LootMultiplier)x. Missie: servahz.chernarusplus"
     Write-Host "Military-loot: extra $($settings.MilitaryLootMultiplier)x (totaal $($settings.LootMultiplier * $settings.MilitaryLootMultiplier)x vanilla)."
+    Write-Host "Nieuwe CE-loot: maximale beginschade $($settings.LootDamageMax). Bestaande items worden niet gerepareerd."
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

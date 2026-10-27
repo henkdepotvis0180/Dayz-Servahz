@@ -9,6 +9,7 @@
   "QueryPort": 27016,
   "LootMultiplier": 5,
   "MilitaryLootMultiplier": 2,
+  "LootDamageMax": 0.15,
   "DayAcceleration": 6,
   "NightAcceleration": 4
 }

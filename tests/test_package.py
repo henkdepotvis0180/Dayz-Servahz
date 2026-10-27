@@ -42,9 +42,10 @@ class PackageTests(unittest.TestCase):
             (folder / f"Keys/{mod['Id']}.bikey").write_text("TEST KEY")
         vanilla = os.environ.get("SERVAHZ_VANILLA_MISSION")
         if vanilla:
-            for name in ("init.c", "db/types.xml", "cfgeconomycore.xml", "cfggameplay.json"):
+            for name in ("init.c", "db/types.xml", "db/globals.xml", "cfgeconomycore.xml", "cfggameplay.json"):
                 shutil.copyfile(Path(vanilla) / name, self.baseline / name)
         else:
+            (self.baseline / 'db/globals.xml').write_text('<variables><var name="LootDamageMin" type="1" value="0.0"/><var name="LootDamageMax" type="1" value="0.82"/><var name="ZombieMaxCount" type="0" value="1000"/></variables>')
             (self.baseline / "init.c").write_text("// TEST FIXTURE")
             (self.baseline / "db/types.xml").write_text(
                 '<types><type name="NailBox"><nominal>10</nominal><min>5</min>'
@@ -157,6 +158,49 @@ class PackageTests(unittest.TestCase):
         for before, after in zip(baseline.findall('type'), output.findall('type')):
             if int(before.findtext('nominal', '0')) > 0:
                 self.assertEqual(int(after.findtext('nominal')), int(before.findtext('nominal')) * 5)
+
+    def test_testmode_loot_quality_backup_and_world_preservation(self):
+        self.install()
+        previous = self.local.read_bytes()
+        settings = json.loads(previous)
+        (self.mission / 'storage_1').mkdir()
+        (self.mission / 'storage_1/players.db').write_text('keep players')
+        original_globals = (self.baseline / 'db/globals.xml').read_bytes()
+        for _ in range(2):
+            self.run_ps('Install-Server.ps1', '-ServerPath', self.server, '-WorkshopPath', self.workshop, '-TestMode')
+            current = json.loads(self.local.read_text())
+            self.assertEqual(current['LootMultiplier'], 8)
+            self.assertEqual(current['MilitaryLootMultiplier'], 3)
+            self.assertEqual(current['LootDamageMax'], 0.10)
+            for field in ('AdminPassword', 'ServerPassword', 'ServerPath', 'WorkshopPath'):
+                self.assertEqual(current[field], settings[field])
+            before = ET.parse(self.baseline / 'db/types.xml').findall('type')
+            after = ET.parse(self.mission / 'db/types.xml').findall('type')
+            for base, generated in zip(before, after):
+                nominal = int(base.findtext('nominal', '0'))
+                if nominal > 0:
+                    factor = 24 if base.find("usage[@name='Military']") is not None else 8
+                    self.assertEqual(int(generated.findtext('nominal')), nominal * factor)
+            globals_xml = ET.parse(self.mission / 'db/globals.xml')
+            self.assertEqual(float(globals_xml.find("var[@name='LootDamageMax']").get('value')), 0.10)
+            self.assertEqual(float(globals_xml.find("var[@name='LootDamageMin']").get('value')), 0)
+            original = ET.fromstring(original_globals)
+            for node in original:
+                if node.get('name') not in ('LootDamageMin', 'LootDamageMax'):
+                    self.assertEqual(globals_xml.find(f"var[@name='{node.get('name')}']").attrib, node.attrib)
+        self.assertEqual((self.mission / 'storage_1/players.db').read_text(), 'keep players')
+        self.assertEqual((self.baseline / 'db/globals.xml').read_bytes(), original_globals)
+        backups = list((self.package / '.local/Backups').glob('server-before-testmode-*.json'))
+        self.assertEqual(len(backups), 2)
+        self.assertTrue(any(p.read_bytes() == previous for p in backups))
+
+    def test_invalid_loot_damage_is_rejected(self):
+        self.install()
+        settings = json.loads(self.local.read_text())
+        settings['LootDamageMax'] = 1.5
+        self.local.write_text(json.dumps(settings))
+        result = self.install(ok=False)
+        self.assertIn('LootDamageMax', result.stderr)
 
     def test_missing_mod_does_not_create_mission(self):
         shutil.rmtree(self.workshop / self.mods[-1]["Id"])
@@ -388,8 +432,8 @@ class ConfigTests(unittest.TestCase):
         self.assertGreater(ai['ThreatDistanceLimit'], 250)
         self.assertGreater(ai['NoiseInvestigationDistanceLimit'], 150)
         patrols = ai["Patrols"]
-        self.assertEqual(len(patrols), 13)
-        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 28)
+        self.assertEqual(len(patrols), 17)
+        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 36)
         self.assertEqual(len({p["Name"] for p in patrols}), len(patrols))
         caps = {name: rules[0]['MaxPatrols'] for name, rules in ai['LoadBalancingCategories'].items()}
         from itertools import combinations
@@ -403,10 +447,10 @@ class ConfigTests(unittest.TestCase):
                     continue
                 max_active = max(max_active, sum(p['NumberOfAI'] for p in active))
                 max_hostile = max(max_hostile, sum(p['NumberOfAI'] for p in active if p['LoadBalancingCategory'] == 'Hostile'))
-        self.assertEqual(max_active, 16)
-        self.assertLessEqual(max_hostile, 10)
+        self.assertEqual(max_active, 26)
+        self.assertLessEqual(max_hostile, 14)
         self.assertEqual(Counter(p['LoadBalancingCategory'] for p in patrols),
-                         {'Hostile': 8, 'Survivor': 3, 'Guards': 2})
+                         {'Hostile': 10, 'Survivor': 5, 'Guards': 2})
         self.assertLessEqual(ai['DamageMultiplier'], 0.65)
         self.assertLessEqual(ai['AccuracyMax'], 0.35)
         loadouts = {'West': 'WestLoadout', 'East': 'EastLoadout', 'Civilian': 'SurvivorLoadout', 'Guards': 'PoliceLoadout'}

@@ -29,12 +29,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 | Onderdeel | Instelling |
 | --- | --- |
 | Map / spelers | Chernarus, 12 slots, eerste en derde persoon |
+| Lootconditie | Nieuw gespawnde CE-loot standaard 0–15% beginschade; teststand 0–10% |
 | Loot | Vanilla `nominal` en `min` ×5; Military-loot extra ×2, dus standaard ×10 |
-| AI | 13 routes, 28 bots verdeeld over de routes; maximaal 7 actieve groepen, hoogstens 16 patrouillebots |
+| AI | 17 routes, 36 bots verdeeld over de routes; maximaal 12 actieve groepen, hoogstens 26 patrouillebots |
 | Moeilijkheid | Nauwkeurigheid 0,15–0,35, 65% uitgaande schade, normale gezondheid; bots zijn lootbaar |
 | AI-spawning | Spelers circa 125–900 m van de patrouille; despawn buiten 1100 m |
 | AI-benadering | Patrouilles joggen; dreigingen tot 450 m, geluidsonderzoek tot 350 m |
-| AI-herhaling | Respawninstelling 20 minuten; despawnvertraging 5 minuten |
+| AI-herhaling | Respawninstelling 15 minuten; despawnvertraging 5 minuten |
 | Bouwen | Expansion-muren, vloeren, trappen, ramps, codesloten, safes; vanilla bouwen blijft mogelijk |
 | Bouwgemak | Geen verplicht territory, soepelere plaatsingschecks, eenvoudige vlag en snapping |
 | Bouwloot | Kits en codesloten in industrie/boerderijen, safes bij industrie/steden/militair |
@@ -46,13 +47,13 @@ De wereld heeft een mix van kleine vijandige patrouilles, neutrale overlevenden 
 
 | Soort | Gebieden | Ingesteld | Maximaal actief |
 | --- | --- | --- | --- |
-| Vijandig (`West`/`East`) | Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy, Krasnostav airfield, Vybor, Novy Sobor | 8 groepen, samen 18 bots | 4 groepen, hoogstens 10 bots |
-| Overlevenden (`Civilian`) | Chernogorsk, Elektrozavodsk, Berezino | 3 groepen van 2 | 2 groepen, 4 bots |
-| Bewakers (`Guards`) | Berezino, Solnichniy | 2 groepen van 2 | 1 groep, 2 bots |
+| Vijandig (`West`/`East`) | Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy, Krasnostav airfield, Vybor, Novy Sobor, Kamensk, Myshkino | 10 groepen, samen 22 bots | 6 groepen, hoogstens 14 bots |
+| Overlevenden (`Civilian`) | Chernogorsk, Elektrozavodsk, Berezino, Gorka, Novodmitrovsk | 5 groepen van 2 | 4 groepen, 8 bots |
+| Bewakers (`Guards`) | Berezino, Solnichniy | 2 groepen van 2 | 2 groepen, 4 bots |
 
-Dit zijn **28 ingestelde bots**, maar hoogstens **16 gelijktijdig actieve patrouillebots** in zeven groepen. Ze spawnen alleen nabij spelers, dus bij een solospeler zijn meestal minder groepen actief. Zelf via het adminmenu gespawnde bots tellen niet mee voor deze patrouillelimieten. De wereld wordt drukker zonder de limiet van vier actieve vijandige groepen te verhogen.
+Dit zijn **36 ingestelde bots**, maar hoogstens **26 gelijktijdig actieve patrouillebots** in twaalf groepen. Ze spawnen alleen nabij spelers, dus bij een solospeler zijn meestal minder groepen actief. Zelf via het adminmenu gespawnde bots tellen niet mee voor deze patrouillelimieten. Het budget is nu zes vijandige groepen, vier groepen overlevenden en twee groepen bewakers. Bij een host die ook de game draait kan dit merkbaar CPU kosten; verlaag bij haperingen eerst de aantallen in `LoadBalancingCategories`.
 
-Overlevenden zijn normaal neutraal maar kunnen zichzelf verdedigen; bewakers kunnen agressief reageren als je wapens richt/heft of hen aanvalt. Bewakers zijn geen garantie op een veilige zone. West en East zijn verschillende vijandige factions en kunnen ook elkaar bevechten. De bestaande accuratesse, 65% uitgaande schade en respawntijd blijven behouden. De groepen gebruiken de bijbehorende standaardloadouts die Expansion zelf aanmaakt.
+Overlevenden zijn normaal neutraal maar kunnen zichzelf verdedigen; bewakers kunnen agressief reageren als je wapens richt/heft of hen aanvalt. Bewakers zijn geen garantie op een veilige zone. West en East zijn verschillende vijandige factions en kunnen ook elkaar bevechten. De bestaande accuratesse en 65% uitgaande schade blijven behouden; de respawninstelling is 15 minuten. De groepen gebruiken de bijbehorende standaardloadouts die Expansion zelf aanmaakt.
 
 Het zijn eigen beginroutes: loop ze lokaal na op obstakels; terrein, gevechten en zicht bepalen het daadwerkelijke gedrag. Waypoint-hoogte 0 wordt door Expansion op het terrein geplaatst. Voor deze uitbreiding zijn geen extra mods nodig: vervang met de server gestopt `config/mission/expansion/settings/AIPatrolSettings.json` in je pakketmap door de nieuwste versie, voer `01-Instellen.cmd` uit en start opnieuw. Je wereld hoeft hiervoor niet gewist te worden. De routes en ontmoetingen moeten daarna lokaal in-game worden gecontroleerd.
 
@@ -63,6 +64,24 @@ Het zijn eigen beginroutes: loop ze lokaal na op obstakels; terrein, gevechten e
 De AI-benadering werkt binnen de ingestelde patrouillegebieden. Afstanden zijn detectielimieten, geen garantie dat een bot je door muren ziet of direct naar je toe loopt. De bots worden niet overal op de kaart om je personage gespawnd.
 
 Traders, geld, helicopters, quests en oneindige stamina zijn geen onderdeel van deze configuratie. Laad niet tegelijk de Expansion Bundle: die bevat dezelfde modules.
+
+## Ruime teststand en beschadigde loot
+
+Gebruik **`04-Teststand.cmd`** met de server gestopt om de lokale instellingen bewust om te zetten naar:
+
+| Instelling | Teststand |
+| --- | --- |
+| `LootMultiplier` | 8: gewone lootdoelen 8× vanilla |
+| `MilitaryLootMultiplier` | 3 extra: militaire lootdoelen totaal 24× vanilla |
+| `LootDamageMax` | 0.10: nieuwe CE-loot met 0–10% beginschade |
+
+Deze knop voert de installer ook uit. Daarna kun je meteen `02-Start-server.cmd` gebruiken. Hij bewaart vooraf de lokale configuratie onder `.local/Backups/server-before-testmode-*.json`. Paden, wachtwoorden en overige instellingen blijven behouden. Het resultaat blijft ingesteld totdat je de lokale waarden terugzet; het is geen tijdelijke schakelaar. Terugzetten: stop de server, kopieer de gewenste configuratiebackup naar `config/server.local.json` en voer `01-Instellen.cmd` uit. Configuratiebackups bevatten wachtwoorden: houd ze prive.
+
+**Update van een bestaande installatie:** kopieer de nieuwste map `scripts`, de nieuwe knop `04-Teststand.cmd` en de nieuwste `config/mission` uit de ZIP naar je bestaande pakketmap. Behoud je eigen `config/server.local.json`. Met `04-Teststand.cmd` kies je daarna de ruimere loot; alleen `01-Instellen.cmd` behoudt je huidige hoeveelheidsfactoren. De nieuwe AI-routes komen uit `config/mission`.
+
+De gewone installer gebruikt standaard `LootDamageMax: 0.15` als het veld nog ontbreekt. De schade-instelling wijzigt alleen `LootDamageMin`/`LootDamageMax` in de eigen missie `db/globals.xml`; andere globals en de Steam-standaardmissie blijven behouden. Dit betreft loot die de Central Economy nieuw spawnt, niet ieder item uit een zombie, AI-loadout of speciaal eventscript. Botuitrusting kan bovendien in een vuurgevecht beschadigd raken.
+
+**Bestaande beschadigde loot wordt niet gerepareerd.** Een herstart wist de economie niet. Nieuwe instellingen werken tijdens het geleidelijk bijvullen; de wereld hoeft niet te worden verwijderd. De hoeveelheid vrije lootposities, tiers en eventvoorwaarden blijft de feitelijke aantallen begrenzen, ook bij 24×. Test militaire spullen op militaire locaties. Het zichtbare serverlabel kan nog '5x Loot' bevatten: de werkelijke factoren staan in `config/server.local.json` en worden door de installer getoond; pas `Hostname` desgewenst aan.
 
 ## Kaart en minimap
 
@@ -126,7 +145,7 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 
 | Bestand | Aanpassing |
 | --- | --- |
-| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier` en tijd |
+| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax` en tijd |
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |
