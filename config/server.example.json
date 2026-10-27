@@ -13,5 +13,6 @@
   "TestMilitaryEverywhere": false,
   "DayAcceleration": 6,
   "NightAcceleration": 4,
-  "TestSuppliesEverywhere": false
+  "TestSuppliesEverywhere": false,
+  "TestFastRestock": false
 }

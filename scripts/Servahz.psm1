@@ -14,6 +14,10 @@ function Read-ServerSettings {
     param([string]$Path = (Join-Path $script:PackageRoot 'config/server.local.json'))
     if (!(Test-Path -LiteralPath $Path)) { throw 'Voer eerst 01-Instellen.cmd uit.' }
     $s = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($s.PSObject.Properties.Name -notcontains 'TestFastRestock') {
+        $s | Add-Member -MemberType NoteProperty -Name TestFastRestock -Value $false
+    }
+    if ($s.TestFastRestock -isnot [bool]) { throw 'TestFastRestock moet true of false zijn, zonder quotes.' }
     if ($s.PSObject.Properties.Name -notcontains 'MilitaryLootMultiplier') {
         $s | Add-Member -MemberType NoteProperty -Name MilitaryLootMultiplier -Value 2
     }
@@ -126,10 +130,10 @@ function Get-SteamLibraries {
 function Save-ManagedBackup {
     param($Layout)
     $dest = Join-Path $Layout.Runtime ('Backups/config-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
-    foreach ($relative in @('db/types.xml', 'db/globals.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
+    foreach ($relative in @('db/types.xml', 'db/globals.xml', 'mapgroupproto.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
             'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json',
             'expansion/settings/MapSettings.json',
-            'servahz_ce/building_types.xml')) {
+            'servahz_ce/building_types.xml', 'servahz_ce/extra_types.xml', 'servahz_ce/extra_spawnabletypes.xml')) {
         $source = Join-Path $Layout.Mission $relative
         if (Test-Path -LiteralPath $source) {
             $target = Join-Path $dest ('mission/' + $relative)
@@ -162,7 +166,7 @@ function Set-LootCondition {
 }
 
 function Set-LootMultiplier {
-    param([string]$Source, [string]$Destination, [double]$Multiplier, [double]$MilitaryMultiplier = 2, [switch]$MilitaryEverywhere)
+    param([string]$Source, [string]$Destination, [double]$Multiplier, [double]$MilitaryMultiplier = 2, [switch]$MilitaryEverywhere, [switch]$FastRestock)
     # Always read the installed vanilla baseline, never the previous generated 5x file.
     [xml]$xml = Get-Content -LiteralPath $Source -Raw
     $count = 0
@@ -197,6 +201,11 @@ function Set-LootMultiplier {
         $min = $type.SelectSingleNode('min')
         if ($null -ne $min -and [int]$min.InnerText -gt 0) {
             $min.InnerText = [string][int][Math]::Ceiling([int]$min.InnerText * $factor)
+        }
+        $flags = $type.SelectSingleNode('flags')
+        if ($FastRestock -and $null -ne $flags -and $flags.GetAttribute('crafted') -ne '1' -and $flags.GetAttribute('deloot') -ne '1') {
+            $restock = $type.SelectSingleNode('restock')
+            if ($null -ne $restock) { $restock.InnerText = '0' }
         }
         $count++
     }
@@ -236,7 +245,8 @@ function Set-TestSupplies {
             $weapon = $null -ne $type.SelectSingleNode('category[@name="weapons"]')
             $ammo = $name -match '^(Ammo_|AmmoBox_|Mag_)'
             $expansion = $name -match '^Expansion(CodeLock|SafeMini|SafeMedium|SafeLarge|WallKit|FloorKit|RampKit|StairKit|WoodPillarKit)$'
-            if (!$weapon -and !$ammo -and !$expansion -and $name -notmatch '^RaG_BB_.*Kit$|^RaG_BB_Book$' -and $name -notin $building) { continue }
+            $extra = $name -match '^RaG_BB_.*Kit$|^RaG_BB_Book$|^BF_.*Kit$|^MMG_(assault_pack|carrier_backpack|camelback|supplybag|mmps_bag)_'
+            if (!$weapon -and !$ammo -and !$expansion -and !$extra -and $name -notin $building) { continue }
             $nominal.InnerText = [string]([int]$nominal.InnerText * 2)
             $min = $type.SelectSingleNode('min')
             if ($null -ne $min) { $min.InnerText = [string]([int]$min.InnerText * 2) }
@@ -271,12 +281,44 @@ function Set-EconomyInclude {
     }
     $ce = $xml.CreateElement('ce')
     $ce.SetAttribute('folder', 'servahz_ce')
-    $file = $xml.CreateElement('file')
-    $file.SetAttribute('name', 'building_types.xml')
-    $file.SetAttribute('type', 'types')
-    $ce.AppendChild($file) | Out-Null
+    foreach ($entry in @(@('building_types.xml', 'types'), @('extra_types.xml', 'types'), @('extra_spawnabletypes.xml', 'spawnabletypes'))) {
+        $file = $xml.CreateElement('file')
+        $file.SetAttribute('name', $entry[0])
+        $file.SetAttribute('type', $entry[1])
+        $ce.AppendChild($file) | Out-Null
+    }
     $xml.DocumentElement.AppendChild($ce) | Out-Null
     Save-Xml $xml $Path
+}
+
+function Set-LootRefill {
+    param([string]$SourceGlobals, [string]$GlobalsPath, [string]$SourceGroups, [string]$GroupsPath, [bool]$Enabled)
+    [xml]$baseline = Get-Content -LiteralPath $SourceGlobals -Raw
+    [xml]$globals = Get-Content -LiteralPath $GlobalsPath -Raw
+    $values = @{ RestartSpawn = 50; RespawnTypes = 30; RespawnLimit = 50; RespawnAttempt = 4; LootSpawnAvoidance = 50 }
+    foreach ($name in $values.Keys) {
+        $original = $baseline.SelectSingleNode('/variables/var[@name="' + $name + '"]')
+        if ($null -eq $original) { throw "$name ontbreekt in de standaardglobals. Controleer de Steam-missie." }
+        $node = $globals.SelectSingleNode('/variables/var[@name="' + $name + '"]')
+        if ($null -eq $node) {
+            $node = $globals.ImportNode($original, $true)
+            $globals.DocumentElement.AppendChild($node) | Out-Null
+        }
+        $value = $original.GetAttribute('value')
+        if ($Enabled) { $value = [string]$values[$name] }
+        $node.SetAttribute('value', $value)
+    }
+    Save-Xml $globals $GlobalsPath
+    # Raise existing capacity limits, preserving all positions, categories and exclusions.
+    # Reading the pristine mission each time prevents cumulative doubling.
+    [xml]$groups = Get-Content -LiteralPath $SourceGroups -Raw
+    if ($Enabled) {
+        foreach ($node in $groups.SelectNodes('//*[@lootmax]')) {
+            $value = [int]$node.GetAttribute('lootmax')
+            if ($value -gt 0) { $node.SetAttribute('lootmax', [string]($value * 2)) }
+        }
+    }
+    Save-Xml $groups $GroupsPath
 }
 
 function Set-EasyBuilding {

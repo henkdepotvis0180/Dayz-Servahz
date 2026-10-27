@@ -18,6 +18,9 @@ try {
         Copy-Item -LiteralPath $localConfig -Destination $backup
     }
     # Migrate existing local settings without replacing paths or passwords.
+    if ($settings.PSObject.Properties.Name -notcontains 'TestFastRestock') {
+        $settings | Add-Member -MemberType NoteProperty -Name TestFastRestock -Value $false
+    }
     if ($settings.PSObject.Properties.Name -notcontains 'MilitaryLootMultiplier') {
         $settings | Add-Member -MemberType NoteProperty -Name MilitaryLootMultiplier -Value 2
     }
@@ -36,6 +39,7 @@ try {
         $settings.LootDamageMax = 0.10
         $settings.TestMilitaryEverywhere = $true
         $settings.TestSuppliesEverywhere = $true
+        $settings.TestFastRestock = $true
     }
     if ($ServerPath) { $settings.ServerPath = $ServerPath }
     if ($WorkshopPath) { $settings.WorkshopPath = $WorkshopPath }
@@ -74,6 +78,7 @@ try {
     foreach ($file in @('DayZServer_x64.exe', 'mpmissions/dayzOffline.chernarusplus/init.c',
             'mpmissions/dayzOffline.chernarusplus/db/types.xml',
             'mpmissions/dayzOffline.chernarusplus/db/globals.xml',
+            'mpmissions/dayzOffline.chernarusplus/mapgroupproto.xml',
             'mpmissions/dayzOffline.chernarusplus/cfgeconomycore.xml',
             'mpmissions/dayzOffline.chernarusplus/cfggameplay.json')) {
         if (!(Test-Path -LiteralPath (Join-Path $layout.Server $file))) { throw "Serverbestand ontbreekt: $file. Controleer de Steam-installatie." }
@@ -125,10 +130,11 @@ try {
             Copy-Item -LiteralPath $_.FullName -Destination $keys -Force
         }
     }
-    $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier -MilitaryEverywhere:$settings.TestMilitaryEverywhere
+    $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier -MilitaryEverywhere:$settings.TestMilitaryEverywhere -FastRestock:$settings.TestFastRestock
     $globals = Join-Path $layout.Mission 'db/globals.xml'
     if (!(Test-Path -LiteralPath $globals)) { Copy-Item -LiteralPath (Join-Path $baseline 'db/globals.xml') -Destination $globals }
     Set-LootCondition -Path $globals -MaximumDamage $settings.LootDamageMax
+    Set-LootRefill -SourceGlobals (Join-Path $baseline 'db/globals.xml') -GlobalsPath $globals -SourceGroups (Join-Path $baseline 'mapgroupproto.xml') -GroupsPath (Join-Path $layout.Mission 'mapgroupproto.xml') -Enabled $settings.TestFastRestock
     Set-EconomyInclude (Join-Path $layout.Mission 'cfgeconomycore.xml')
     Set-EasyBuilding (Join-Path $layout.Mission 'cfggameplay.json')
     $missionConfig = Join-Path $root 'config/mission'
@@ -141,6 +147,7 @@ try {
     if ($settings.TestSuppliesEverywhere) {
         Set-TestSupplies (Join-Path $layout.Mission 'db/types.xml')
         Set-TestSupplies (Join-Path $layout.Mission 'servahz_ce/building_types.xml')
+        Set-TestSupplies (Join-Path $layout.Mission 'servahz_ce/extra_types.xml')
     }
     New-Item -ItemType Directory -Path $layout.Profiles -Force | Out-Null
     # Seed RaG defaults once. Existing server preferences and unknown fields stay intact.
@@ -158,6 +165,7 @@ try {
     Write-Host "Nieuwe CE-loot: maximale beginschade $($settings.LootDamageMax). Bestaande items worden niet gerepareerd."
     if ($settings.TestMilitaryEverywhere) { Write-Host 'Teststand: normale militaire loot ook in steden, dorpen, industrie, boerderijen, politie en jachtgebieden; tiers 1-4.' }
     if ($settings.TestSuppliesEverywhere) { Write-Host 'Testvoorraad: dubbele doelen voor wapens, munitie en bouwvoorraad op alle 17 locatiecategorieen; planken en lumber als loot.' }
+    if ($settings.TestFastRestock) { Write-Host 'Testaanvulling: 2x gebouwcapaciteit, RestartSpawn=50%, sneller bijvullen en 50 m afstand. Geen wereldwipe; geen garantie per gebouw.' }
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

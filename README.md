@@ -2,7 +2,7 @@
 
 **Updates:** [wijzigingen per versie](CHANGELOG.md) · [GitHub Releases en downloads](https://github.com/henkdepotvis0180/Dayz-Servahz/releases). De release notes vermelden wat je lokaal moet vervangen en welke controles zijn uitgevoerd.
 
-Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation, plus RaG BaseBuilding. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
+Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation, plus RaG BaseBuilding, Building Fortifications, MMG en Expansion Weapons. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
 
@@ -10,11 +10,11 @@ Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion A
 
 1. Pak dit pakket volledig uit op je Windows-pc, bijvoorbeeld naar `C:\DayZ-Servahz`. Bewaar deze map: de knoppen gebruiken de lokale configuratie hierin.
 2. Installeer **Steam → Bibliotheek → Tools → DayZ Server**, app-ID **223350**. De host en spelers hebben ook DayZ nodig. Start DayZ eenmaal om launcher en BattlEye te laten installeren.
-3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **negen** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
+3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **twaalf** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
 4. Sluit een eventueel draaiende DayZ-server. Dubbelklik **`01-Instellen.cmd`**. De installer zoekt de Steam-bibliotheken en maakt `config/server.local.json` met jouw paden en een willekeurig adminwachtwoord.
 5. Open `config/server.local.json` in Kladblok. Vul voor een prive-server `ServerPassword` in, sla op en voer **`01-Instellen.cmd`** nogmaals uit. Gebruik een ander wachtwoord dan `AdminPassword`. Dit lokale bestand wordt door Git genegeerd.
 6. Dubbelklik **`02-Start-server.cmd`**. Laat het servervenster open en wacht enkele minuten. De eerste start maakt Expansion-profielen en de lootwereld aan. Voer **`03-Controleren.cmd`** uit voor configuratie- en querycontrole.
-7. Open de DayZ Launcher met alle negen mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
+7. Open de DayZ Launcher met alle twaalf mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
 
 Windows kan gedownloade scripts blokkeren. Gebruik zo nodig **Eigenschappen → Blokkering opheffen** op de ZIP en pak opnieuw uit. De `.cmd`-knoppen gebruiken alleen voor hun eigen PowerShell-proces `ExecutionPolicy Bypass`; ze veranderen geen permanente Windows-instelling. Instellen vereist normaal geen administratorrechten als de Steam-map beschrijfbaar is.
 
@@ -59,7 +59,7 @@ Overlevenden zijn normaal neutraal maar kunnen zichzelf verdedigen; bewakers kun
 
 Het zijn eigen beginroutes: loop ze lokaal na op obstakels; terrein, gevechten en zicht bepalen het daadwerkelijke gedrag. Waypoint-hoogte 0 wordt door Expansion op het terrein geplaatst. Voor deze uitbreiding zijn geen extra mods nodig: vervang met de server gestopt `config/mission/expansion/settings/AIPatrolSettings.json` in je pakketmap door de nieuwste versie, voer `01-Instellen.cmd` uit en start opnieuw. Je wereld hoeft hiervoor niet gewist te worden. De routes en ontmoetingen moeten daarna lokaal in-game worden gecontroleerd.
 
-**5× loot is vijfmaal de economiedoelen, geen garantie op vijfmaal zoveel spullen per huis.** Spawnposities, tiers, events en CE-limieten blijven gelden. `nominal=0`, voertuigevents, zombies en dieren worden niet vervijfvoudigd. De eigen Expansion-bouwloot heeft vaste ruime aantallen in `building_types.xml` en wordt niet nogmaals vermenigvuldigd. Op bestaande werelden vult de economie geleidelijk bij; de installer verwijdert je wereld nooit om dit te versnellen.
+**5× loot is vijfmaal de economiedoelen, geen garantie op vijfmaal zoveel spullen per huis.** Spawnposities, tiers, events en CE-limieten blijven gelden. `nominal=0`, voertuigevents, zombies en dieren worden niet vervijfvoudigd. De eigen bouwloot heeft vaste aantallen in `building_types.xml`; `TestSuppliesEverywhere` verdubbelt de actieve pakketdoelen, los van de vanilla-factoren. Op bestaande werelden vult de economie geleidelijk bij; de installer verwijdert je wereld nooit om dit te versnellen.
 
 **Meer militaire gear:** `MilitaryLootMultiplier` is standaard `2`, boven op `LootMultiplier: 5`. Elk actief itemtype met een `Military`-usage krijgt dus een doel/minimum van 10× vanilla, inclusief militaire wapens, munitie en kleding die zo zijn gemarkeerd. Items met meerdere usages krijgen dezelfde verhoging ook op hun overige bestaande locaties. In de gewone stand blijven tiers en speciale eventregels behouden. De teststand kan met `TestMilitaryEverywhere` normale militaire loot ook voor burgerlocaties/tier 1–4 toestaan; speciale eventloot blijft apart. Zet de extra factor op `1` voor gewone 5× loot. Oude lokale configuraties krijgen het nieuwe veld automatisch, met behoud van wachtwoorden en paden.
 
@@ -77,7 +77,8 @@ Gebruik **`04-Teststand.cmd`** met de server gestopt om de lokale instellingen b
 | `MilitaryLootMultiplier` | 3 extra: militaire lootdoelen totaal 24× vanilla |
 | `LootDamageMax` | 0.10: nieuwe CE-loot met 0–10% beginschade |
 | `TestMilitaryEverywhere` | true: normale militaire loot ook op burgerlocaties en tiers 1–4 |
-| `TestSuppliesEverywhere` | true: extra wapens, munitie, magazijnen en bouwvoorraad op alle 17 locatiecategorieën en tiers 1–4 |
+| `TestSuppliesEverywhere` | true: extra wapens, munitie, magazijnen, MMG-rugzakken en bouwvoorraad op alle 17 locatiecategorieën en tiers 1–4 |
+| `TestFastRestock` | true: dubbele bestaande lootcapaciteit per gebouw/container, sneller bijvullen en herstartaanvulling |
 
 Deze knop voert de installer ook uit. Daarna kun je meteen `02-Start-server.cmd` gebruiken. Hij bewaart vooraf de lokale configuratie onder `.local/Backups/server-before-testmode-*.json`. Paden, wachtwoorden en overige instellingen blijven behouden. Het resultaat blijft ingesteld totdat je de lokale waarden terugzet; het is geen tijdelijke schakelaar. Terugzetten: stop de server, kopieer de gewenste configuratiebackup naar `config/server.local.json` en voer `01-Instellen.cmd` uit. Configuratiebackups bevatten wachtwoorden: houd ze prive.
 
@@ -93,7 +94,48 @@ Deze voorraad krijgt alle 17 usages die de gecontroleerde Chernarus-data gebruik
 
 Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe veld aan te zetten. Oude lokale configuraties krijgen `TestSuppliesEverywhere: false` als het ontbreekt; alleen `01-Instellen.cmd` schakelt de uitbreiding dus niet vanzelf in. Zet **beide** velden `TestSuppliesEverywhere` en `TestMilitaryEverywhere` op `false` en voer `01-Instellen.cmd` uit om de originele locaties/tiers en de gewone pakketbouwloot te herstellen voor toekomstige spawns. Andere lootfactoren blijven dan op hun huidige waarden. Laat je lokale configuratie staan bij het vervangen van de map `scripts` uit de nieuwste ZIP.
 
-**Bestaande beschadigde loot wordt niet gerepareerd.** Een herstart wist de economie niet. Nieuwe instellingen werken tijdens het geleidelijk bijvullen; de wereld hoeft niet te worden verwijderd. De hoeveelheid vrije lootposities, tiers en eventvoorwaarden blijft de feitelijke aantallen begrenzen, ook bij 24×. In de gewone stand blijven militaire locaties nodig; met `TestMilitaryEverywhere: true` kunnen normale militaire items ook op de toegevoegde burgerlocaties verschijnen. Het zichtbare serverlabel kan nog '5x Loot' bevatten: de werkelijke factoren staan in `config/server.local.json` en worden door de installer getoond; pas `Hostname` desgewenst aan.
+**Bestaande beschadigde loot wordt niet gerepareerd.** Een herstart wist de economie niet. Met `TestFastRestock` vraagt de server ook aanvulling bij een herstart; anders werken de instellingen tijdens het geleidelijk bijvullen; de wereld hoeft niet te worden verwijderd. De hoeveelheid vrije lootposities, tiers en eventvoorwaarden blijft de feitelijke aantallen begrenzen, ook bij 24×. In de gewone stand blijven militaire locaties nodig; met `TestMilitaryEverywhere: true` kunnen normale militaire items ook op de toegevoegde burgerlocaties verschijnen. Het zichtbare serverlabel kan nog '5x Loot' bevatten: de werkelijke factoren staan in `config/server.local.json` en worden door de installer getoond; pas `Hostname` desgewenst aan.
+
+## Meer zichtbare loot en drie extra mods (v0.9.0)
+
+**Voor jouw ruime teststand: voer na het bijwerken `04-Teststand.cmd` opnieuw uit.** Alleen de nieuwe bestanden kopiëren schakelt het nieuwe veld `TestFastRestock` niet in. Je huidige saves en wachtwoorden blijven behouden. De hoeveelheid loot in je bestaande wereld is hier niet rechtstreeks gemeten; onderstaande wijzigingen nemen bekende CE-beperkingen weg, maar geven geen garantie op een item in iedere kamer.
+
+De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Host en alle spelers laden nu **twaalf mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
+
+**Nieuwe lootselectie:**
+
+| Voorraad | Gewone pakketdoelen per type | Teststand per type |
+| --- | --- | --- |
+| 13 vuurwapens | doel 60 / minimum 45 | doel 120 / minimum 90 |
+| 7 Expansion-magazijnen | doel 120 / minimum 90 | doel 240 / minimum 180 |
+| 3 losse munitietypen en 3 munitiedozen | doel 100 / minimum 80 | doel 200 / minimum 160 |
+| 7 vizieren/railadapters | doel 30 / minimum 20 | doel 60 / minimum 40 |
+| 9 MMG-rugzakvarianten | doel 75 / minimum 60 | doel 150 / minimum 120 |
+| 4 barricadekits | doel 40 / minimum 32 | doel 80 / minimum 64 |
+
+Dit zijn vaste pakketdoelen in `servahz_ce/extra_types.xml`, geen extra vermenigvuldiging met `LootMultiplier`. `TestSuppliesEverywhere` verdubbelt deze doelen en opent alle 17 usages/tier 1–4. Wapen- en itemcategorieën, tags en echte lootposities blijven gelden. De teststand heeft daarnaast nog de bestaande vanilla-, RaG- en Expansion-bouwloot.
+
+Wapens: **M9, G36, MPX, MP5, MP5SD, MP7, Kedr, Vityaz, M16, DT11, Benelli M4, AWM en Kar98**. De zeven aparte Expansion-magazijnen staan in de loot; MP5 en M16 gebruiken ook vanilla-magazijnen die al in de economie zitten. De 10 wapens met losse magazijnen hebben **80% kans op een passend magazijn** bij nieuwe CE-spawns. Losse munitie en magazijnen hebben een ingestelde hoeveelheid van 80–100%; munitiedozen blijven gewone dozen. Dit is geen garantie op een volledig geladen wapen. Er zijn geen RPG's, LAW's of granaatwerpers aan de gewone pakketloot toegevoegd.
+
+Rugzakken: zwarte **Assault Pack, Carrier Backpack, Camelback, Supplybag en MMPS**, plus groene en tan Supplybag/MMPS. Volgens de MMG-beschrijving lopen deze modellen van 80 tot 150 slots. Andere MMG-kleding en pantser worden met de mod geladen, maar zijn niet in deze gerichte lootselectie opgenomen.
+
+Barricades: **kleine en middelgrote raamkit, deurkit en dubbele deurkit**. Plaats de juiste kit bij een bestaand raam of deur en voeg de materialen toe die de bouwactie vraagt. Building Fortifications behoudt zijn eigen standaardbouwkosten; de eenvoudige RaG-kosten gelden hier niet. De vier geplaatste barricadeklassen hebben `nominal=0`, `crafted=1` en een CE-levensduur van 45 dagen. Dat is geen onbeperkte levensduur of raidbescherming; onderhoud en herstartpersistentie lokaal controleren.
+
+**Waarom hogere aantallen niet altijd volle huizen geven:** vroeger wijzigde de teststand vooral doelen en locaties. Gebouwcapaciteit, bijvulbudgetten, wachttijden en afstand tot spelers bleven beperkt. Het nieuwe `TestFastRestock: true` doet daarnaast:
+
+- Verdubbelt positieve `lootmax`-waarden uit de Steam-standaardmissie in de eigen `mapgroupproto.xml`. Nul blijft nul; posities, tags en categorieën worden niet gewijzigd. Meer capaciteit maakt geen nieuwe fysieke posities.
+- Zet `RestartSpawn=50`: vraagt bij een herstart aanvulling richting de nominale doelen (50% volgens de Bohemia-configuratiereferentie), met behoud van de bestaande opgeslagen wereld.
+- Zet `RespawnTypes=30`, `RespawnLimit=50` en `RespawnAttempt=4`, zodat meer typen/items per ronde kunnen worden bijgevuld.
+- Verkleint `LootSpawnAvoidance` van de Chernarus-standaard 100 naar **50 meter**. Loop bij een leeg gebouw meer dan 50 meter weg en kom later terug; naast het lootpunt blijven staan kan het spawnen blokkeren.
+- Zet `restock=0` voor actieve, gewone vanilla-loot: geen extra wachttijd per type. Crafted en speciale eventloot behouden hun regels.
+
+**Update:** stop de server en maak een wereldbackup. Abonneer host en spelers op de drie nieuwe mods, wacht op Steam en vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html`. Behoud `config/server.local.json`, je missie en saves. Voer **`04-Teststand.cmd`** uit, importeer de nieuwe preset, start met `02-Start-server.cmd` en laat de server laden. Een wereldwipe is niet nodig. Starten/bijvullen kan meer CPU en tijd kosten.
+
+`03-Controleren.cmd` controleert dat de nieuwe CE-bestanden zijn gekoppeld en dat de snelle bijvulwaarden zijn toegepast. In de console moet de extra modloot als **46 itemtypen** worden geteld. Controleer bij ontbrekende items ook het nieuwste RPT op onbekende klassen of modfouten; pakkettests starten geen echte DayZ-server.
+
+**Terugzetten:** server stoppen, `TestFastRestock` op `false` zetten en `01-Instellen.cmd` uitvoeren. De vijf bijvulglobals, normale `restock`-waarden en gebouwcapaciteit worden dan uit de Steam-standaardmissie hersteld; andere globals blijven staan. `LootMultiplier`, andere testvelden en reeds bestaande loot blijven behouden. Zet voor herstel van de originele locaties ook `TestMilitaryEverywhere` en `TestSuppliesEverywhere` uit. De installer leest telkens de standaardmissie: herhaald instellen stapelt de capaciteitsfactor niet. `mapgroupproto.xml` is nu een beheerd bestand; bewerk de Steam-standaardmissie niet.
+
+Bronnen: [Bohemia CE-configuratie](https://community.bistudio.com/wiki/DayZ:Central_Economy_Configuration), [officiële Expansion CE-data](https://github.com/ExpansionModTeam/DayZ-Expansion-Missions/tree/248dd215738550bff9cc3b5a0c84c5e895074712/Template/Chernarus/expansion_ce), [MMG-klassennamen in de community-marktconfiguratie van Expansion](https://github.com/ExpansionModTeam/DayZ-Expansion-Unofficial-Market-Settings/blob/fdf7815b1a97f9ae717e2022199102af8c3945c7/Market/MMG%20Gear/MMG_Gear.json) en [de oorspronkelijke barricadeconfiguratie](https://github.com/Dumpgrah/Public-BuildingFortification/blob/c14eee2927eb3f387ed95166fdf846cece07782a/BuildingFortifications/scripts/config.cpp). Modbestanden worden via Steam geladen; controleer daadwerkelijk spawnen, compatibiliteit en performance in-game.
 
 ## Kaart en minimap
 
@@ -105,11 +147,11 @@ Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe vel
 - Controleer bij toetsconflicten **Options → Controls → Expansion**. Bestaande client-keybindings kunnen afwijken van de standaard.
 - Groepsgenoten en bots worden niet automatisch op de kaart getoond; deze configuratie levert geen groepsmod of radar.
 
-**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle negen mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
+**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle twaalf mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
 
 ## Makkelijker bouwen met RaG (v0.8.0)
 
-**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **negen mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
+**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **twaalf mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
 
 **Update:** stop de server en maak een wereldbackup. Abonneer je op beide RaG-mods en wacht op Steam. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html` in je pakketmap. Behoud `config/server.local.json`, je missie en saves. Voer `01-Instellen.cmd` uit (of `04-Teststand.cmd` voor testloot), importeer de nieuwe preset en start opnieuw. Geen wipe nodig.
 
@@ -157,7 +199,7 @@ Test eerst op de host, daarna met een tweede pc in je LAN, daarna van buitenaf.
 
    Dit zijn de standaardpoorten. Het pakket reserveert `GamePort` t/m `GamePort+3`; pas bij andere poorten ook de routerregels aan. Er is geen TCP- of RCon-forward nodig. Het firewallscript wijzigt alleen zijn eigen `DayZ-Servahz-UDP`-regel, nooit de router.
 
-4. Vrienden importeren `Mods.html`, laden de negen mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
+4. Vrienden importeren `Mods.html`, laden de twaalf mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
 5. Laat iemand buiten je LAN testen: sommige routers ondersteunen geen NAT-loopback. Een TCP-poortchecker test deze UDP-server niet.
 
 LAN werkt, internet niet? Vergelijk het WAN-adres van je router met je publieke IPv4. **CGNAT**, bijvoorbeeld een WAN-adres in `100.64.0.0/10`, of dubbele NAT kan inkomende verbindingen blokkeren. Vraag je provider om publiek IPv4 of configureer beide routers/bridge mode. Een mesh-VPN zoals Tailscale is een alternatief; host en vrienden moeten dat zelf installeren, dit pakket configureert het niet.
@@ -176,11 +218,13 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 
 | Bestand | Aanpassing |
 | --- | --- |
-| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax`, `TestMilitaryEverywhere`, `TestSuppliesEverywhere` en tijd |
+| `config/server.local.json` | Naam, wachtwoorden, slots, paden, poorten, `LootMultiplier`, `MilitaryLootMultiplier`, `LootDamageMax`, `TestMilitaryEverywhere`, `TestSuppliesEverywhere`, `TestFastRestock` en tijd |
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |
-| `config/mission/servahz_ce/building_types.xml` | Expansion- en RaG-bouwloot, levensduur gebouwde onderdelen |
+| `config/mission/servahz_ce/building_types.xml` | Bouwloot en levensduur gebouwde onderdelen |
+| `config/mission/servahz_ce/extra_types.xml` | Nieuwe wapens, magazijnen, munitie, rugzakken en barricadekits |
+| `config/mission/servahz_ce/extra_spawnabletypes.xml` | Passende magazijnen bij nieuwe wapenspawns |
 | `config/profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json` | RaG-startinstellingen; alleen gekopieerd als het live profiel ontbreekt |
 
 De installer vervangt de beheerde doelconfiguraties. Directe wijzigingen daarin verdwijnen bij opnieuw instellen: wijzig de bronbestanden hierboven. Overige Expansion-profielinstellingen blijven behouden. Verander `m_Version` niet zelf: dit zijn schema-versies.
@@ -213,7 +257,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 
 | Probleem | Controle |
 | --- | --- |
-| Ontbrekende PBO, verkeerde versie/signature | Alle negen mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Ontbrekende PBO, verkeerde versie/signature | Alle twaalf mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | Launcher toont modnamen als een gecombineerde regel | Gebruik de nieuwste scripts; Windows PowerShell 5.1 gaf eerder een geneste modlijst door. In het RPT moeten modpaden met puntkomma's gescheiden zijn, met voor elke mod zijn eigen pad |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
@@ -229,7 +273,7 @@ Begin voor een kleine groep met een recente CPU, SSD en ongeveer **16 GB RAM in 
 ## Lokale acceptatiecontrole
 
 - `03-Controleren.cmd` slaagt: configuratie/modbestanden kloppen en de verwachte servernaam antwoordt op A2S_INFO. Dat bewijst nog geen speelbaarheid.
-- Je kunt met alle negen mods inloggen, bewegen en loot oprapen.
+- Je kunt met alle twaalf mods inloggen, bewegen en loot oprapen.
 - AI verschijnt bij Balota/Stary/NWAF; bewegen, vechten en looten werken. Controleer routes op obstakels.
 - **M** toont de kaart met je positie; **N vasthouden** toont GPS/minimap en kort N wisselt modus.
 - Een Expansion-kit plaatsen, bouwen en een codeslot gebruiken werkt.

@@ -43,5 +43,20 @@
     "Name": "RaG_BaseBuilding",
     "Id": "3157695626",
     "Folder": "@RaG_BaseBuilding"
+  },
+  {
+    "Name": "Building Fortifications",
+    "Id": "2670506982",
+    "Folder": "@BuildingFortifications"
+  },
+  {
+    "Name": "MMG - Mightys Military Gear",
+    "Id": "2663169692",
+    "Folder": "@MMG"
+  },
+  {
+    "Name": "DayZ-Expansion-Weapons",
+    "Id": "2792985069",
+    "Folder": "@ExpansionWeapons"
   }
 ]

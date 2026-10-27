@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='utf-8'?>
+<spawnabletypes>
+    <type name="Expansion_M9">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_M9_15Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_G36">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_G36_30Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_MPX">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_MPX_50Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_MP5">
+        <attachments chance="0.80">
+            <item name="Mag_MP5_30Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_MP5SD">
+        <attachments chance="0.80">
+            <item name="Mag_MP5_30Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_MP7">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_MP7_40Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_Kedr">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_Kedr_20Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_VityazSN">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_Vityaz_30Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_M16">
+        <attachments chance="0.80">
+            <item name="Mag_STANAG_30Rnd" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="Expansion_AWM">
+        <attachments chance="0.80">
+            <item name="Mag_Expansion_AWM_5Rnd" chance="1.00" />
+        </attachments>
+    </type>
+</spawnabletypes>

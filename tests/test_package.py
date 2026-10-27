@@ -43,10 +43,15 @@ class PackageTests(unittest.TestCase):
             (folder / f"Keys/{mod['Id']}.bikey").write_text("TEST KEY")
         vanilla = os.environ.get("SERVAHZ_VANILLA_MISSION")
         if vanilla:
-            for name in ("init.c", "db/types.xml", "db/globals.xml", "cfgeconomycore.xml", "cfggameplay.json"):
+            for name in ("init.c", "db/types.xml", "db/globals.xml", "mapgroupproto.xml", "cfgeconomycore.xml", "cfggameplay.json"):
                 shutil.copyfile(Path(vanilla) / name, self.baseline / name)
         else:
             (self.baseline / 'db/globals.xml').write_text('<variables><var name="LootDamageMin" type="1" value="0.0"/><var name="LootDamageMax" type="1" value="0.82"/><var name="ZombieMaxCount" type="0" value="1000"/></variables>')
+            tree = ET.parse(self.baseline / 'db/globals.xml')
+            for name, value in {'RestartSpawn': 0, 'RespawnTypes': 12, 'RespawnLimit': 20, 'RespawnAttempt': 2, 'LootSpawnAvoidance': 100}.items():
+                ET.SubElement(tree.getroot(), 'var', name=name, type='0', value=str(value))
+            tree.write(self.baseline / 'db/globals.xml')
+            (self.baseline / 'mapgroupproto.xml').write_text('<map><defaults><default name="group" lootmax="6"/></defaults><group name="House" lootmax="4"><container name="lootFloor" lootmax="2"><category name="tools"/><point pos="1 2 3"/></container></group><group name="NoLoot" lootmax="0"/></map>')
             (self.baseline / "init.c").write_text("// TEST FIXTURE")
             (self.baseline / "db/types.xml").write_text(
                 '<types><type name="NailBox"><nominal>10</nominal><min>5</min>'
@@ -179,6 +184,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(current['LootDamageMax'], 0.10)
             self.assertIs(current['TestMilitaryEverywhere'], True)
             self.assertIs(current['TestSuppliesEverywhere'], True)
+            self.assertIs(current['TestFastRestock'], True)
             for field in ('AdminPassword', 'ServerPassword', 'ServerPath', 'WorkshopPath'):
                 self.assertEqual(current[field], settings[field])
             before = ET.parse(self.baseline / 'db/types.xml').findall('type')
@@ -198,7 +204,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(float(globals_xml.find("var[@name='LootDamageMin']").get('value')), 0)
             original = ET.fromstring(original_globals)
             for node in original:
-                if node.get('name') not in ('LootDamageMin', 'LootDamageMax'):
+                if node.get('name') not in ('LootDamageMin', 'LootDamageMax', 'RestartSpawn', 'RespawnTypes', 'RespawnLimit', 'RespawnAttempt', 'LootSpawnAvoidance'):
                     self.assertEqual(globals_xml.find(f"var[@name='{node.get('name')}']").attrib, node.attrib)
         self.assertEqual((self.mission / 'storage_1/players.db').read_text(), 'keep players')
         self.assertEqual((self.baseline / 'db/globals.xml').read_bytes(), original_globals)
@@ -221,6 +227,86 @@ class PackageTests(unittest.TestCase):
         self.local.write_text(json.dumps(settings))
         result = self.install(ok=False)
         self.assertIn('LootDamageMax', result.stderr)
+
+    def test_fast_refill_density_and_restore_without_wipe(self):
+        types = ET.parse(self.baseline / 'db/types.xml')
+        nailbox = types.find("type[@name='NailBox']")
+        restock = nailbox.find('restock')
+        if restock is None:
+            restock = ET.SubElement(nailbox, 'restock')
+        restock.text = '3600'
+        types.write(self.baseline / 'db/types.xml')
+        self.install()
+        previous = json.loads(self.local.read_text())
+        self.assertFalse(previous['TestFastRestock'])
+        save = self.mission / 'storage_1/players.db'
+        save.parent.mkdir()
+        save.write_bytes(b'keep world')
+        path = self.mission / 'db/globals.xml'
+        globals_xml = ET.parse(path)
+        ET.SubElement(globals_xml.getroot(), 'var', name='CustomUnrelated', type='0', value='123')
+        globals_xml.write(path)
+        source = ET.parse(self.baseline / 'mapgroupproto.xml')
+        baseline_groups = (self.baseline / 'mapgroupproto.xml').read_bytes()
+        for _ in range(2):
+            self.run_ps('Install-Server.ps1', '-TestMode')
+            self.assertEqual(ET.parse(self.mission / 'db/types.xml').findtext("type[@name='NailBox']/restock"), '0')
+            current = ET.parse(path)
+            for name, amount in {'RestartSpawn': 50, 'RespawnTypes': 30, 'RespawnLimit': 50, 'RespawnAttempt': 4, 'LootSpawnAvoidance': 50}.items():
+                self.assertEqual(int(current.find(f"var[@name='{name}']").get('value')), amount)
+            self.assertEqual(current.find("var[@name='CustomUnrelated']").get('value'), '123')
+            generated = ET.parse(self.mission / 'mapgroupproto.xml')
+            for before, after in zip(source.iter(), generated.iter()):
+                expected = dict(before.attrib)
+                if 'lootmax' in expected:
+                    expected['lootmax'] = str(int(expected['lootmax']) * 2)
+                self.assertEqual(after.attrib, expected)
+            self.run_ps('Test-Server.ps1', '-StaticOnly')
+        self.assertEqual(save.read_bytes(), b'keep world')
+        self.assertEqual((self.baseline / 'mapgroupproto.xml').read_bytes(), baseline_groups)
+        config = json.loads(self.local.read_text())
+        config['TestFastRestock'] = False
+        self.local.write_text(json.dumps(config))
+        self.install()
+        self.assertEqual(ET.parse(self.mission / 'db/types.xml').findtext("type[@name='NailBox']/restock"), '3600')
+        restored = ET.parse(self.mission / 'mapgroupproto.xml')
+        self.assertEqual([n.attrib for n in restored.iter()], [n.attrib for n in source.iter()])
+        current = ET.parse(path)
+        baseline = ET.parse(self.baseline / 'db/globals.xml')
+        for name in ('RestartSpawn', 'RespawnTypes', 'RespawnLimit', 'RespawnAttempt', 'LootSpawnAvoidance'):
+            self.assertEqual(current.find(f"var[@name='{name}']").attrib, baseline.find(f"var[@name='{name}']").attrib)
+        self.assertEqual(current.find("var[@name='CustomUnrelated']").get('value'), '123')
+        self.assertTrue(list((self.server / 'Servahz/Backups').glob('config-*/mission/mapgroupproto.xml')))
+        config['TestFastRestock'] = 'true'
+        self.local.write_text(json.dumps(config))
+        self.assertIn('TestFastRestock', self.install(ok=False).stderr)
+
+    def test_extra_mod_loot_and_economy_links(self):
+        self.run_ps('Install-Server.ps1', '-ServerPath', self.server, '-WorkshopPath', self.workshop, '-TestMode')
+        extra_path = self.mission / 'servahz_ce/extra_types.xml'
+        first = extra_path.read_bytes()
+        extra = ET.parse(extra_path)
+        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '120')
+        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '240')
+        self.assertEqual(extra.findtext("type[@name='MMG_mmps_bag_black']/nominal"), '150')
+        self.assertEqual(extra.findtext("type[@name='BF_DoorBarricadeKit']/nominal"), '80')
+        for node in extra.findall('type'):
+            self.assertEqual(len(node.findall('usage')), 17, node.get('name'))
+            self.assertTrue({'Tier1', 'Tier2', 'Tier3', 'Tier4'} <= {n.get('name') for n in node.findall('value')})
+        for _ in range(2):
+            self.install()
+            self.assertEqual(extra_path.read_bytes(), first)
+            core = ET.parse(self.mission / 'cfgeconomycore.xml')
+            files = core.findall("ce[@folder='servahz_ce']/file")
+            self.assertEqual({(f.get('name'), f.get('type')) for f in files},
+                             {('building_types.xml', 'types'), ('extra_types.xml', 'types'), ('extra_spawnabletypes.xml', 'spawnabletypes')})
+            self.assertEqual(len(files), 3)
+        core_path = self.mission / 'cfgeconomycore.xml'
+        core = ET.parse(core_path)
+        ce = core.find("ce[@folder='servahz_ce']")
+        ce.remove(ce.find("file[@name='extra_types.xml']"))
+        core.write(core_path)
+        self.assertIn('extra_types.xml', self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False).stderr)
 
     def test_rag_profile_seed_preserve_backup_and_testloot(self):
         self.install()
@@ -463,7 +549,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 9) { throw 'Expected nine individual mod objects' }
+if ($mods.Count -ne 12) { throw 'Expected twelve individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -535,9 +621,33 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
 
 
 class ConfigTests(unittest.TestCase):
+    def test_new_mods_loot_attachments_and_no_duplicate_types(self):
+        mods = json.loads((ROOT / 'config/mods.json').read_text())
+        self.assertEqual([m['Id'] for m in mods[-3:]], ['2670506982', '2663169692', '2792985069'])
+        extra = ET.parse(ROOT / 'config/mission/servahz_ce/extra_types.xml')
+        names = [n.get('name') for n in extra.findall('type')]
+        self.assertEqual(len(names), 46)
+        self.assertEqual(len(names), len(set(names)))
+        building = ET.parse(ROOT / 'config/mission/servahz_ce/building_types.xml')
+        self.assertFalse(set(names) & {n.get('name') for n in building.findall('type')})
+        for name in ('BF_WindowBarricade', 'BF_WindowBarricadeMed', 'BF_DoorBarricade', 'BF_DoubleDoorBarricade'):
+            node = building.find(f"type[@name='{name}']")
+            self.assertEqual(node.findtext('nominal'), '0')
+            self.assertEqual(node.findtext('lifetime'), '3888000')
+            self.assertEqual(node.find('flags').get('crafted'), '1')
+        self.assertFalse(any('RPG' in n or 'LAW' in n or 'M203' in n or 'Admin' in n or 'Hologram' in n for n in names))
+        self.assertEqual(len([n for n in names if n.startswith('MMG_')]), 9)
+        self.assertEqual(len([n for n in names if n.startswith('BF_')]), 4)
+        spawn = ET.parse(ROOT / 'config/mission/servahz_ce/extra_spawnabletypes.xml')
+        for node in spawn.findall('type'):
+            self.assertIn(node.get('name'), names)
+            self.assertEqual(node.find('attachments').get('chance'), '0.80')
+            magazine = node.find('attachments/item').get('name')
+            self.assertTrue(magazine in names or magazine in ('Mag_MP5_30Rnd', 'Mag_STANAG_30Rnd'))
+
     def test_rag_dependencies_materials_and_economy(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
-        self.assertEqual([(m['Name'], m['Id']) for m in mods[-2:]],
+        self.assertEqual([(m['Name'], m['Id']) for m in mods[7:9]],
                          [('RaG_Core', '3556131153'), ('RaG_BaseBuilding', '3157695626')])
         config = json.loads((ROOT / 'config/profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json').read_text())
         self.assertEqual(config['Version'], 2)

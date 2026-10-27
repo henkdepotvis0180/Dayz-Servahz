@@ -18,7 +18,27 @@ try {
     [xml]$types = Get-Content -LiteralPath (Join-Path $layout.Mission 'db/types.xml') -Raw
     [xml]$core = Get-Content -LiteralPath (Join-Path $layout.Mission 'cfgeconomycore.xml') -Raw
     [xml]$building = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/building_types.xml') -Raw
+    [xml]$extra = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/extra_types.xml') -Raw
+    [xml]$attachments = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/extra_spawnabletypes.xml') -Raw
+    [xml]$groups = Get-Content -LiteralPath (Join-Path $layout.Mission 'mapgroupproto.xml') -Raw
+    foreach ($entry in @(@('building_types.xml', 'types'), @('extra_types.xml', 'types'), @('extra_spawnabletypes.xml', 'spawnabletypes'))) {
+        if (@($core.SelectNodes('/economycore/ce[@folder="servahz_ce"]/file[@name="' + $entry[0] + '" and @type="' + $entry[1] + '"]')).Count -ne 1) {
+            throw "CE-koppeling ontbreekt of is dubbel: $($entry[0]). Voer de installer opnieuw uit."
+        }
+    }
+    if (@($extra.SelectNodes('/types/type')).Count -lt 1) { throw 'Extra modloot ontbreekt.' }
+    Write-Host "Extra modloot: $(@($extra.SelectNodes('/types/type')).Count) itemtypen gekoppeld aan de economie."
     [xml]$globals = Get-Content -LiteralPath (Join-Path $layout.Mission 'db/globals.xml') -Raw
+    if ($settings.TestFastRestock) {
+        $expected = @{ RestartSpawn = 50; RespawnTypes = 30; RespawnLimit = 50; RespawnAttempt = 4; LootSpawnAvoidance = 50 }
+        foreach ($name in $expected.Keys) {
+            $node = $globals.SelectSingleNode('/variables/var[@name="' + $name + '"]')
+            if ($null -eq $node -or [int]$node.GetAttribute('value') -ne $expected[$name]) {
+                throw "Snelle testaanvulling is niet toegepast: $name. Voer 04-Teststand.cmd opnieuw uit."
+            }
+        }
+        Write-Host 'Snelle testaanvulling: RestartSpawn=50%, 30 typen, 50 items/type, 4 pogingen, 50 m afstand.'
+    }
     $damageMin = $globals.SelectSingleNode('/variables/var[@name="LootDamageMin"]')
     $damageMax = $globals.SelectSingleNode('/variables/var[@name="LootDamageMax"]')
     if ($null -eq $damageMin -or $null -eq $damageMax) { throw 'Lootconditie ontbreekt in db/globals.xml.' }

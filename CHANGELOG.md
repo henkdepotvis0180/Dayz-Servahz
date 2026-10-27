@@ -4,6 +4,24 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.9.0] — 2026-10-27
+
+### Barricades, grote rugzakken, extra wapens en sneller zichtbare testloot
+
+- Building Fortifications, MMG – Mightys Military Gear en DayZ-Expansion-Weapons toegevoegd: nu twaalf mods op host en clients.
+- 46 gerichte CE-itemtypen: 13 vuurwapens, 7 magazijnen, 6 munitietypen/-dozen, 7 vizieren/railadapters, 9 rugzakvarianten en 4 barricadekits. Geen RPG/LAW/granaatwerpers in de gewone lootselectie.
+- Ruime vaste doelen, verdubbeld en alle 17 locatiecategorieën/tier 1–4 in de teststand. Bijvoorbeeld per type doel 120 vuurwapens, 240 magazijnen en 150 rugzakken. Beschikbare posities en categorieën blijven de echte verdeling begrenzen.
+- Tien wapens hebben bij nieuwe CE-spawns 80% kans op een passend magazijn. Losse munitie en magazijnen gebruiken 80–100% hoeveelheid; munitiedozen behouden hun normale inhoud.
+- Geplaatste barricades krijgen aparte CE-levensduurregels (45 dagen), zonder ze als losse bouwwerken te spawnen. RaG-kosten en bestaande botbudgetten blijven gelijk.
+- Nieuw `TestFastRestock`, standaard uit en aan via `04-Teststand.cmd`: 2× positieve gebouw-/containercapaciteit, `RestartSpawn=50`, `RespawnTypes=30`, `RespawnLimit=50`, `RespawnAttempt=4`, `LootSpawnAvoidance=50` en `restock=0` voor actieve gewone vanilla-loot.
+- Dit verruimt naast aantallen ook het bijvullen. Er is geen vaste lootgarantie per huis; de toestand van de eigen live wereld is hier niet gemeten. Initialisatie kan meer CPU/tijd vragen.
+- Nieuwe CE-bestanden worden expliciet gekoppeld en statisch gecontroleerd. Herhaald instellen stapelt niet. Uitschakelen van `TestFastRestock` herstelt de vijf beheerde bijvulglobals, gebouwcapaciteit en normale restock uit de standaardmissie.
+- Lokale configuratie, wachtwoorden, profielen en wereldsaves blijven behouden; geen wipe. Nieuwe beheerde bestanden worden in configuratiebackups meegenomen.
+
+**Bijwerken:** stop de server en maak een wereldbackup. Abonneer host en alle spelers op de drie nieuwe mods en wacht op Steam. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html`. Behoud `config/server.local.json` en je wereldsave. Voer **`04-Teststand.cmd`** opnieuw uit; importeer de nieuwe preset en start met `02-Start-server.cmd`. Laat de server laden. Ga bij lege gebouwen meer dan 50 meter weg en kom later terug. `03-Controleren.cmd` moet de 46 extra itemtypen en snelle bijvulwaarden herkennen.
+
+**Controle:** 27 pakkettests geslaagd met testbestanden en 27 met officiële Chernarus-data. Tests voor alle modpaden, nieuwe CE-koppelingen, magazijnen, doelen, capaciteit, herhaald instellen, uitschakelen en behoud van saves/wachtwoorden/overige globals. Nog lokaal in-game te controleren: echte moddownloads, spawnklassen en magazijncompatibiliteit, lootverdeling, barricades plaatsen/bouwen/sluiten en persistentie na herstart, rugzakcapaciteit en serverprestaties.
+
 ## [0.8.0] — 2026-10-27
 
 ### RaG BaseBuilding erbij en circa 20% meer bots
