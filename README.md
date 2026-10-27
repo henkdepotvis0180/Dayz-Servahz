@@ -1,5 +1,7 @@
 # Servahz — DayZ voor Windows, AI, 5× loot en makkelijk bouwen
 
+**Updates:** [wijzigingen per versie](CHANGELOG.md) · [GitHub Releases en downloads](https://github.com/henkdepotvis0180/Dayz-Servahz/releases). De release notes vermelden wat je lokaal moet vervangen en welke controles zijn uitgevoerd.
+
 Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
