@@ -4,6 +4,21 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.8.0] — 2026-10-27
+
+### RaG BaseBuilding erbij en circa 20% meer bots
+
+- RaG_Core en RaG_BaseBuilding toegevoegd aan de modlijst en launcher-preset: nu negen mods op server en alle clients. Bestaande Expansion-mods blijven aanwezig.
+- Nieuwe RaG-profielen starten met 2 planken + 1 spijker per kit en 2 planken per houten bouwstap, circa 5 seconden bouwtijd. De optionele metalen deur kost 1 metaalplaat. Dit is geen hout-en-ragsrecept; dat vereist een eigen receptmod.
+- 21 RaG-spelerkits en het bouwboek als CE-loot toegevoegd. De teststand verdubbelt hun pakketdoelen en gebruikt alle 17 locatiecategorieën; admin-gereedschap en hologrammen zijn geen loot.
+- RaG-profiel wordt alleen bij ontbreken aangemaakt; bestaande profielinstellingen blijven byte voor byte behouden en worden bij opnieuw instellen geback-upt. Wereldbackup bevat ook RaG-profielen. Saves en lokale wachtwoorden worden niet vervangen.
+- Patrouilles van 36 naar 43 ingestelde bots (+19,4%); berekend maximum van 26 naar 31 actieve bots (+19,2%). Nog steeds 17 routes en maximaal 12 actieve groepen: 6 vijandige, 4 overlevenden en 2 bewakers. Moeilijkheidsinstellingen blijven gelijk.
+- Bestaande Expansion-bouwdelen en codesloten blijven beschikbaar. Gebruik op RaG-delen vanilla combinatiesloten; Expansion-codeslotcompatibiliteit is geen onderdeel van deze release.
+
+**Bijwerken:** stop de server en maak een wereldbackup. Abonneer host en spelers op RaG_Core en RaG_BaseBuilding en wacht op Steam. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html` in de pakketmap. Behoud `config/server.local.json` en de wereldsave. Voer `01-Instellen.cmd` uit, of `04-Teststand.cmd` voor de teststand, importeer de nieuwe preset en start opnieuw. Een reeds bestaand RaG-profiel behoudt zijn eigen bouwkosten.
+
+**Controle:** 24 pakkettests geslaagd met testbestanden en 24 met officiële Chernarus-data. De tests controleren de negen modpaden, RaG-kosten/loot, eerste profielaanmaak, behoud en backup van bestaande profielen/saves/wachtwoorden, herhaald instellen en alle combinaties van botbudgetten. Lokaal nog controleren: de echte moddownloads en game starten, RaG-kits craften/plaatsen/afbouwen, slotwerking, herstartpersistentie en prestaties met extra bots.
+
 ## [0.7.0] — 2026-10-27
 
 ### Wapens, munitie en bouwvoorraad op alle soorten testlocaties

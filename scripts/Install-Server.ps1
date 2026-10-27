@@ -143,6 +143,15 @@ try {
         Set-TestSupplies (Join-Path $layout.Mission 'servahz_ce/building_types.xml')
     }
     New-Item -ItemType Directory -Path $layout.Profiles -Force | Out-Null
+    # Seed RaG defaults once. Existing server preferences and unknown fields stay intact.
+    $ragRelative = 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+    $ragTarget = Join-Path $layout.Profiles $ragRelative
+    if (!(Test-Path -LiteralPath $ragTarget)) {
+        $ragSource = Join-Path $root ('config/profiles/' + $ragRelative)
+        $null = Get-Content -LiteralPath $ragSource -Raw | ConvertFrom-Json
+        New-Item -ItemType Directory -Path (Split-Path $ragTarget -Parent) -Force | Out-Null
+        Copy-Item -LiteralPath $ragSource -Destination $ragTarget
+    }
     Write-ServerConfig $settings $layout.Config
     Write-Host "Klaar: $count vanilla-loottypen op $($settings.LootMultiplier)x. Missie: servahz.chernarusplus"
     Write-Host "Military-loot: extra $($settings.MilitaryLootMultiplier)x (totaal $($settings.LootMultiplier * $settings.MilitaryLootMultiplier)x vanilla)."

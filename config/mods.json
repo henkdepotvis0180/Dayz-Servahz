@@ -1,9 +1,47 @@
 [
-  { "Name": "CF", "Id": "1559212036", "Folder": "@CF" },
-  { "Name": "Dabs Framework", "Id": "2545327648", "Folder": "@DabsFramework" },
-  { "Name": "DayZ-Expansion-Core", "Id": "2291785308", "Folder": "@ExpansionCore" },
-  { "Name": "DayZ-Expansion-Licensed", "Id": "2116157322", "Folder": "@ExpansionLicensed" },
-  { "Name": "DayZ-Expansion-AI", "Id": "2792982069", "Folder": "@ExpansionAI" },
-  { "Name": "DayZ-Expansion-BaseBuilding", "Id": "2792982513", "Folder": "@ExpansionBaseBuilding" },
-  { "Name": "DayZ-Expansion-Navigation", "Id": "2792984722", "Folder": "@ExpansionNavigation" }
+  {
+    "Name": "CF",
+    "Id": "1559212036",
+    "Folder": "@CF"
+  },
+  {
+    "Name": "Dabs Framework",
+    "Id": "2545327648",
+    "Folder": "@DabsFramework"
+  },
+  {
+    "Name": "DayZ-Expansion-Core",
+    "Id": "2291785308",
+    "Folder": "@ExpansionCore"
+  },
+  {
+    "Name": "DayZ-Expansion-Licensed",
+    "Id": "2116157322",
+    "Folder": "@ExpansionLicensed"
+  },
+  {
+    "Name": "DayZ-Expansion-AI",
+    "Id": "2792982069",
+    "Folder": "@ExpansionAI"
+  },
+  {
+    "Name": "DayZ-Expansion-BaseBuilding",
+    "Id": "2792982513",
+    "Folder": "@ExpansionBaseBuilding"
+  },
+  {
+    "Name": "DayZ-Expansion-Navigation",
+    "Id": "2792984722",
+    "Folder": "@ExpansionNavigation"
+  },
+  {
+    "Name": "RaG_Core",
+    "Id": "3556131153",
+    "Folder": "@RaG_Core"
+  },
+  {
+    "Name": "RaG_BaseBuilding",
+    "Id": "3157695626",
+    "Folder": "@RaG_BaseBuilding"
+  }
 ]

@@ -7,6 +7,9 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
 try {
     $settings = Read-ServerSettings
     $layout = Get-ServerLayout $settings
+    $ragPath = Join-Path $layout.Profiles 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+    $rag = Get-Content -LiteralPath $ragPath -Raw | ConvertFrom-Json
+    if (@($rag.PartCosts).Count -eq 0) { throw 'RaG-bouwkosten ontbreken in het profiel.' }
     foreach ($file in @($layout.Marker, $layout.Config, (Join-Path $layout.Server 'DayZServer_x64.exe'),
             (Join-Path $layout.Mission 'init.c'), (Join-Path $layout.Mission 'db/types.xml'),
             (Join-Path $layout.Mission 'cfgeconomycore.xml'))) {

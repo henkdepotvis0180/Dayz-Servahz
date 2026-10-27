@@ -137,6 +137,13 @@ function Save-ManagedBackup {
             Copy-Item -LiteralPath $source -Destination $target
         }
     }
+    $ragRelative = 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+    $ragConfig = Join-Path $Layout.Profiles $ragRelative
+    if (Test-Path -LiteralPath $ragConfig) {
+        $target = Join-Path $dest ('Profiles/' + $ragRelative)
+        New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
+        Copy-Item -LiteralPath $ragConfig -Destination $target
+    }
     if (Test-Path -LiteralPath $Layout.Config) {
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
         Copy-Item -LiteralPath $Layout.Config -Destination (Join-Path $dest 'serverDZ.cfg')
@@ -229,7 +236,7 @@ function Set-TestSupplies {
             $weapon = $null -ne $type.SelectSingleNode('category[@name="weapons"]')
             $ammo = $name -match '^(Ammo_|AmmoBox_|Mag_)'
             $expansion = $name -match '^Expansion(CodeLock|SafeMini|SafeMedium|SafeLarge|WallKit|FloorKit|RampKit|StairKit|WoodPillarKit)$'
-            if (!$weapon -and !$ammo -and !$expansion -and $name -notin $building) { continue }
+            if (!$weapon -and !$ammo -and !$expansion -and $name -notmatch '^RaG_BB_.*Kit$|^RaG_BB_Book$' -and $name -notin $building) { continue }
             $nominal.InnerText = [string]([int]$nominal.InnerText * 2)
             $min = $type.SelectSingleNode('min')
             if ($null -ne $min) { $min.InnerText = [string]([int]$min.InnerText * 2) }

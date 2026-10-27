@@ -1,0 +1,385 @@
+{
+  "Version": 2,
+  "DisableAllDamage": 0,
+  "DisableDamageButDoors": 0,
+  "DisableDismantle": 0,
+  "DisableCraftVanillaFence": 0,
+  "DisableCraftVanillaWatchtower": 0,
+  "BaseCanAttachXmasLights": 1,
+  "BaseInfiniteLifetime": 0,
+  "BaseBuildAnywhere": 1,
+  "FlagBuildAnywhere": 1,
+  "EnableHideShowInventory": 1,
+  "ReturnKitAfterBuilt": 0,
+  "EnableBuildHatchLadder": 1,
+  "EnableAttachPortableGasLamp": 1,
+  "BaseBuildTime": 5.0,
+  "BaseDismantleTime": 15.0,
+  "BaseBuildToolDamage": 1.0,
+  "BaseDismantleToolDamage": 3.0,
+  "BaseDestroyToolDamage": 50.0,
+  "ToolDamageOnVanillaLockDestroy": 150.0,
+  "HologramRotationSpeed": 0.10000000149011612,
+  "DisableAllRaGBBKitCrafting": 0,
+  "EnableBookKitCrafting": 1,
+  "PlanksPerKitCraft": 2.0,
+  "NailsPerKitCraft": 1.0,
+  "BaseBuildTools": [
+    "Hatchet",
+    "Hammer"
+  ],
+  "BaseDismantleTools": [
+    "Hatchet",
+    "Crowbar"
+  ],
+  "BaseDestroyTools": [
+    "SledgeHammer"
+  ],
+  "PartCosts": [
+    {
+      "Part": "Pillar",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Wall",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "DoorFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Door",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "HatchFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "HatchDoor",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "HatchStaircase",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "HatchLadder",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateDoorLeft",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateDoorRight",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateLeftFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateLeftDoor",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateRightFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "GateRightDoor",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WindowBigFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WindowBig",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WindowSmallFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WindowSmall",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "AngledRoof",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "AngledRoofEndLeft",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "AngledRoofEndRight",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Floor",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Ramp",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Ceiling",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "StairCase1",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "StairCase2",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Stairs",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Foundation",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "LowWall",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WoodStorageFloor",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WoodStorageFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "WoodStorageRoof",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "SingleDoorFrame",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "SingleDoor",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "Ladder",
+      "NAILS": 0.0,
+      "PLANKS": 2.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 0.0
+    },
+    {
+      "Part": "MetalDoor",
+      "NAILS": 0.0,
+      "PLANKS": 0.0,
+      "LOGS": 0.0,
+      "METALSHEETS": 1.0
+    }
+  ],
+  "CraftToggles": [
+    {
+      "Kit": "CeilingKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "DoorKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "FloorKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "FoundationKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "GateKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "GateLeftKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "GateRightKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "HatchKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "LowWallKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "PillarKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "RampKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "RoofKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "SingleDoorKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "SmallWindowKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "Staircase2Kit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "StaircaseKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "StairsKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "StepLadder",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "WallKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "WindowKit",
+      "ENABLED": 1
+    },
+    {
+      "Kit": "WoodStorageKit",
+      "ENABLED": 1
+    }
+  ]
+}

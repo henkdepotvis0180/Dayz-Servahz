@@ -222,6 +222,41 @@ class PackageTests(unittest.TestCase):
         result = self.install(ok=False)
         self.assertIn('LootDamageMax', result.stderr)
 
+    def test_rag_profile_seed_preserve_backup_and_testloot(self):
+        self.install()
+        relative = 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+        profile = self.server / 'Servahz/Profiles' / relative
+        default = json.loads((ROOT / 'config/profiles' / relative).read_text())
+        self.assertEqual(json.loads(profile.read_text()), default)
+        custom = dict(default, NailsPerKitCraft=3, PrivateSentinel='keep my preferences')
+        profile.write_text(json.dumps(custom))
+        previous = profile.read_bytes()
+        settings = json.loads(self.local.read_text())
+        settings['ServerPassword'] = 'keep-private-password'
+        self.local.write_text(json.dumps(settings))
+        save = self.mission / 'storage_1/players.db'
+        save.parent.mkdir()
+        save.write_bytes(b'player and world sentinel')
+        for _ in range(2):
+            self.run_ps('Install-Server.ps1', '-TestMode')
+            self.assertEqual(profile.read_bytes(), previous)
+            self.assertEqual(save.read_bytes(), b'player and world sentinel')
+            current = json.loads(self.local.read_text())
+            for key in ('ServerPassword', 'AdminPassword', 'ServerPath', 'WorkshopPath'):
+                self.assertEqual(current[key], settings[key])
+        backups = list((self.server / 'Servahz/Backups').glob('config-*/Profiles/' + relative))
+        self.assertTrue(backups)
+        self.assertTrue(all(p.read_bytes() == previous for p in backups))
+        loot = ET.parse(self.mission / 'servahz_ce/building_types.xml')
+        for name in ('RaG_BB_WallKit', 'RaG_BB_FloorKit', 'RaG_BB_Book'):
+            node = loot.find(f"type[@name='{name}']")
+            self.assertEqual(int(node.findtext('nominal')), 80 if name.endswith('Book') else 60)
+            self.assertEqual(len(node.findall('usage')), 17)
+        self.run_ps('Test-Server.ps1', '-StaticOnly')
+        destination = self.root / 'rag world backup'
+        self.run_ps('Backup-World.ps1', '-Destination', destination)
+        self.assertEqual((destination / 'Profiles' / relative).read_bytes(), previous)
+
     def test_supplies_locations_amounts_and_restore(self):
         # Independent representative cases include civilian ammunition, disabled/event
         # weapons, raw building material and unrelated loot. No real saves are used.
@@ -428,7 +463,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 7) { throw 'Expected seven individual mod objects' }
+if ($mods.Count -ne 9) { throw 'Expected nine individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -500,6 +535,26 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
 
 
 class ConfigTests(unittest.TestCase):
+    def test_rag_dependencies_materials_and_economy(self):
+        mods = json.loads((ROOT / 'config/mods.json').read_text())
+        self.assertEqual([(m['Name'], m['Id']) for m in mods[-2:]],
+                         [('RaG_Core', '3556131153'), ('RaG_BaseBuilding', '3157695626')])
+        config = json.loads((ROOT / 'config/profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json').read_text())
+        self.assertEqual(config['Version'], 2)
+        self.assertEqual(config['PlanksPerKitCraft'], 2)
+        self.assertEqual(config['NailsPerKitCraft'], 1)
+        self.assertEqual(len(config['PartCosts']), 37)
+        for stage in config['PartCosts']:
+            self.assertEqual(stage['NAILS'], 0)
+            self.assertEqual(stage['LOGS'], 0)
+            self.assertEqual(stage['PLANKS'], 0 if stage['Part'] == 'MetalDoor' else 2)
+        self.assertEqual(config['DisableCraftVanillaFence'], 0)
+        self.assertEqual(config['DisableAllDamage'], 0)
+        loot = ET.parse(ROOT / 'config/mission/servahz_ce/building_types.xml')
+        names = {n.get('name') for n in loot.findall('type') if n.get('name').startswith('RaG_')}
+        self.assertEqual(len(names), 22)
+        self.assertTrue(all(n.endswith('Kit') or n == 'RaG_BB_Book' for n in names))
+
     def test_navigation_manifest_preset_and_settings(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
         navigation = [m for m in mods if m['Id'] == '2792984722']
@@ -533,7 +588,7 @@ class ConfigTests(unittest.TestCase):
         self.assertGreater(ai['NoiseInvestigationDistanceLimit'], 150)
         patrols = ai["Patrols"]
         self.assertEqual(len(patrols), 17)
-        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 36)
+        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 43)
         self.assertEqual(len({p["Name"] for p in patrols}), len(patrols))
         caps = {name: rules[0]['MaxPatrols'] for name, rules in ai['LoadBalancingCategories'].items()}
         from itertools import combinations
@@ -547,8 +602,8 @@ class ConfigTests(unittest.TestCase):
                     continue
                 max_active = max(max_active, sum(p['NumberOfAI'] for p in active))
                 max_hostile = max(max_hostile, sum(p['NumberOfAI'] for p in active if p['LoadBalancingCategory'] == 'Hostile'))
-        self.assertEqual(max_active, 26)
-        self.assertLessEqual(max_hostile, 14)
+        self.assertEqual(max_active, 31)
+        self.assertLessEqual(max_hostile, 18)
         self.assertEqual(Counter(p['LoadBalancingCategory'] for p in patrols),
                          {'Hostile': 10, 'Survivor': 5, 'Guards': 2})
         self.assertLessEqual(ai['DamageMultiplier'], 0.65)

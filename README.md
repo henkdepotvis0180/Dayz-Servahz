@@ -2,7 +2,7 @@
 
 **Updates:** [wijzigingen per versie](CHANGELOG.md) · [GitHub Releases en downloads](https://github.com/henkdepotvis0180/Dayz-Servahz/releases). De release notes vermelden wat je lokaal moet vervangen en welke controles zijn uitgevoerd.
 
-Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
+Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation, plus RaG BaseBuilding. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
 
@@ -10,11 +10,11 @@ Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion A
 
 1. Pak dit pakket volledig uit op je Windows-pc, bijvoorbeeld naar `C:\DayZ-Servahz`. Bewaar deze map: de knoppen gebruiken de lokale configuratie hierin.
 2. Installeer **Steam → Bibliotheek → Tools → DayZ Server**, app-ID **223350**. De host en spelers hebben ook DayZ nodig. Start DayZ eenmaal om launcher en BattlEye te laten installeren.
-3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **zeven** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
+3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **negen** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
 4. Sluit een eventueel draaiende DayZ-server. Dubbelklik **`01-Instellen.cmd`**. De installer zoekt de Steam-bibliotheken en maakt `config/server.local.json` met jouw paden en een willekeurig adminwachtwoord.
 5. Open `config/server.local.json` in Kladblok. Vul voor een prive-server `ServerPassword` in, sla op en voer **`01-Instellen.cmd`** nogmaals uit. Gebruik een ander wachtwoord dan `AdminPassword`. Dit lokale bestand wordt door Git genegeerd.
 6. Dubbelklik **`02-Start-server.cmd`**. Laat het servervenster open en wacht enkele minuten. De eerste start maakt Expansion-profielen en de lootwereld aan. Voer **`03-Controleren.cmd`** uit voor configuratie- en querycontrole.
-7. Open de DayZ Launcher met alle zeven mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
+7. Open de DayZ Launcher met alle negen mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
 
 Windows kan gedownloade scripts blokkeren. Gebruik zo nodig **Eigenschappen → Blokkering opheffen** op de ZIP en pak opnieuw uit. De `.cmd`-knoppen gebruiken alleen voor hun eigen PowerShell-proces `ExecutionPolicy Bypass`; ze veranderen geen permanente Windows-instelling. Instellen vereist normaal geen administratorrechten als de Steam-map beschrijfbaar is.
 
@@ -33,7 +33,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 | Map / spelers | Chernarus, 12 slots, eerste en derde persoon |
 | Lootconditie | Nieuw gespawnde CE-loot standaard 0–15% beginschade; teststand 0–10% |
 | Loot | Vanilla `nominal` en `min` ×5; Military-loot extra ×2, dus standaard ×10 |
-| AI | 17 routes, 36 bots verdeeld over de routes; maximaal 12 actieve groepen, hoogstens 26 patrouillebots |
+| AI | 17 routes, 43 bots verdeeld over de routes; maximaal 12 actieve groepen, hoogstens 31 patrouillebots |
 | Moeilijkheid | Nauwkeurigheid 0,15–0,35, 65% uitgaande schade, normale gezondheid; bots zijn lootbaar |
 | AI-spawning | Spelers circa 125–900 m van de patrouille; despawn buiten 1100 m |
 | AI-benadering | Patrouilles joggen; dreigingen tot 450 m, geluidsonderzoek tot 350 m |
@@ -49,11 +49,11 @@ De wereld heeft een mix van kleine vijandige patrouilles, neutrale overlevenden 
 
 | Soort | Gebieden | Ingesteld | Maximaal actief |
 | --- | --- | --- | --- |
-| Vijandig (`West`/`East`) | Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy, Krasnostav airfield, Vybor, Novy Sobor, Kamensk, Myshkino | 10 groepen, samen 22 bots | 6 groepen, hoogstens 14 bots |
-| Overlevenden (`Civilian`) | Chernogorsk, Elektrozavodsk, Berezino, Gorka, Novodmitrovsk | 5 groepen van 2 | 4 groepen, 8 bots |
+| Vijandig (`West`/`East`) | Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy, Krasnostav airfield, Vybor, Novy Sobor, Kamensk, Myshkino | 10 groepen, samen 28 bots | 6 groepen, hoogstens 18 bots |
+| Overlevenden (`Civilian`) | Chernogorsk, Elektrozavodsk, Berezino, Gorka, Novodmitrovsk | 5 groepen, samen 11 bots | 4 groepen, hoogstens 9 bots |
 | Bewakers (`Guards`) | Berezino, Solnichniy | 2 groepen van 2 | 2 groepen, 4 bots |
 
-Dit zijn **36 ingestelde bots**, maar hoogstens **26 gelijktijdig actieve patrouillebots** in twaalf groepen. Ze spawnen alleen nabij spelers, dus bij een solospeler zijn meestal minder groepen actief. Zelf via het adminmenu gespawnde bots tellen niet mee voor deze patrouillelimieten. Het budget is nu zes vijandige groepen, vier groepen overlevenden en twee groepen bewakers. Bij een host die ook de game draait kan dit merkbaar CPU kosten; verlaag bij haperingen eerst de aantallen in `LoadBalancingCategories`.
+Dit zijn **43 ingestelde bots**, maar hoogstens **31 gelijktijdig actieve patrouillebots** in twaalf groepen. Ze spawnen alleen nabij spelers, dus bij een solospeler zijn meestal minder groepen actief. Zelf via het adminmenu gespawnde bots tellen niet mee voor deze patrouillelimieten. Het budget is nu zes vijandige groepen, vier groepen overlevenden en twee groepen bewakers. Bij een host die ook de game draait kan dit merkbaar CPU kosten; verlaag bij haperingen eerst de aantallen in `LoadBalancingCategories`.
 
 Overlevenden zijn normaal neutraal maar kunnen zichzelf verdedigen; bewakers kunnen agressief reageren als je wapens richt/heft of hen aanvalt. Bewakers zijn geen garantie op een veilige zone. West en East zijn verschillende vijandige factions en kunnen ook elkaar bevechten. De bestaande accuratesse en 65% uitgaande schade blijven behouden; de respawninstelling is 15 minuten. De groepen gebruiken de bijbehorende standaardloadouts die Expansion zelf aanmaakt.
 
@@ -105,9 +105,28 @@ Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe vel
 - Controleer bij toetsconflicten **Options → Controls → Expansion**. Bestaande client-keybindings kunnen afwijken van de standaard.
 - Groepsgenoten en bots worden niet automatisch op de kaart getoond; deze configuratie levert geen groepsmod of radar.
 
-**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle zeven mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
+**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle negen mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
 
-## Bouwen in de game
+## Makkelijker bouwen met RaG (v0.8.0)
+
+**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **negen mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
+
+**Update:** stop de server en maak een wereldbackup. Abonneer je op beide RaG-mods en wacht op Steam. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html` in je pakketmap. Behoud `config/server.local.json`, je missie en saves. Voer `01-Instellen.cmd` uit (of `04-Teststand.cmd` voor testloot), importeer de nieuwe preset en start opnieuw. Geen wipe nodig.
+
+Zo bouw je met de meegeleverde RaG-startinstellingen:
+
+1. Zaag hout tot **planken**. Combineer **2 planken + 1 losse spijker** en kies bijvoorbeeld een RaG-muur-, vloer-, deur- of trapkit. Maak een spijkerdoos open voor losse spijkers. Kits en het herbruikbare `RaG_BB_Book` zijn ook als loot toegevoegd; de teststand verspreidt ze over alle 17 locatiecategorieën.
+2. Neem de kit in je handen en plaats hem. **Pijl omlaag** wisselt snapping, **pijl rechts** wisselt aansluitpunten; **pijl omhoog** laat je bij een snap-punt roteren. Gebruik **Page Up/Down** voor hoogte. Controleer eventuele andere keybindings onder RaG BaseBuilding.
+3. Voeg **2 planken per houten bouwstap** toe, neem een **hamer of hatchet** en voer de bouwactie uit. Een deur kan eerst een frame en daarna een deur vereisen: iedere stap kost opnieuw 2 planken. Geen spijkers, boomstammen of metaal voor houten bouwstappen; de optionele metalen deur kost 1 metaalplaat. Een stap duurt circa 5 seconden.
+4. Gebruik een **vanilla drie- of viercijferig combinatieslot** op een afgebouwde geschikte deur/poort. Het Expansion-codeslot werkt niet automatisch op RaG-delen; een aparte compatibiliteitsmod is niet onderdeel van dit pakket.
+
+Dit is eenvoudiger bouwen, maar **geen hout-en-ragsrecept**: de kit vraagt nog één spijker. De standaard RaG-materialen zijn via JSON instelbaar; rags als receptingrediënt vraagt maatwerk. RaG verandert de bouwkosten van bestaande Expansion-delen niet.
+
+De installer maakt bij ontbreken `Servahz/Profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json` uit `config/profiles` aan. **Een bestaand RaG-profiel wordt behouden**, dus eigen kosten, onbekende velden en instellingen blijven staan. Pas bij een bestaande RaG-installatie de live profielwaarden bewust aan met de server gestopt; alleen het bronbestand vervangen verandert dat profiel niet. De configbackup bewaart het bestaande RaG-profiel; de wereldbackup bewaart alle profielen en saves. Verander `Version` niet. Bouwschade en dismantling blijven mogelijk: dit is geen raidbescherming.
+
+[RaG-configuratie en kosten](https://tyson89.github.io/RaG-Mod-Wikis/mods/basebuilding/server-configuration/) en [installatie/compatibiliteit](https://tyson89.github.io/RaG-Mod-Wikis/mods/basebuilding/server-setup/) zijn als bron gebruikt. Lokaal controleren: kit craften, plaatsen, hout toevoegen, bouwen, slot bedienen en persistentie na herstart. Controleer ook of routes en de extra bots soepel draaien.
+
+## Bouwen met de bestaande Expansion-delen
 
 - **Stok + touw**: blader door recepten voor bouwkits; kits zijn ook als loot beschikbaar.
 - Plaats een kit en wissel snapping met **X**. Bouw met **hamer/bijl, planken, spijkers en lumber**. Lumber zaag je uit boomstammen met een handzaag of ijzerzaag.
@@ -138,7 +157,7 @@ Test eerst op de host, daarna met een tweede pc in je LAN, daarna van buitenaf.
 
    Dit zijn de standaardpoorten. Het pakket reserveert `GamePort` t/m `GamePort+3`; pas bij andere poorten ook de routerregels aan. Er is geen TCP- of RCon-forward nodig. Het firewallscript wijzigt alleen zijn eigen `DayZ-Servahz-UDP`-regel, nooit de router.
 
-4. Vrienden importeren `Mods.html`, laden de zeven mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
+4. Vrienden importeren `Mods.html`, laden de negen mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
 5. Laat iemand buiten je LAN testen: sommige routers ondersteunen geen NAT-loopback. Een TCP-poortchecker test deze UDP-server niet.
 
 LAN werkt, internet niet? Vergelijk het WAN-adres van je router met je publieke IPv4. **CGNAT**, bijvoorbeeld een WAN-adres in `100.64.0.0/10`, of dubbele NAT kan inkomende verbindingen blokkeren. Vraag je provider om publiek IPv4 of configureer beide routers/bridge mode. Een mesh-VPN zoals Tailscale is een alternatief; host en vrienden moeten dat zelf installeren, dit pakket configureert het niet.
@@ -161,7 +180,8 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |
-| `config/mission/servahz_ce/building_types.xml` | Bouwloot en levensduur gebouwde onderdelen |
+| `config/mission/servahz_ce/building_types.xml` | Expansion- en RaG-bouwloot, levensduur gebouwde onderdelen |
+| `config/profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json` | RaG-startinstellingen; alleen gekopieerd als het live profiel ontbreekt |
 
 De installer vervangt de beheerde doelconfiguraties. Directe wijzigingen daarin verdwijnen bij opnieuw instellen: wijzig de bronbestanden hierboven. Overige Expansion-profielinstellingen blijven behouden. Verander `m_Version` niet zelf: dit zijn schema-versies.
 
@@ -193,7 +213,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 
 | Probleem | Controle |
 | --- | --- |
-| Ontbrekende PBO, verkeerde versie/signature | Alle zeven mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Ontbrekende PBO, verkeerde versie/signature | Alle negen mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | Launcher toont modnamen als een gecombineerde regel | Gebruik de nieuwste scripts; Windows PowerShell 5.1 gaf eerder een geneste modlijst door. In het RPT moeten modpaden met puntkomma's gescheiden zijn, met voor elke mod zijn eigen pad |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
@@ -209,10 +229,11 @@ Begin voor een kleine groep met een recente CPU, SSD en ongeveer **16 GB RAM in 
 ## Lokale acceptatiecontrole
 
 - `03-Controleren.cmd` slaagt: configuratie/modbestanden kloppen en de verwachte servernaam antwoordt op A2S_INFO. Dat bewijst nog geen speelbaarheid.
-- Je kunt met alle zeven mods inloggen, bewegen en loot oprapen.
+- Je kunt met alle negen mods inloggen, bewegen en loot oprapen.
 - AI verschijnt bij Balota/Stary/NWAF; bewegen, vechten en looten werken. Controleer routes op obstakels.
 - **M** toont de kaart met je positie; **N vasthouden** toont GPS/minimap en kort N wisselt modus.
 - Een Expansion-kit plaatsen, bouwen en een codeslot gebruiken werkt.
+- Een RaG-kit maken met 2 planken + 1 spijker; iedere houten bouwstap kost 2 planken. Plaatsen, afbouwen en een vanilla combinatieslot werken, ook na herstart.
 - Stop normaal, herstart en controleer personage, inventaris en gebouw.
 - Een vriend buiten je LAN kan verbinden en spelen.
 
