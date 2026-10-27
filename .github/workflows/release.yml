@@ -3,28 +3,47 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag to publish or repair
+        required: true
+        type: string
 permissions:
   contents: write
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
+      - name: Validate version tag
+        run: '[[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]'
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Extract version notes
-        run: python .github/scripts/release_notes.py "$GITHUB_REF_NAME" > "$RUNNER_TEMP/release-notes.md"
+        run: python .github/scripts/release_notes.py "$RELEASE_TAG" > "$RUNNER_TEMP/release-notes.md"
+      - name: Package Windows scripts and public configuration
+        run: |
+          git archive --format=zip --prefix=Dayz-Servahz/ \
+            --output="$RUNNER_TEMP/Dayz-Servahz-$RELEASE_TAG-Windows.zip" HEAD \
+            01-Instellen.cmd 02-Start-server.cmd 03-Controleren.cmd 04-Teststand.cmd \
+            AGENTS.md CHANGELOG.md README.md Mods.html scripts config
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release edit "$GITHUB_REF_NAME" --title "Servahz $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md"
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release edit "$RELEASE_TAG" --title "Servahz $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
           else
-            gh release create "$GITHUB_REF_NAME" --verify-tag --title "Servahz $GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/release-notes.md"
+            gh release create "$RELEASE_TAG" --verify-tag --title "Servahz $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
           fi
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/Dayz-Servahz-$RELEASE_TAG-Windows.zip" --clobber
