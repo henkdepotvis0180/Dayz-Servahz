@@ -14,4 +14,7 @@ jobs:
         shell: pwsh
         run: |
           $env:SERVAHZ_PWSH = (Get-Command powershell.exe).Source
+          # PowerShell 7's inherited module path can hide Windows PowerShell's
+          # built-in modules (including Get-FileHash) in the child process.
+          $env:PSModulePath = [Environment]::GetEnvironmentVariable('PSModulePath', 'Machine')
           python -m unittest discover -s tests -v

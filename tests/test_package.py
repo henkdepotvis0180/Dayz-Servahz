@@ -304,7 +304,7 @@ class PackageTests(unittest.TestCase):
     def test_missing_mod_does_not_create_mission(self):
         shutil.rmtree(self.workshop / self.mods[-1]["Id"])
         result = self.install(ok=False)
-        self.assertIn('Mod ontbreekt', result.stderr)
+        self.assertIn('Mod ontbreekt', ' '.join(result.stderr.split()))
         self.assertFalse(self.mission.exists())
 
     def test_steam_detection_skips_disconnected_drives(self):
