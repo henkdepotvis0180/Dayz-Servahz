@@ -14,14 +14,23 @@ try {
     $settings = Get-Content -LiteralPath $localConfig -Raw | ConvertFrom-Json
     if ($ServerPath) { $settings.ServerPath = $ServerPath }
     if ($WorkshopPath) { $settings.WorkshopPath = $WorkshopPath }
+    foreach ($name in @('ServerPath', 'WorkshopPath')) {
+        if ($settings.$name -and !(Test-Path -LiteralPath $settings.$name -PathType Container -ErrorAction SilentlyContinue)) {
+            if ($PSBoundParameters.ContainsKey($name)) {
+                throw "De opgegeven $name is niet bereikbaar. Controleer het pad en of de schijf is aangesloten."
+            }
+            Write-Warning "Opgeslagen $name is niet meer bereikbaar. Steam-locaties opnieuw zoeken."
+            $settings.$name = ''
+        }
+    }
     if (!$settings.ServerPath -or !$settings.WorkshopPath) {
         foreach ($library in (Get-SteamLibraries)) {
-            $candidate = Join-Path $library 'steamapps/common/DayZServer'
-            if (!$settings.ServerPath -and (Test-Path -LiteralPath (Join-Path $candidate 'DayZServer_x64.exe'))) {
+            $candidate = [IO.Path]::Combine($library, 'steamapps/common/DayZServer')
+            if (!$settings.ServerPath -and (Test-Path -LiteralPath ([IO.Path]::Combine($candidate, 'DayZServer_x64.exe')) -ErrorAction SilentlyContinue)) {
                 $settings.ServerPath = $candidate
             }
-            $candidate = Join-Path $library 'steamapps/workshop/content/221100'
-            if (!$settings.WorkshopPath -and (Test-Path -LiteralPath $candidate)) { $settings.WorkshopPath = $candidate }
+            $candidate = [IO.Path]::Combine($library, 'steamapps/workshop/content/221100')
+            if (!$settings.WorkshopPath -and (Test-Path -LiteralPath $candidate -PathType Container -ErrorAction SilentlyContinue)) { $settings.WorkshopPath = $candidate }
         }
     }
     if (!$settings.ServerPath) {

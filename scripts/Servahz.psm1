@@ -68,9 +68,13 @@ function Assert-ServerStopped {
 }
 
 function Get-SteamLibraries {
+    param([string[]]$SteamRoots)
     $roots = @()
+    if ($PSBoundParameters.ContainsKey('SteamRoots')) {
+        $roots = @($SteamRoots)
+    } else {
     foreach ($key in @('HKCU:\Software\Valve\Steam', 'HKLM:\SOFTWARE\WOW6432Node\Valve\Steam')) {
-        if (Test-Path $key) {
+        if (Test-Path $key -ErrorAction SilentlyContinue) {
             $props = Get-ItemProperty $key
             foreach ($name in @('SteamPath', 'InstallPath')) {
                 if ($props.PSObject.Properties.Name -contains $name) { $roots += $props.$name }
@@ -78,16 +82,23 @@ function Get-SteamLibraries {
         }
     }
     if (${env:ProgramFiles(x86)}) { $roots += Join-Path ${env:ProgramFiles(x86)} 'Steam' }
-    $libraries = @($roots)
+    }
+    $libraries = @()
     foreach ($root in $roots) {
-        $vdf = Join-Path $root 'steamapps/libraryfolders.vdf'
+        # Steam can retain disconnected drives. Join-Path validates PS drives
+        # and throws before Test-Path can reject them; check roots first.
+        if ([string]::IsNullOrWhiteSpace($root) -or !(Test-Path -LiteralPath $root -PathType Container -ErrorAction SilentlyContinue)) { continue }
+        $libraries += $root
+        $vdf = [IO.Path]::Combine($root, 'steamapps/libraryfolders.vdf')
         if (Test-Path -LiteralPath $vdf) {
             foreach ($line in (Get-Content -LiteralPath $vdf)) {
                 if ($line -match '"path"\s+"([^"]+)"') { $libraries += $Matches[1].Replace('\\', '\') }
             }
         }
     }
-    return @($libraries | Select-Object -Unique)
+    return @($libraries | Where-Object {
+        ![string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_ -PathType Container -ErrorAction SilentlyContinue)
+    } | Select-Object -Unique)
 }
 
 function Save-ManagedBackup {

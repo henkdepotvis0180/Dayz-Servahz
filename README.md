@@ -134,6 +134,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 | Ontbrekende PBO, verkeerde versie/signature | Alle zes mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
+| Oude Steam-schijf ontbreekt | De installer slaat onbereikbare Steam-bibliotheken over. Controleer bij een expliciet pad `ServerPath`/`WorkshopPath` of de schijf is aangesloten |
 | Querycontrole faalt | Server laten laden; querypoort en logs controleren; eerst lokaal proberen |
 | Query werkt, verbinden niet | Gamepoort, clientmods, BattlEye en gamebuild controleren |
 | Geen bots | Nader een patrouillegebied vanaf meer dan 250 m en wacht; controleer loadouts en logs |

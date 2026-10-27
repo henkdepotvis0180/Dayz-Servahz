@@ -130,6 +130,32 @@ class PackageTests(unittest.TestCase):
         self.assertIn('Mod ontbreekt', result.stderr)
         self.assertFalse(self.mission.exists())
 
+    def test_steam_detection_skips_disconnected_drives(self):
+        steam = self.root / 'Steam'
+        (steam / 'steamapps').mkdir(parents=True)
+        existing = self.root / 'Other Library'
+        existing.mkdir()
+        (steam / 'steamapps/libraryfolders.vdf').write_text(
+            '"libraryfolders"\n{\n"0" { "path" "' + str(existing).replace('\\', '\\\\') +
+            '" }\n"1" { "path" "ServahzMissingDrive:\\\\SteamLibrary" }\n}\n')
+        script = self.package / 'scripts/Probe-Steam.ps1'
+        script.write_text('''
+param([string]$SteamRoot)
+$ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
+$libraries = @(Get-SteamLibraries -SteamRoots @('ServahzMissingDrive:\\Steam', $SteamRoot))
+Write-Utf8File (Join-Path $PSScriptRoot 'libraries.json') (ConvertTo-Json -InputObject $libraries)
+''')
+        self.run_ps('Probe-Steam.ps1', '-SteamRoot', steam)
+        libraries = json.loads((script.parent / 'libraries.json').read_text())
+        self.assertEqual(libraries, [str(steam), str(existing)])
+
+    def test_explicit_missing_drive_has_actionable_error(self):
+        result = self.run_ps('Install-Server.ps1', '-ServerPath', 'ServahzMissingDrive:\\DayZServer',
+                             '-WorkshopPath', self.workshop, ok=False)
+        self.assertIn('ServerPath is niet bereikbaar', result.stderr)
+        self.assertFalse(self.mission.exists())
+
     def test_missing_key_does_not_create_mission(self):
         shutil.rmtree(self.workshop / self.mods[0]["Id"] / "Keys")
         result = self.install(ok=False)
