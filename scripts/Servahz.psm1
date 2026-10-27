@@ -324,6 +324,11 @@ function Set-LootRefill {
 function Set-EasyBuilding {
     param([string]$Path)
     $gameplay = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($gameplay.PlayerData.PSObject.Properties.Name -notcontains 'StaminaData') {
+        $gameplay.PlayerData | Add-Member -MemberType NoteProperty -Name StaminaData -Value ([pscustomobject]@{})
+    }
+    # Only standing sprint drain changes; combat actions, recovery and weight stay as configured.
+    $gameplay.PlayerData.StaminaData | Add-Member -MemberType NoteProperty -Name sprintStaminaModifierErc -Value 0.25 -Force
     foreach ($name in @('disableIsCollidingBBoxCheck', 'disableIsClippingRoofCheck',
             'disableIsBaseViableCheck', 'disableIsCollidingGPlotCheck', 'disableIsCollidingAngleCheck',
             'disableIsPlacementPermittedCheck', 'disableHeightPlacementCheck')) {

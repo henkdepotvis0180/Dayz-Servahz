@@ -228,6 +228,28 @@ class PackageTests(unittest.TestCase):
         result = self.install(ok=False)
         self.assertIn('LootDamageMax', result.stderr)
 
+    def test_travel_sprint_preserves_other_stamina_and_world(self):
+        path = self.baseline / 'cfggameplay.json'
+        gameplay = json.loads(path.read_text())
+        stamina = gameplay['PlayerData'].setdefault('StaminaData', {})
+        stamina.update(sprintStaminaModifierErc=1.0, sprintStaminaModifierCro=1.0,
+                       meleeStaminaModifier=1.0, obstacleTraversalStaminaModifier=1.0,
+                       holdBreathStaminaModifier=1.0, staminaMax=100.0,
+                       staminaWeightLimitThreshold=6000.0, CustomSentinel=17)
+        path.write_text(json.dumps(gameplay))
+        baseline = path.read_bytes()
+        self.install()
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'keep my save')
+        self.run_ps('Install-Server.ps1', '-TestMode')
+        current = json.loads((self.mission / 'cfggameplay.json').read_text())
+        expected = dict(gameplay['PlayerData'])
+        expected['StaminaData'] = dict(stamina, sprintStaminaModifierErc=0.25)
+        self.assertEqual(current['PlayerData'], expected)
+        self.assertEqual(path.read_bytes(), baseline)
+        self.assertEqual(world.read_bytes(), b'keep my save')
+
     def test_fast_refill_density_and_restore_without_wipe(self):
         types = ET.parse(self.baseline / 'db/types.xml')
         nailbox = types.find("type[@name='NailBox']")

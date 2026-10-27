@@ -26,6 +26,12 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 
 `ServerPath` bevat `DayZServer_x64.exe`. `WorkshopPath` bevat de genummerde modmappen, niet `!Workshop` en niet de DayZ-gamemap. Steam kan game, server en Workshop over verschillende bibliotheken verdelen.
 
+## Langer sprinten (v0.10.0)
+
+Rechtop sprinten kost **75% minder stamina**, zonder extra mod. De installer zet alleen `PlayerData.StaminaData.sprintStaminaModifierErc` op `0.25` in de eigen `cfggameplay.json`. Dit maakt ook rechtop sprinten tijdens een gevecht goedkoper. Melee, ontwijken, springen/klimmen, adem inhouden, zwemmen, hurkend sprinten, regeneratie en gewicht houden hun bestaande instellingen. Een zware rugzak kan je maximale staminabalk dus nog steeds verkleinen.
+
+Bijwerken: server stoppen, wereldbackup maken, `scripts` vervangen, **`04-Teststand.cmd`** uitvoeren en starten met **`02-Start-server.cmd`**. `01-Instellen.cmd` past dezelfde sprintaanpassing toe met behoud van je huidige lootinstellingen. Saves en wachtwoorden blijven staan. De aanpassing wordt bij iedere installatie opnieuw toegepast; voor herstel van normaal sprintverbruik zet je de waarde in `Set-EasyBuilding` in `scripts/Servahz.psm1` op `1.0` en voer je de installer opnieuw uit.
+
 ## Inhoud en spelregels
 
 | Onderdeel | Instelling |

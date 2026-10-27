@@ -4,6 +4,18 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.10.0] — 2026-10-27
+
+### Minder stamina voor lange afstanden
+
+- Rechtop sprinten gebruikt 25% van het normale verbruik (`sprintStaminaModifierErc=0.25`). Dit geldt ook voor rechtop sprinten tijdens gevechten; er is geen gevechtsdetectie.
+- Melee, ontwijken, springen/klimmen, adem inhouden, zwemmen, hurkend sprinten, regeneratie en de gewichtsbeperking houden hun bestaande instellingen. Er is geen extra mod nodig.
+- Installer en teststand passen dit toe in de eigen missie. Lokale wachtwoorden, saves en de Steam-standaardmissie blijven behouden; geen wipe.
+
+**Bijwerken:** stop de server, maak een wereldbackup, vervang `scripts` en voer voor jouw teststand `04-Teststand.cmd` uit. Start daarna met `02-Start-server.cmd`. `01-Instellen.cmd` past dezelfde stamina-aanpassing toe met behoud van de huidige lootinstellingen.
+
+**Controle:** pakkettests controleren het sprintverbruik en behoud van overige PlayerData/stamina-instellingen, standaardmissie en saves. In-game nog controleren: lange afstand sprinten met dezelfde bepakking, melee/ontwijken, adem inhouden en springen. Gewicht kan de maximale staminabalk nog steeds beperken.
+
 ## [0.9.0] — 2026-10-27
 
 ### Barricades, grote rugzakken, extra wapens en sneller zichtbare testloot
