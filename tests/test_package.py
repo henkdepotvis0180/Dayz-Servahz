@@ -284,7 +284,7 @@ class PackageTests(unittest.TestCase):
             filtered_source = ET.fromstring(ET.tostring(source.getroot()))
             filtered_generated = ET.fromstring(ET.tostring(generated.getroot()))
             for group in list(filtered_generated.findall('group')):
-                if group.find("container[@name='ServahzFood']") is not None:
+                if any(c.find("tag[@name='shelves']") is not None and c.find("category[@name='food']") is not None and len(c.findall('category')) == 1 for c in group.findall('container')):
                     old = filtered_source.find(f"group[@name='{group.get('name')}']")
                     filtered_source.remove(old)
                     filtered_generated.remove(group)
@@ -304,7 +304,7 @@ class PackageTests(unittest.TestCase):
         restored = ET.parse(self.mission / 'mapgroupproto.xml')
         original = ET.fromstring(ET.tostring(source.getroot()))
         for group in list(restored.findall('group')):
-            if group.find("container[@name='ServahzFood']") is not None:
+            if any(c.find("tag[@name='shelves']") is not None and c.find("category[@name='food']") is not None and len(c.findall('category')) == 1 for c in group.findall('container')):
                 original.remove(original.find(f"group[@name='{group.get('name')}']"))
                 restored.getroot().remove(group)
         self.assertEqual([n.attrib for n in restored.iter()], [n.attrib for n in original.iter()])
@@ -329,7 +329,7 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(extra.findtext("type[@name='BF_DoorBarricadeKit']/nominal"), '80')
         self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '60')
         self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '120')
-        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '200')
+        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '180')
         self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '60')
         for node in extra.findall('type'):
             if int(node.findtext('nominal')) == 0:
@@ -664,6 +664,17 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
 
 
 
+    def test_loot_summary_filters_rpt_to_class_names(self):
+        self.install()
+        rpt = self.server / 'Servahz/Profiles/test.RPT'
+        rpt.write_text('Cannot spawn SNAFU_FixtureMissing player=76561111111111111 address=192.0.2.1 secret-fixture-password\n')
+        result = self.run_ps('Test-Server.ps1','-StaticOnly')
+        self.assertIn('SNAFU_FixtureMissing',result.stdout)
+        for private in ['76561111111111111','192.0.2.1','secret-fixture-password']:
+            self.assertNotIn(private,result.stdout+result.stderr)
+        self.assertIn('Lootbalans 0.17',result.stdout)
+        self.assertIn('modwapens=',result.stdout)
+
     def test_static_check_detects_unusable_ammo_supply(self):
         self.install()
         path = self.mission / 'servahz_ce/extra_types.xml'
@@ -698,12 +709,17 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         for name, limit in [('Land_City_Store_Test',8), ('Land_House_1W_Test',8), ('Land_Workshop1_Test',8), ('Land_House_Disabled_Test',0)]:
             group = ET.SubElement(groups.getroot(),'group',name=name,lootmax=str(limit))
             ET.SubElement(group,'usage',name='Town')
-            shelf = ET.SubElement(group,'container',name='lootshelves',lootmax='6')
+            shelf = ET.SubElement(group,'container',name='lootshelves',lootmax='2')
             for category in ['tools','food']:
                 ET.SubElement(shelf,'category',name=category)
             ET.SubElement(shelf,'tag',name='shelves')
             for i in range(6):
                 ET.SubElement(shelf,'point',pos=f'{i} 0 0',range='0.2',height='0.5')
+            floor = ET.SubElement(group,'container',name='lootFloor',lootmax='4')
+            ET.SubElement(floor,'category',name='tools')
+            ET.SubElement(floor,'tag',name='floor')
+            for i in range(5):
+                ET.SubElement(floor,'point',pos=f'{i} 1 0',range='0.5',height='1')
         groups.write(groups_path)
         source_types = path.read_bytes()
         source_groups = groups_path.read_bytes()
@@ -719,11 +735,11 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
             for _ in range(2):
                 self.install()
                 generated = ET.parse(self.mission / 'db/types.xml')
-                self.assertEqual(generated.findtext("type[@name='BakedBeansCan']/nominal"), '225')
-                self.assertEqual(generated.findtext("type[@name='BakedBeansCan']/min"), '180')
+                self.assertEqual(generated.findtext("type[@name='BakedBeansCan']/nominal"), '600')
+                self.assertEqual(generated.findtext("type[@name='BakedBeansCan']/min"), '540')
                 self.assertEqual(generated.findtext("type[@name='Apple']/nominal"), '0')
                 self.assertEqual(generated.findtext("type[@name='SVD']/nominal"), '20')
-                self.assertEqual(generated.findtext("type[@name='Izh18']/nominal"), '60' if test_mode else '30')
+                self.assertEqual(generated.findtext("type[@name='Izh18']/nominal"), '24' if test_mode else '12')
                 for name in ['Ammo_308Win','Mag_STANAG_30Rnd']:
                     node = generated.find(f"type[@name='{name}']")
                     self.assertEqual(node.findtext('quantmin'),'80')
@@ -737,13 +753,21 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
                     after = updated.find(f"group[@name='{before.get('name')}']")
                     self.assertEqual(sorted(tuple(sorted(x.attrib.items())) for x in before.findall('.//point')),
                                      sorted(tuple(sorted(x.attrib.items())) for x in after.findall('.//point')))
-                    self.assertEqual(after.get('lootmax'),before.get('lootmax'))
-                for name, count in [('Land_City_Store_Test',3),('Land_House_1W_Test',2)]:
-                    food = updated.find(f"group[@name='{name}']/container[@name='ServahzFood']")
-                    self.assertEqual(len(food.findall('point')),count)
-                    self.assertEqual([n.get('name') for n in food.findall('category')],['food'])
+                    expected_cap = '11' if before.get('name') in ['Land_City_Store_Test','Land_House_1W_Test'] else before.get('lootmax')
+                    if before.get('name').endswith('_Test'):
+                        self.assertEqual(after.get('lootmax'),expected_cap)
+                for name, limit in [('Land_City_Store_Test',6),('Land_House_1W_Test',5)]:
+                    shelf = updated.find(f"group[@name='{name}']/container[@name='lootshelves']")
+                    self.assertEqual(len(shelf.findall('point')),6)
+                    self.assertEqual(shelf.get('lootmax'),str(limit))
+                    self.assertEqual([n.get('name') for n in shelf.findall('category')],['food'])
+                    self.assertIsNotNone(updated.find(f"group[@name='{name}']/container[@name='lootFloor']/category[@name='food']"))
                 for name in ['Land_Workshop1_Test','Land_House_Disabled_Test']:
-                    self.assertIsNone(updated.find(f"group[@name='{name}']/container[@name='ServahzFood']"))
+                    shelf = updated.find(f"group[@name='{name}']/container[@name='lootshelves']")
+                    self.assertEqual(len(shelf.findall('category')),2)
+                    self.assertIsNone(updated.find(f"group[@name='{name}']/container[@name='lootFloor']/category[@name='food']"))
+                self.assertIn('floor',{n.get('name') for n in generated.find("type[@name='BakedBeansCan']").findall('tag')})
+                self.assertLessEqual(int(generated.findtext("type[@name='Ammo_308Win']/nominal")),180 if test_mode else 90)
                 current = ((self.mission / 'db/types.xml').read_bytes(),(self.mission / 'mapgroupproto.xml').read_bytes())
                 if previous is not None:
                     self.assertEqual(current,previous)

@@ -1,4 +1,8 @@
 {
+  "FoodFactor": 8,
+  "VanillaFirearmCap": 12,
+  "SupplyCap": 90,
+  "AccessoryCap": 60,
   "VanillaFirearms": [
     "AK101",
     "AK74",

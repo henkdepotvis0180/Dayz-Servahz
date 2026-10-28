@@ -25,6 +25,21 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Meer eten en minder herhaling (v0.17.0)
+
+Gebruik [update 0.17.0](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.17.0) als eten ondanks 0.15/0.16 schaars bleef. Stop de server, voer het ene updatescript uit en start weer. De bestaande lootverversing wordt niet opnieuw gestart en je base/opslag wordt niet opgeruimd.
+
+- **Schappen voor eten:** de bestaande voedselschappen in winkels, horeca en huizen accepteren voortaan alleen voedsel. Tools/kleding/boeken kunnen er bij nieuwe spawns niet meer tussen komen. Voedsel mag ook op vloerplekken liggen. Er worden geen nieuwe coördinaten verzonnen.
+- **Extra ruimte:** deze gebouwen krijgen waar bestaande punten dat toelaten maximaal 12 extra lootruimte in winkels/horeca of 3 in huizen, met een ruimere schaplimiet. Daardoor hoeft extra eten niet uitsluitend te wachten tot alle oude items verlopen. Dit garandeert nog geen eten in ieder gebouw.
+- **Meer voorraad:** de 27 gekozen voedsel-/dranktypen gaan van 3× naar 8× bovenop je huidige lootfactor, met minimum 90% en restock 0. BakedBeansCan wordt bij de standaard 5× loot doel 600/minimum 540; bij 8× testloot doel 960/minimum 864.
+- **Minder overdaad van dezelfde voorraad:** gewone munitie/magazijnen maximaal 90 doelen per type, of 180 met testvoorraad, maar met 80–100% inhoud bij losse spawns. Gewone vanilla-guns maximaal 12/24 per type. De 21 modwapens blijven op 30/60; er zijn geen extra mods of nieuwe wapentypen toegevoegd. Event-/crafted-/uitgeschakelde loot wordt niet als gewone loot aangezet.
+
+Met officiële Chernarus-data en de testinstellingen veranderen de voedsel-/drankdoelen van **12.624 naar 33.664** en de munitie-/magazijndoelen van **65.024 naar 19.140**. Het totale beheerde lootdoel daalt van **276.940 naar 234.652**. Dit zijn doelen voor objecten/stapels op de hele kaart, geen daadwerkelijke aantallen of losse patronen. De verdeling verandert sterker zonder het totale itemdoel verder te vergroten.
+
+`03-Controleren.cmd` moet **Lootbalans 0.17** tonen, met jouw gegenereerde doelen voor eten/drinken, munitie/magazijnen en wapens. De aantallen hangen van je lokale loot-/testinstellingen en Steam-missieversie af. Eventuele relevante RPT-waarschuwingen tonen alleen modklassennamen; daarmee kan ontbrekende modloot gericht worden onderzocht zonder volledige logs te delen.
+
+Bestaande spullen blijven bestaan. Nieuwe voedselplekken worden geleidelijk gevuld; hogere doelen zijn geen bevestiging dat de engine alle doelen al heeft gehaald. Controleer verse winkels/huizen en geef bij aanhoudende problemen de nieuwe controle-uitvoer door. De oudere getallen en schappenindeling hieronder beschrijven hun eigen versies; deze sectie vervangt ze voor 0.17.0.
+
 ## Loot opnieuw verdelen met bescherming voor je base (v0.16.0)
 
 Deze optionele actie ververst geselecteerde losse wapens, magazijnen, munitie en houdbare voeding buiten een beschermde cirkel. **De update installeren wist niets.** Alle doelitems binnen de cirkel worden overgeslagen, ongeacht hoogte of wie ze heeft neergelegd. Opslag (ook in attachments), baseonderdelen, voertuigen en inventarissen worden overal overgeslagen. De nieuwe lootbalans uit 0.15.0 zit ook in deze update.

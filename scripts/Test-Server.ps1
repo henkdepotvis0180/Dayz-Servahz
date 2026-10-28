@@ -48,12 +48,34 @@ try {
     }
     $obsolete = $extra.SelectSingleNode('/types/type[@name="GCGN_Ammo_762x51"]')
     if ($null -ne $obsolete -and [int]$obsolete.nominal -ne 0) { throw 'Oude 7.62x51-loot is nog actief; de geselecteerde SNAFU-geweren gebruiken .308 Winchester.' }
-    foreach ($food in $groups.SelectNodes('/*/group/container[@name="ServahzFood"]')) {
-        if ($food.SelectNodes('category').Count -ne 1 -or $null -eq $food.SelectSingleNode('category[@name="food"]') -or $food.SelectNodes('point').Count -lt 1) {
-            throw 'Voedselplekken zijn niet correct ingericht. Voer 01-Instellen.cmd uit.'
+    if ($groups.SelectNodes('/*/group/container[@name="ServahzFood"]').Count -gt 0) { throw 'Oude voedselindeling gevonden. Voer 01-Instellen.cmd uit voor food-only schappen.' }
+    $foodShelves = $groups.SelectNodes('/*/group/container[tag[@name="shelves"] and category[@name="food"] and count(category)=1]')
+    $foodGoal = 0; $supplyGoal = 0; $modWeaponGoal = 0; $vanillaWeaponGoal = 0
+    $modWeapons = @($balance.WeaponSets | ForEach-Object { $_.Weapon })
+    foreach ($document in @($types, $extra)) {
+        foreach ($node in $document.SelectNodes('/types/type[nominal > 0]')) {
+            $name = $node.GetAttribute('name')
+            if ($name -in $modWeapons) { $modWeaponGoal += [int]$node.nominal }
+            if ($name -in $balance.VanillaFirearms) { $vanillaWeaponGoal += [int]$node.nominal }
+            if ($name -in $balance.ShelfFood) { $foodGoal += [int]$node.nominal }
+            elseif ($name -match '^(Ammo_|AmmoBox_|Mag_|Expansion_Ammo|SNAFU_Ammo_|GCGN_Ammo_)|(_Mag|_Mag_BK|rdMag_Black)$') { $supplyGoal += [int]$node.nominal }
         }
     }
-    Write-Host "Lootbalans: passende wapenvoorraden; $($groups.SelectNodes('/*/group/container[@name="ServahzFood"]').Count) gebouwtypen met aparte voedselplekken."
+    Write-Host "Lootbalans 0.17: $($foodShelves.Count) food-only schappen; doelen eten/drinken=$foodGoal, munitie/magazijnen=$supplyGoal. Dit zijn configuratiedoelen, geen actuele wereldtelling."
+    Write-Host "Wapendoelen: modwapens=$modWeaponGoal, vanilla-vuurwapens=$vanillaWeaponGoal. Bestaande items worden niet verwijderd."
+    # Only emit class names, never full RPT lines (which can contain player data).
+    try {
+        $rpt = Get-ChildItem -LiteralPath $layout.Profiles -Filter '*.RPT' -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($null -ne $rpt) {
+            $unknown = @()
+            foreach ($line in (Get-Content -LiteralPath $rpt.FullName -Tail 5000)) {
+                if ($line -match '(?i)(unknown|cannot|can.t spawn|not found|does not exist|doesn.t exist|no such|failed|no economy profile)') {
+                    foreach ($match in [regex]::Matches($line, '(?i)\b(?:SNAFU|GCGN|Expansion_)[A-Za-z0-9_]*\b')) { $unknown += $match.Value }
+                }
+            }
+            foreach ($name in @($unknown | Sort-Object -Unique | Select-Object -First 15)) { Write-Warning "RPT-waarschuwing met modklasse: $name. Controleer de modversie/spawnklasse." }
+        }
+    } catch { Write-Warning 'Laatste RPT kon niet worden gelezen; de statische configuratiecontrole gaat verder.' }
     [xml]$globals = Get-Content -LiteralPath (Join-Path $layout.Mission 'db/globals.xml') -Raw
     if ($settings.TestFastRestock) {
         $expected = @{ RestartSpawn = 50; RespawnTypes = 30; RespawnLimit = 50; RespawnAttempt = 4; LootSpawnAvoidance = 50 }

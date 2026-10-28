@@ -269,8 +269,8 @@ function Set-SurvivalLoot {
     $balance = Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/loot-balance.json') -Raw | ConvertFrom-Json
     [xml]$xml = Get-Content -LiteralPath $Path -Raw
     [xml]$extra = Get-Content -LiteralPath $ExtraPath -Raw
-    $cap = 30
-    if ($TestSupplies) { $cap = 60 }
+    $cap = [int]$balance.VanillaFirearmCap
+    if ($TestSupplies) { $cap *= 2 }
     foreach ($type in $xml.SelectNodes('/types/type')) {
         $name = $type.GetAttribute('name')
         $nominal = $type.SelectSingleNode('nominal')
@@ -283,9 +283,15 @@ function Set-SurvivalLoot {
             if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Min([int]$minimum.InnerText, [int]($cap * 0.8)) }
         }
         if ($name -in $balance.ShelfFood) {
-            $nominal.InnerText = [string]([int]$nominal.InnerText * 3)
+            $nominal.InnerText = [string]([int]$nominal.InnerText * [int]$balance.FoodFactor)
             $minimum = $type.SelectSingleNode('min')
-            if ($null -ne $minimum) { $minimum.InnerText = [string]([int]$minimum.InnerText * 3) }
+            if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Max([int]$minimum.InnerText * [int]$balance.FoodFactor, [Math]::Ceiling([int]$nominal.InnerText * 0.9)) }
+            $restock = $type.SelectSingleNode('restock')
+            if ($null -ne $restock) { $restock.InnerText = '0' }
+            if ($null -eq $type.SelectSingleNode('tag[@name="floor"]')) {
+                $tag = $xml.CreateElement('tag'); $tag.SetAttribute('name','floor')
+                $type.AppendChild($tag) | Out-Null
+            }
             foreach ($pair in @(@('usage', @('Town', 'Village')), @('value', @('Tier1', 'Tier2', 'Tier3', 'Tier4')))) {
                 foreach ($value in $pair[1]) {
                     if ($null -eq $type.SelectSingleNode($pair[0] + '[@name="' + $value + '"]')) {
@@ -293,6 +299,34 @@ function Set-SurvivalLoot {
                         $type.AppendChild($node) | Out-Null
                     }
                 }
+            }
+        }
+    }
+    $supplyCap = [int]$balance.SupplyCap
+    $accessoryCap = [int]$balance.AccessoryCap
+    if ($TestSupplies) { $supplyCap *= 2; $accessoryCap *= 2 }
+    $guns = @($balance.VanillaFirearms) + @($balance.WeaponSets | ForEach-Object { $_.Weapon })
+    foreach ($document in @($xml, $extra)) {
+        foreach ($type in $document.SelectNodes('/types/type[nominal > 0]')) {
+            $name = $type.GetAttribute('name')
+            $flags = $type.SelectSingleNode('flags')
+            if ($null -eq $flags -or $flags.GetAttribute('crafted') -eq '1' -or $flags.GetAttribute('deloot') -eq '1') { continue }
+            if ($name -match '^(Ammo_|AmmoBox_|Mag_|Expansion_Ammo|SNAFU_Ammo_|GCGN_Ammo_)' -or $name -match '(_Mag|_Mag_BK|rdMag_Black)$') {
+                $limit = $supplyCap
+                if ($name -notmatch 'AmmoBox') {
+                    foreach ($key in @('quantmin','quantmax')) {
+                        $quantity = $type.SelectSingleNode($key)
+                        if ($null -ne $quantity) { if ($key -eq 'quantmin') { $quantity.InnerText = '80' } else { $quantity.InnerText = '100' } }
+                    }
+                }
+            } elseif ($null -ne $type.SelectSingleNode('category[@name="weapons"]') -and $name -notin $guns) {
+                $limit = $accessoryCap
+            } else { continue }
+            $nominal = $type.SelectSingleNode('nominal')
+            if ([int]$nominal.InnerText -gt $limit) {
+                $nominal.InnerText = [string]$limit
+                $minimum = $type.SelectSingleNode('min')
+                if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Min([int]$minimum.InnerText, [int]($limit * 0.8)) }
             }
         }
     }
@@ -334,35 +368,44 @@ function Set-SurvivalLoot {
 
 function Set-FoodShelves {
     param([string]$Path)
-    # Input is freshly copied/generated from Steam on every install. Move existing
-    # shelf positions; never duplicate coordinates or invent new spawn positions.
+    # Use the original CE container names and coordinates. Every install starts
+    # from Steam's prototype so capacity increases never compound.
     [xml]$xml = Get-Content -LiteralPath $Path -Raw
+    $groupDefault = $xml.SelectSingleNode('/*/defaults/default[@name="group"]')
+    $containerDefault = $xml.SelectSingleNode('/*/defaults/default[@name="container"]')
+    $defaultGroupCap = 6; $defaultContainerCap = 4
+    if ($null -ne $groupDefault) { $defaultGroupCap = [int]$groupDefault.GetAttribute('lootmax') }
+    if ($null -ne $containerDefault) { $defaultContainerCap = [int]$containerDefault.GetAttribute('lootmax') }
     foreach ($group in $xml.SelectNodes('/*/group')) {
         $name = $group.GetAttribute('name')
         $shop = $name -match '^Land_(City_(Store|Stand_(Grocery|FastFood))|Village_(store|Pub)|House_1B01_Pub|FuelStation_Build|Workshop_FuelStation)'
         $isHouse = $name -match '^Land_House(Block)?_'
         if (!$shop -and !$isHouse) { continue }
-        if ($group.HasAttribute('lootmax') -and [int]$group.GetAttribute('lootmax') -eq 0) { continue }
-        if ($null -ne $group.SelectSingleNode('container[@name="ServahzFood"]')) { continue }
+        $groupCap = $defaultGroupCap
+        if ($group.HasAttribute('lootmax')) { $groupCap = [int]$group.GetAttribute('lootmax') }
+        if ($groupCap -le 0) { continue }
+        $extra = 3
+        if ($shop) { $extra = 12 }
+        $changed = $false
         foreach ($shelf in @($group.SelectNodes('container[category[@name="food"] and tag[@name="shelves"]]'))) {
             $points = @($shelf.SelectNodes('point'))
-            if ($points.Count -lt 2) { continue }
-            if ($shelf.HasAttribute('lootmax') -and [int]$shelf.GetAttribute('lootmax') -eq 0) { continue }
-            $limit = 2
-            if ($shop) { $limit = 6 }
-            $reserve = [Math]::Min($limit, [int][Math]::Floor($points.Count / 2))
-            $food = $xml.CreateElement('container')
-            $food.SetAttribute('name', 'ServahzFood'); $food.SetAttribute('lootmax', [string]$reserve)
-            $category = $xml.CreateElement('category'); $category.SetAttribute('name', 'food')
-            $food.AppendChild($category) | Out-Null
-            foreach ($tag in $shelf.SelectNodes('tag')) { $food.AppendChild($tag.CloneNode($true)) | Out-Null }
-            for ($i = 0; $i -lt $reserve; $i++) { $food.AppendChild($points[$i]) | Out-Null }
-            if ($shelf.HasAttribute('lootmax')) {
-                $shelf.SetAttribute('lootmax', [string][Math]::Min([int]$shelf.GetAttribute('lootmax'), $points.Count - $reserve))
-            }
-            $group.AppendChild($food) | Out-Null
-            break
+            $cap = $defaultContainerCap
+            if ($shelf.HasAttribute('lootmax')) { $cap = [int]$shelf.GetAttribute('lootmax') }
+            if ($points.Count -eq 0 -or $cap -le 0) { continue }
+            foreach ($category in @($shelf.SelectNodes('category[@name!="food"]'))) { $shelf.RemoveChild($category) | Out-Null }
+            $shelf.SetAttribute('lootmax', [string][Math]::Max($cap, [Math]::Min($points.Count, $cap + $extra)))
+            $changed = $true
         }
+        if (!$changed) { continue }
+        foreach ($floor in @($group.SelectNodes('container[tag[@name="floor"] and point]'))) {
+            if ($floor.HasAttribute('lootmax') -and [int]$floor.GetAttribute('lootmax') -eq 0) { continue }
+            if ($null -eq $floor.SelectSingleNode('category[@name="food"]')) {
+                $category = $xml.CreateElement('category'); $category.SetAttribute('name', 'food')
+                $floor.AppendChild($category) | Out-Null
+            }
+        }
+        $pointCount = $group.SelectNodes('container/point').Count
+        $group.SetAttribute('lootmax', [string][Math]::Max($groupCap, [Math]::Min($pointCount, $groupCap + $extra)))
     }
     Save-Xml $xml $Path
 }

@@ -168,7 +168,7 @@ try {
     if ($settings.TestMilitaryEverywhere) { Write-Host 'Teststand: normale militaire loot ook in steden, dorpen, industrie, boerderijen, politie en jachtgebieden; tiers 1-4.' }
     if ($settings.TestSuppliesEverywhere) { Write-Host 'Testvoorraad: dubbele doelen voor wapens, munitie en bouwvoorraad op alle 17 locatiecategorieen; planken en lumber als loot.' }
     if ($settings.TestFastRestock) { Write-Host 'Testaanvulling: 2x gebouwcapaciteit, RestartSpawn=50%, sneller bijvullen en 50 m afstand. Geen wereldwipe; geen garantie per gebouw.' }
-    Write-Host 'Lootbalans: begrensde vuurwapendoelen, passende voorraden, 3x houdbare voeding en aparte voedselplekken in winkels/huizen.'
+    Write-Host 'Lootbalans: lagere vanilla-/munitiedoelen, 8x houdbare voeding, food-only schappen en extra voedselruimte in winkels/huizen.'
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

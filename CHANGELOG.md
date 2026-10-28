@@ -4,6 +4,23 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.17.0] — 2026-10-28
+
+### Voedselschappen, minder munitie-overdaad en meer ruimte voor modwapens
+
+- De vorige balans liet nog veel hogere munitie-/magazijndoelen dan voedseldoelen toe. Met de officiële Chernarus-data en de 8×/3× testinstellingen: eten/drinken van 12.624 naar 33.664 objectdoelen, munitie/magazijnen van 65.024 naar 19.140. Het totale doel over de beheerde CE-bestanden daalt van 276.940 naar 234.652. Dit zijn configuratiedoelen, geen gemeten aantallen in een draaiende wereld.
+- De 27 gekozen houdbare voedsel-/dranktypen krijgen 8× in plaats van 3× bovenop de ingestelde lootfactor, minimum minstens 90% van hun doel en restock 0. Ze mogen ook op vloerposities spawnen. Uitgeschakelde, crafted en eventtypen blijven ongemoeid.
+- Winkels, horeca en huizen gebruiken hun oorspronkelijke schapcontainers en coördinaten. De schappen die voedsel toelaten worden volledig food-only; geen tools/kleding/boeken meer op nieuwe spawns van die schappen. Vloercontainers laten ook voedsel toe. De oude twee-/zes-puntenverdeling in een extra ServahzFood-container vervalt.
+- Bij deze gebouwen komt maximaal 12 extra lootruimte in winkels/horeca en 3 in huizen, waar bestaande fysieke posities dat toelaten. Ook de schaplimiet krijgt extra ruimte. Nul-capaciteit blijft uit, oorspronkelijke coördinaten blijven gelijk en opnieuw instellen telt de verhoging niet op.
+- Gewone vanilla-vuurwapens maximaal 12 per type, of 24 met testvoorraad. De 21 geselecteerde modwapens behouden hun 30/60 doelen, zodat veelvoorkomende vanilla-guns minder overheersen. Geen nieuwe mods of itemtypen toegevoegd.
+- Gewone munitie-/magazijndoelen maximaal 90 per type, of 180 met testvoorraad. Wapenaccessoires maximaal 60/120. Bestaande event-/crafted-regels blijven behouden. Losse gewone munitie/magazijnen krijgen 80–100% hoeveelheid; de passende voorraad blijft minstens tweemaal het individuele modwapendoel.
+- `03-Controleren.cmd` toont expliciet Lootbalans 0.17 en de daadwerkelijk gegenereerde voedsel-, munitie- en wapendoelen. Eventuele RPT-waarschuwingen met SNAFU/GCGN/Expansion-klassen worden als alleen klassennamen getoond, zonder de volledige logregels of spelersgegevens.
+- Geen automatische opruiming of nieuwe lootverversing. Bestaande items, opslag, saves, wachtwoorden en privé-basecirkel blijven behouden. De normale economie vult vrije plekken; oude spullen verdwijnen niet onmiddellijk door lagere doelen.
+
+**Bijwerken:** stop de server en voer `Servahz-Update-v0.17.0.cmd` uit naast `01-Instellen.cmd`. De updater behoudt actieve instellingen en het eigen voorbeeldbestand en maakt een backup. Start met `02-Start-server.cmd`; controleer met `03-Controleren.cmd` dat Lootbalans 0.17 en de nieuwe doelen worden getoond. Controleer ook verse winkels/huizen buiten de beschermde basecirkel. Geen nieuwe Workshop-downloads, wipe of herhaling van 05/06 nodig voor deze configuratie-update.
+
+**Controle:** regressietests en officiële Chernarus-CE-data voor food-only schappen, vloerselectie, voedselminima, caps/compatibele voorraad, behoud van coördinaten en uitgeschakelde loot, idempotentie, saves/instellingen en de privacyveilige RPT-uitvoer. De Windows-suite controleert de echte updater-launcher. De uiteindelijke spawns en verdeling moeten in-game worden beoordeeld; de controle telt configuratiedoelen en leest geen live wereldinventaris.
+
 ## [0.16.2] — 2026-10-28
 
 ### Aangepast voorbeeldbestand blokkeert geen bestaande installatie
