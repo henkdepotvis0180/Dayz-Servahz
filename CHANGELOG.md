@@ -4,6 +4,19 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.16.2] — 2026-10-28
+
+### Aangepast voorbeeldbestand blokkeert geen bestaande installatie
+
+- Het aangeleverde diagnostiekbestand wees uitsluitend naar `config/server.example.json`. Dat bestand is alleen een sjabloon voor de eerste installatie; een bestaande server gebruikt `config/server.local.json`.
+- Na validatie van de verplichte lokale serverinstellingen wordt het voorbeeldbestand niet meer als voorwaarde voor een update gecontroleerd. Een afwijkend of ontbrekend voorbeeld is dan toegestaan.
+- Het voorbeeldbestand blijft bij bestaande installaties byte voor byte behouden, ook als een toekomstige update een nieuw standaardsjabloon in de payload zou bevatten. De updater kopieert of logt de mogelijke privé-inhoud niet.
+- De bescherming van onbekende wijzigingen in scripts en andere beheerde configuratiebestanden blijft actief. Een ontbrekende `server.local.json` of ongeldige actieve instellingen blijven een fout. Geen wijziging aan loot, missiecode, saves, wachtwoorden, profielen of privé-basecoördinaten.
+
+**Bijwerken:** stop de server en voer `Servahz-Update-v0.16.2.cmd` uit in dezelfde bestaande pakketmap. Direct vanaf 0.14.0 mogelijk; eerdere mislukte updates hoeven niet eerst te worden hersteld. Laat zowel `server.example.json` als `server.local.json` staan en deel hun inhoud niet. De knoppen voor proefscan/lootverversing komen met de update mee; installeren plant geen opruiming in.
+
+**Controle:** integratietests met een afwijkend, mogelijk privé voorbeeldbestand en een gewijzigde voorbeeldversie in de payload, ongewijzigde actieve instellingen, geen privé-inhoud in uitvoer, herhaald bijwerken zonder extra backup, ontbrekend ongebruikt voorbeeld en blijvende bescherming van ontbrekende basis-/gewijzigde scriptbestanden. Windows voert ook de echte cmd-launcher uit. De lokale DayZ-proefscan uit 0.16.0 blijft nodig vóór de optionele lootverversing.
+
 ## [0.16.1] — 2026-10-28
 
 ### Updater herkent gemengde officiële bestanden en Windows-regeleinden

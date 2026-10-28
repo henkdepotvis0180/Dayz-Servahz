@@ -817,7 +817,7 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         self.run_ps('Queue-LootRefresh.ps1','-CenterX',8000,'-CenterZ',7000,ok=False)
         self.assertFalse((self.package / '.local/loot-refresh-settings.json').exists())
 
-    def make_update(self, *, missing_mod=False, second_change=False):
+    def make_update(self, *, missing_mod=False, second_change=False, changed_example=False):
         # Render a real embedded payload against this disposable installed base.
         spec = importlib.util.spec_from_file_location('build_update', ROOT / '.github/scripts/build_update.py')
         builder = importlib.util.module_from_spec(spec)
@@ -838,6 +838,10 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         if second_change:
             name = 'scripts/Test-Server.ps1'
             target[name] += b'\n# Official fixture update\n'
+        if changed_example:
+            example = json.loads(target['config/server.example.json'])
+            example['Hostname'] = 'Official future default'
+            target['config/server.example.json'] = json.dumps(example).encode()
         self.update_target = target
 
         states = [builder.file_state('v0.13.0',base), builder.file_state('v0.14.0',target)]
@@ -938,12 +942,37 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         self.assertEqual(backups[0].read_text(),'My retained local notes')
         self.assertEqual(docs.read_text(),'Updated documentation')
 
+    def test_update_preserves_private_example_even_when_payload_changes_it(self):
+        self.install()
+        script, manifest = self.make_update(changed_example=True)
+        self.assertIn('config/server.example.json',manifest['files'])
+        example = self.package / 'config/server.example.json'
+        private_example = b'{"ServerPassword":"private-template-secret","unknown":true}'
+        example.write_bytes(private_example)
+        active = self.local.read_bytes()
+        result = self.apply_update(script)
+        self.assertEqual(example.read_bytes(),private_example)
+        self.assertEqual(self.local.read_bytes(),active)
+        self.assertNotIn('private-template-secret',result.stdout+result.stderr)
+        self.apply_update(script)
+        self.assertEqual(len(list((self.package / '.local/Backups').glob('update-v0.14.0-*'))),1)
+
+    def test_update_accepts_missing_unused_example_with_valid_local_settings(self):
+        self.install()
+        script, _ = self.make_update()
+        example = self.package / 'config/server.example.json'
+        example.unlink()
+        active = self.local.read_bytes()
+        self.apply_update(script)
+        self.assertFalse(example.exists())
+        self.assertEqual(self.local.read_bytes(),active)
+
     def test_update_reports_missing_required_base_file(self):
         self.install()
         script, _ = self.make_update()
-        (self.package / 'config/server.example.json').unlink()
+        (self.package / 'config/mods.json').unlink()
         result = self.apply_update(script,ok=False)
-        self.assertIn('Ontbreekt: config/server.example.json',result.stdout)
+        self.assertIn('Ontbreekt: config/mods.json',result.stdout)
         self.assertFalse((self.package / '.local/Backups').exists())
 
     def test_update_retries_after_installer_failure(self):

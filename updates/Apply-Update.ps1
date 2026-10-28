@@ -33,12 +33,16 @@ try {
     # mix published versions; text encoding/newlines do not change their content.
     $targetState = $manifest.states[-1]
     $documentation = @('README.md', 'CHANGELOG.md', 'AGENTS.md')
+    # Read-ServerSettings already validated the mandatory active local settings.
+    # This first-install template is unused and may contain private user values.
+    $preserve = @('config/server.example.json')
     $conflicts = @()
     $payloadCurrent = $true
     $sha = [Security.Cryptography.SHA256]::Create()
     try {
         foreach ($property in $targetState.files.PSObject.Properties) {
             $name = $property.Name
+            if ($name -in $preserve) { continue }
             $path = Join-Path $root $name
             $inPayload = $manifest.files.PSObject.Properties.Name -contains $name
             if (!(Test-Path -LiteralPath $path -PathType Leaf)) {
@@ -113,6 +117,7 @@ try {
     & $engine -NoLogo -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'scripts/Backup-World.ps1') -Destination (Join-Path $backup 'world')
     if ($LASTEXITCODE -ne 0) { throw 'Wereldbackup mislukt. Er is niets bijgewerkt.' }
     foreach ($property in $manifest.files.PSObject.Properties) {
+        if ($property.Name -in $preserve) { continue }
         $original = Join-Path $root $property.Name
         if (Test-Path -LiteralPath $original) {
             $saved = Join-Path (Join-Path $backup 'package') $property.Name
@@ -121,6 +126,7 @@ try {
         }
     }
     foreach ($property in $manifest.files.PSObject.Properties) {
+        if ($property.Name -in $preserve) { continue }
         $destination = Join-Path $root $property.Name
         New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force | Out-Null
         Copy-Item -LiteralPath (Join-Path $unpacked $property.Name) -Destination $destination -Force
