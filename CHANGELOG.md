@@ -4,6 +4,21 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.1] — 2026-10-28
+
+### Alleen-lezen diagnose bij RaG-deuren en combinatiesloten
+
+- Nieuwe knop **`07-Bouwdiagnose.cmd`**. Leest de bestaande installatie en schrijft alleen een afgeschermde samenvatting onder `.local/BuildDiagnostics`. Start/stopt geen server en wijzigt geen wereldbestanden, deuren, slotcodes, actieve instellingen of profielen.
+- Vergelijkt SHA-256 van alle RaG Core- en RaG BaseBuilding-PBO's in de serverkopie met de lokale Workshop-download, inclusief ontbrekende en achtergebleven bestanden. De bestaande 03-controle controleerde aanwezigheid en sleutels, niet die inhoud. Gelijke bestanden bewijzen geen actuele Steam-download of overeenkomst met de mods op de computers van spelers.
+- Toont uitsluitend geselecteerde numerieke RaG-instellingen en kosten van deurstappen, de beschikbare DayZ Server-bestandsversie, wereldopslagmetadata en datums van maximaal vijf aanwezige wereldbackupmappen. Leest geen wereldinventaris en voert geen herstel uit; een aanwezige backup is niet automatisch een gecontroleerde herstelbackup.
+- Zoekt in de staarten van maximaal acht recente RPT-/script-/ADM-logs naar bouw-/slotfouten en bouw-/afbraakmeldingen. Toont maximaal dertig samenvattingen met alleen tijd, vaste categorie en toegestane publieke klasse-/functienamen. Geen volledige logregels, spelersnamen, adressen, PIN's, basecoördinaten of wachtwoorden. Foutsignalen bewijzen op zichzelf geen verwijdering van een specifieke deur.
+- Geen wijziging aan de RaG-economie of levensduur. Het ontbreken van geplaatste RaG-klassen in `types.xml` bewijst geen oorzaak: de makersdocumentatie adviseert kits/het boek voor de economie en waarschuwt tegen het toevoegen van de implementatieklassen. `BaseInfiniteLifetime` is volgens RaG 45 dagen na opslag laden, geen onbeperkte bescherming.
+- Dit is een diagnosehulpmiddel, **geen bevestigde reparatie** voor verkeerde cijferwieltjes of een verdwenen deur. Geen nieuwe mods, lootverversing, wipe, automatische terugzetactie of wijziging aan bestaande CJ187-profielen.
+
+**Bijwerken/gebruiken:** stop de server en voer `Servahz-Update-v0.18.1.cmd` uit naast `01-Instellen.cmd`; de gewone updater maakt eerst een wereld-/profielbackup en behoudt saves, wachtwoorden en actieve instellingen. Dubbelklik daarna op `07-Bouwdiagnose.cmd`. De diagnose werkt ook met de server gestopt en installeert zelf niets. Deel alleen het resulterende diagnoserapport. Bewaar de huidige wereld apart voordat een herstelkeuze wordt gemaakt; een volledige oude wereld terugzetten kan recente bouw- en spelersvoortgang vervangen. Voor het verzamelen van dit rapport zijn starten, 04, 05 of 06 niet nodig.
+
+**Controle:** tests voor ongewijzigde wereld/profielen/instellingen/logs, privacyfilters bij meerdere regels tellende scriptfouten en afbraakmeldingen, afwijkende/ontbrekende RaG-PBO's, ongeldige profielen zonder vervanging, scriptsyntaxis en het updaterpad. Volledige regressiesuite en Windows PowerShell 5.1. De werkelijke lokale modversies, serverlogsignalen en status van de verdwenen deur kunnen pas met het rapport/in-game worden beoordeeld; hier is geen DayZ-engine uitgevoerd.
+
 ## [0.18.0] — 2026-10-28
 
 ### Sleutelvrije CJ187-voorraadkisten en MMG Half Mega Inventory

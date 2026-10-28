@@ -397,6 +397,71 @@ class PackageTests(unittest.TestCase):
         self.run_ps('Backup-World.ps1', '-Destination', destination)
         self.assertEqual((destination / 'Profiles' / relative).read_bytes(), previous)
 
+    def test_build_diagnostic_preserves_world_profile_and_filters_private_logs(self):
+        self.install()
+        profiles = self.server / 'Servahz/Profiles'
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'preserve whole world')
+        profile = profiles / 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+        rag = json.loads(profile.read_text())
+        rag['PrivateSentinel'] = 'DO-NOT-PRINT-PROFILE'
+        profile.write_text(json.dumps(rag))
+        settings = json.loads(self.local.read_text())
+        settings['ServerPassword'] = 'DO-NOT-PRINT-PASSWORD'
+        self.local.write_text(json.dumps(settings))
+        (profiles / 'script_test.log').write_text('''SCRIPT (E): 18:22:31 NULL pointer to instance
+Private player SOME-PRIVATE-PLAYER at 192.0.2.123 used pin 549
+Class: ActionDialCombinationLockOnTarget
+Function: OnFinishProgressServer
+File: RaG_BB_Door.c
+18:24:00 player SOME-PRIVATE-PLAYER dismantled RaG_BB_Door at private-coordinates
+''')
+        backup = self.package / '.local/Backups/update-v0.18.0-test/world/mission/storage_1'
+        backup.mkdir(parents=True)
+        (backup / 'players.db').write_bytes(b'older world')
+        before = {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()}
+        local_before = self.local.read_bytes()
+        result = self.run_ps('Test-Building.ps1')
+        self.assertIn('bouwdiagnose 0.18.1', result.stdout)
+        self.assertIn('RaG_Core: GELIJK', result.stdout)
+        self.assertIn('BaseInfiniteLifetime=0', result.stdout)
+        self.assertIn('PLANKS=2, NAILS=0, LOGS=0, METALSHEETS=0', result.stdout)
+        self.assertIn('NULL-pointer', result.stdout)
+        self.assertIn('afbraak/verwijderingsmelding', result.stdout)
+        self.assertIn('ActionDialCombinationLockOnTarget', result.stdout)
+        self.assertIn('Wereldbackup #1', result.stdout)
+        reports = list((self.package / '.local/BuildDiagnostics').glob('*.txt'))
+        self.assertEqual(len(reports), 1)
+        for output in [result.stdout, result.stderr, reports[0].read_text(encoding='utf-8-sig')]:
+            for private in ['DO-NOT-PRINT-PROFILE', 'DO-NOT-PRINT-PASSWORD', 'SOME-PRIVATE-PLAYER', '192.0.2.123', '549', 'private-coordinates']:
+                self.assertNotIn(private, output)
+        self.assertEqual(self.local.read_bytes(), local_before)
+        self.assertEqual(before, {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()})
+
+    def test_build_diagnostic_detects_stale_and_missing_mod_copies(self):
+        self.install()
+        workshop = self.workshop / '3157695626/Addons/test.pbo'
+        workshop.write_bytes(b'new workshop script version')
+        result = self.run_ps('Test-Building.ps1')
+        self.assertIn('RaG_BaseBuilding: WIJKT AF', result.stdout)
+        server_pbo = self.server / 'Servahz/Mods/@RaG_BaseBuilding/Addons/test.pbo'
+        server_pbo.unlink()
+        result = self.run_ps('Test-Building.ps1')
+        self.assertIn('RaG_BaseBuilding: ONVOLLEDIG', result.stdout)
+        self.assertFalse(server_pbo.exists())
+
+    def test_build_diagnostic_reports_invalid_profile_without_replacing_it(self):
+        self.install()
+        profile = self.server / 'Servahz/Profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+        profile.write_text('{ invalid json PRIVATE-INVALID-CONTENT')
+        previous = profile.read_bytes()
+        result = self.run_ps('Test-Building.ps1')
+        self.assertIn('RaG-profiel: ontbreekt', result.stdout)
+        self.assertIn('Geen herkende bouw-/slotfoutsignalen', result.stdout)
+        self.assertNotIn('PRIVATE-INVALID-CONTENT', result.stdout + result.stderr)
+        self.assertEqual(profile.read_bytes(), previous)
+
     def test_lootchests_unlocked_contents_placement_and_culture(self):
         # Deliberately use a non-symmetric local point and a 90-degree building.
         (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>

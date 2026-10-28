@@ -25,6 +25,18 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Een RaG-deur verdwijnt of het combinatieslot reageert verkeerd (v0.18.1)
+
+Gebruik [update 0.18.1](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.1) om **`07-Bouwdiagnose.cmd`** toe te voegen. Dit is een diagnosehulpmiddel, geen bevestigde slotreparatie of herstel van een verdwenen deur. Stop de server en voer het ene updatescript uit naast `01-Instellen.cmd`; de bestaande updater maakt eerst een wereld-/profielbackup. Daarna kun je 07 uitvoeren met de server nog gestopt. Het verzamelen van de diagnose vereist geen serverstart, teststand of lootverversing.
+
+De knop leest de actieve numerieke RaG-bouwinstellingen en deurkosten, vergelijkt de twee RaG-modkopieën op de server met de lokale Workshop-download, toont wereldopslag-/backupmetadata en zoekt naar relevante fout-/bouwmeldingen in recente logstaarten. **GELIJK** bij een mod betekent gelijke lokale PBO-inhoud, niet automatisch de nieuwste Steam-versie of dezelfde clientbestanden. Bij **WIJKT AF** of **ONVOLLEDIG**: houd de server gestopt, laat Steam de twee RaG-mods voltooien/repareren en voer 01 opnieuw uit. Ook spelers moeten dezelfde actuele mods laden. Dit is een herstelstap voor een afwijkende kopie, geen garantie dat daarmee iedere slotfout is opgelost.
+
+07 schrijft uitsluitend **`.local/BuildDiagnostics/<datum-tijd>.txt`** in de pakketmap en toont de samenvatting op het scherm. De wereld, lokale serverinstellingen, profielen en bronlogs blijven ongewijzigd. Alleen vaste categorieën, tijden en toegestane publieke klasse-/functienamen worden uit logs overgenomen; volledige logregels, gebruikersgegevens, slotcodes en privéconfiguratie worden niet afgedrukt. Deel alleen dit diagnoserapport. Het programma ontleedt geen wereldsave en kan dus niet bewijzen dat een specifieke deur is verwijderd of nog aanwezig is. Logsignalen zijn aanwijzingen, geen automatische oorzaakvaststelling.
+
+Het ontbreken van aparte CE-lootregels voor geplaatste RaG-delen is **geen bewezen opschoonfout**. De [RaG-installatiedocumentatie](https://tyson89.github.io/RaG-Mod-Wikis/mods/basebuilding/server-setup/) adviseert kits/het boek en waarschuwt tegen het toevoegen van de geplaatste implementatieklassen aan `types.xml`. Volgens de [RaG-configuratiedocumentatie](https://tyson89.github.io/RaG-Mod-Wikis/mods/basebuilding/server-configuration/) zet `BaseInfiniteLifetime=1` de levensduur na opslag laden op 45 dagen. Die instelling voorkomt niet iedere verwijdering en herstelt geen verdwenen object. Deze update verandert haar niet.
+
+Bij verlies van bouwdelen: stop normaal en bewaar eerst een aparte actuele wereld-/profielbackup met `scripts/Backup-World.ps1` volgens de backupinstructies hieronder. De diagnose toont alleen of oudere wereldbackupmappen aanwezig zijn, niet of zij jouw deur bevatten of volledig herstelbaar zijn. Een volledige oude wereld terugzetten kan recente bouw- en spelersvoortgang vervangen; er wordt hier niets automatisch teruggezet. Controleer met het lokale rapport en de in-game situatie voordat een herstelkeuze wordt gemaakt.
+
 ## Voorraadkisten zonder sleutels en meer MMG-vakjes (v0.18.0)
 
 Download [update 0.18.0](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.0). Deze bevat ook alle wijzigingen tot en met 0.17.0; tussenliggende versies hoef je niet apart uit te voeren.
