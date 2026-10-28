@@ -2,6 +2,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $script:PackageRoot = Split-Path $PSScriptRoot -Parent
 $script:MissionName = 'servahz.chernarusplus'
+. (Join-Path $PSScriptRoot 'LootChests.ps1')
 
 function Write-Utf8File {
     param([string]$Path, [string]$Text)
@@ -133,7 +134,7 @@ function Save-ManagedBackup {
     foreach ($relative in @('db/types.xml', 'db/globals.xml', 'mapgroupproto.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
             'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json',
             'expansion/settings/MapSettings.json',
-            'servahz_ce/building_types.xml', 'servahz_ce/extra_types.xml', 'servahz_ce/extra_spawnabletypes.xml')) {
+            'servahz_ce/building_types.xml', 'servahz_ce/extra_types.xml', 'servahz_ce/extra_spawnabletypes.xml', 'servahz_ce/lootchest_types.xml')) {
         $source = Join-Path $Layout.Mission $relative
         if (Test-Path -LiteralPath $source) {
             $target = Join-Path $dest ('mission/' + $relative)
@@ -147,6 +148,12 @@ function Save-ManagedBackup {
         $target = Join-Path $dest ('Profiles/' + $ragRelative)
         New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
         Copy-Item -LiteralPath $ragConfig -Destination $target
+    }
+    $chestSource = Join-Path $Layout.Profiles 'CJ_LootChests'
+    if (Test-Path -LiteralPath $chestSource) {
+        $chestTarget = Join-Path $dest 'Profiles/CJ_LootChests'
+        New-Item -ItemType Directory -Path (Split-Path $chestTarget -Parent) -Force | Out-Null
+        Copy-Item -LiteralPath $chestSource -Destination $chestTarget -Recurse
     }
     if (Test-Path -LiteralPath $Layout.Config) {
         New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -427,7 +434,7 @@ function Set-EconomyInclude {
     }
     $ce = $xml.CreateElement('ce')
     $ce.SetAttribute('folder', 'servahz_ce')
-    foreach ($entry in @(@('building_types.xml', 'types'), @('extra_types.xml', 'types'), @('extra_spawnabletypes.xml', 'spawnabletypes'))) {
+    foreach ($entry in @(@('building_types.xml', 'types'), @('extra_types.xml', 'types'), @('extra_spawnabletypes.xml', 'spawnabletypes'), @('lootchest_types.xml', 'types'))) {
         $file = $xml.CreateElement('file')
         $file.SetAttribute('name', $entry[0])
         $file.SetAttribute('type', $entry[1])

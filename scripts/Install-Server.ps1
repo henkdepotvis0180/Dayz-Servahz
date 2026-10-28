@@ -79,6 +79,7 @@ try {
             'mpmissions/dayzOffline.chernarusplus/db/types.xml',
             'mpmissions/dayzOffline.chernarusplus/db/globals.xml',
             'mpmissions/dayzOffline.chernarusplus/mapgroupproto.xml',
+            'mpmissions/dayzOffline.chernarusplus/mapgrouppos.xml',
             'mpmissions/dayzOffline.chernarusplus/cfgeconomycore.xml',
             'mpmissions/dayzOffline.chernarusplus/cfggameplay.json')) {
         if (!(Test-Path -LiteralPath (Join-Path $layout.Server $file))) { throw "Serverbestand ontbreekt: $file. Controleer de Steam-installatie." }
@@ -94,6 +95,16 @@ try {
             throw "Handtekeningsleutel ontbreekt voor $($mod.Name). Laat Steam de mod opnieuw downloaden."
         }
     }
+    # Prepare and validate the new profile before changing the live mission/mods.
+    $chestPath = Join-Path $layout.Profiles 'CJ_LootChests/LootChests_V106.json'
+    $newChestConfig = $null
+    if (Test-Path -LiteralPath $chestPath) {
+        $chestConfig = Get-Content -LiteralPath $chestPath -Raw | ConvertFrom-Json
+    } else {
+        $newChestConfig = New-LootChestConfig -PositionsPath (Join-Path $baseline 'mapgrouppos.xml') -GroupsPath (Join-Path $baseline 'mapgroupproto.xml')
+        $chestConfig = $newChestConfig
+    }
+    $chestCount = Assert-LootChestConfig $chestConfig
     if ((Test-Path -LiteralPath $layout.Runtime) -and !(Test-Path -LiteralPath $layout.Marker)) {
         throw "De map $($layout.Runtime) bestaat zonder Servahz-marker. Kies een andere serverinstallatie; bestaande bestanden worden niet overschreven."
     }
@@ -161,6 +172,12 @@ try {
         New-Item -ItemType Directory -Path (Split-Path $ragTarget -Parent) -Force | Out-Null
         Copy-Item -LiteralPath $ragSource -Destination $ragTarget
     }
+    if ($null -ne $newChestConfig) {
+        Write-Utf8File $chestPath ($newChestConfig | ConvertTo-Json -Depth 20)
+    }
+    Write-LootChestLocations -Config $chestConfig -Path (Join-Path $layout.Profiles 'CJ_LootChests/Servahz-Lootkisten.csv')
+    Write-Host "CJ187: $chestCount voorraadkisten zonder sleutel; locaties in Profiles/CJ_LootChests/Servahz-Lootkisten.csv."
+    Write-Host 'MMG Half Mega: meer vakjes in bestaande MMG-spullen; geen extra kleding aan de economie toegevoegd.'
     Write-ServerConfig $settings $layout.Config
     Write-Host "Klaar: $count vanilla-loottypen op $($settings.LootMultiplier)x. Missie: servahz.chernarusplus"
     Write-Host "Military-loot: extra $($settings.MilitaryLootMultiplier)x (totaal $($settings.LootMultiplier * $settings.MilitaryLootMultiplier)x vanilla)."

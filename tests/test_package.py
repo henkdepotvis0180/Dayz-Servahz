@@ -78,6 +78,17 @@ class PackageTests(unittest.TestCase):
                 "BaseBuildingData": {"HologramData": {"disableIsUnderwaterCheck": False},
                                      "ConstructionData": {"disableDistanceCheck": False}},
                 "PlayerData": {"sentinel": "preserve"}}))
+        if vanilla:
+            shutil.copyfile(Path(vanilla) / 'mapgrouppos.xml', self.baseline / 'mapgrouppos.xml')
+        else:
+            # Asymmetric floor point tests world rotation independently of origin.
+            groups = ET.parse(self.baseline / 'mapgroupproto.xml')
+            shop = ET.SubElement(groups.getroot(), 'group', name='Land_Village_store', lootmax='4')
+            ET.SubElement(shop, 'usage', name='Town')
+            floor = ET.SubElement(shop, 'container', name='lootFloor', lootmax='4')
+            ET.SubElement(floor, 'point', pos='2 -1 3', range='1.5', height='2', flags='32')
+            groups.write(self.baseline / 'mapgroupproto.xml')
+            (self.baseline / 'mapgrouppos.xml').write_text('<map><group name="Land_Village_store" pos="2000 100 3000" rpy="0 0 90" a="0"/></map>')
         # A vanilla world must never be copied into our new mission.
         (self.baseline / "storage_1").mkdir()
         (self.baseline / "storage_1/vanilla-save").write_text("do not copy")
@@ -342,8 +353,8 @@ class PackageTests(unittest.TestCase):
             core = ET.parse(self.mission / 'cfgeconomycore.xml')
             files = core.findall("ce[@folder='servahz_ce']/file")
             self.assertEqual({(f.get('name'), f.get('type')) for f in files},
-                             {('building_types.xml', 'types'), ('extra_types.xml', 'types'), ('extra_spawnabletypes.xml', 'spawnabletypes')})
-            self.assertEqual(len(files), 3)
+                             {('building_types.xml', 'types'), ('extra_types.xml', 'types'), ('extra_spawnabletypes.xml', 'spawnabletypes'), ('lootchest_types.xml', 'types')})
+            self.assertEqual(len(files), 4)
         core_path = self.mission / 'cfgeconomycore.xml'
         core = ET.parse(core_path)
         ce = core.find("ce[@folder='servahz_ce']")
@@ -385,6 +396,120 @@ class PackageTests(unittest.TestCase):
         destination = self.root / 'rag world backup'
         self.run_ps('Backup-World.ps1', '-Destination', destination)
         self.assertEqual((destination / 'Profiles' / relative).read_bytes(), previous)
+
+    def test_lootchests_unlocked_contents_placement_and_culture(self):
+        # Deliberately use a non-symmetric local point and a 90-degree building.
+        (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>
+          <group name="Land_Village_store" lootmax="3"><usage name="Town"/>
+            <container name="lootFloor" lootmax="3">
+              <point pos="2 -1 3" range="1.5" height="2"/>
+            </container></group></prototype>''')
+        (self.baseline / 'mapgrouppos.xml').write_text('''<map>
+          <group name="Land_Village_store" pos="2000 100 3000" rpy="0 0 90" a="0"/>
+          <group name="Land_Village_store" pos="2010 100 3010" rpy="0 0 0" a="90"/>
+          <group name="Land_Village_store" pos="5000 100 3000" rpy="4 0 0" a="90"/>
+          <group name="Land_Village_store" pos="6000 100 3000" rpy="0 0 -90" a="180"/>
+          </map>''')
+        probe = self.package / 'scripts/Probe-ChestCulture.ps1'
+        probe.write_text('''
+param([string]$ServerPath, [string]$WorkshopPath)
+Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
+[Threading.Thread]::CurrentThread.CurrentCulture = 'nl-NL'
+& (Join-Path $PSScriptRoot 'Install-Server.ps1') -ServerPath $ServerPath -WorkshopPath $WorkshopPath
+''')
+        self.run_ps('Probe-ChestCulture.ps1', '-ServerPath', self.server, '-WorkshopPath', self.workshop)
+        profile = self.server / 'Servahz/Profiles/CJ_LootChests/LootChests_V106.json'
+        config = json.loads(profile.read_text(encoding='utf-8-sig'))
+        locations = config['LootChestsLocations']
+        self.assertEqual(len(locations), 2)
+        xyz = [list(map(float, x['pos'][0].split('|')[0].split())) for x in locations]
+        self.assertEqual(xyz, [[2003.0, 99.03, 2998.0], [5997.0, 99.03, 3002.0]])
+        self.assertTrue(all(x['keyclass'] == '' and x['openable'] == 2 for x in locations))
+        self.assertTrue(all(x['number'] == 1 and x['lootrandomize'] == 0 for x in locations))
+        self.assertTrue(all(len(x['loot']) >= 10 for x in locations))
+        self.assertEqual(config['RandomQuantity'], 0)
+        self.assertIn('2003.0', (profile.parent / 'Servahz-Lootkisten.csv').read_text())
+        self.run_ps('Test-Server.ps1', '-StaticOnly')
+
+    def test_lootchests_preserve_profile_world_and_refuse_locked_profile(self):
+        self.install()
+        relative = 'CJ_LootChests/LootChests_V106.json'
+        profile = self.server / 'Servahz/Profiles' / relative
+        config = json.loads(profile.read_text())
+        config['PrivateSentinel'] = 'keep these preferences'
+        profile.write_text(json.dumps(config))
+        before = profile.read_bytes()
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'world sentinel')
+        settings = self.local.read_bytes()
+        self.install()
+        self.assertEqual(profile.read_bytes(), before)
+        self.assertEqual(world.read_bytes(), b'world sentinel')
+        self.assertEqual(json.loads(self.local.read_bytes()), json.loads(settings))
+        backups = list((self.server / 'Servahz/Backups').glob('config-*/Profiles/' + relative))
+        self.assertTrue(any(p.read_bytes() == before for p in backups))
+        config['LootChestsLocations'][0]['keyclass'] = 'CJ_Key1'
+        profile.write_text(json.dumps(config))
+        locked = profile.read_bytes()
+        mission_before = (self.mission / 'db/types.xml').read_bytes()
+        self.assertIn('vergrendelde', self.install(ok=False).stderr)
+        self.assertEqual(profile.read_bytes(), locked)
+        self.assertEqual((self.mission / 'db/types.xml').read_bytes(), mission_before)
+        self.assertEqual(world.read_bytes(), b'world sentinel')
+
+    def test_lootchests_generated_economy_and_weapon_pairs(self):
+        self.install()
+        profile = self.server / 'Servahz/Profiles/CJ_LootChests/LootChests_V106.json'
+        config = json.loads(profile.read_text())
+        locations = config['LootChestsLocations']
+        self.assertGreaterEqual(len(locations), 1)
+        self.assertLessEqual(len(locations), 256)
+        positions = [list(map(float, x['pos'][0].split('|')[0].split())) for x in locations]
+        for i, a in enumerate(positions):
+            self.assertTrue(0 < a[0] < 15360 and 0 < a[2] < 15360)
+            for b in positions[:i]:
+                self.assertGreaterEqual((a[0]-b[0])**2 + (a[2]-b[2])**2, 349.99**2)
+        pairs = {(x['Weapon'], x['Magazine']) for x in json.loads((ROOT / 'config/loot-balance.json').read_text())['WeaponSets']}
+        for weapon in config['LCPredefinedWeapons']:
+            self.assertIn((weapon['weapon'], weapon['magazine']), pairs)
+        if os.environ.get('SERVAHZ_VANILLA_MISSION'):
+            vanilla_names = {n.get('name') for n in ET.parse(self.baseline / 'db/types.xml').findall('type')}
+            self.assertFalse({n for table in config['LootCategories'] for n in table['Loot']} - vanilla_names)
+            self.assertGreater(len(locations), 100)
+            self.assertGreater(len(config['LCPredefinedWeapons']), 5)
+            self.assertEqual({x['name'].split('_')[1] for x in locations}, {'Food', 'General', 'Medical', 'Weapons', 'Building'})
+        economy = ET.parse(self.mission / 'servahz_ce/lootchest_types.xml')
+        for location in locations:
+            for name in location['chest']:
+                node = economy.find(f"type[@name='{name}']")
+                self.assertEqual(node.findtext('nominal'), '0')
+                self.assertEqual(node.findtext('min'), '0')
+                self.assertGreaterEqual(int(node.findtext('lifetime')), 86400)
+        self.run_ps('Test-Server.ps1', '-StaticOnly')
+        economy.find('type/lifetime').text = '0'
+        economy.write(self.mission / 'servahz_ce/lootchest_types.xml')
+        self.assertIn('kisteconomie', self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False).stderr)
+
+    def test_lootchests_skip_private_base_without_changing_protection(self):
+        (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>
+          <group name="Land_Village_store"><usage name="Town"/>
+            <container name="lootFloor"><point pos="0 0 0" range="2" height="2"/></container>
+          </group></prototype>''')
+        (self.baseline / 'mapgrouppos.xml').write_text('''<map>
+          <group name="Land_Village_store" pos="2000 100 3000" rpy="0 0 0"/>
+          <group name="Land_Village_store" pos="6000 100 3000" rpy="0 0 0"/>
+          </map>''')
+        private = self.package / '.local/loot-refresh-settings.json'
+        private.parent.mkdir()
+        private.write_text(json.dumps({'CenterX': 2000, 'CenterZ': 3000, 'Radius': 500}))
+        previous = private.read_bytes()
+        self.install()
+        profile = self.server / 'Servahz/Profiles/CJ_LootChests/LootChests_V106.json'
+        locations = json.loads(profile.read_text())['LootChestsLocations']
+        self.assertEqual(len(locations), 1)
+        self.assertEqual(locations[0]['pos'], ['6000.000 100.030 3000.000|0.000 0 0'])
+        self.assertEqual(private.read_bytes(), previous)
 
     def test_supplies_locations_amounts_and_restore(self):
         # Independent representative cases include civilian ammunition, disabled/event
@@ -592,7 +717,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 15) { throw 'Expected fifteen individual mod objects' }
+if ($mods.Count -ne 17) { throw 'Expected seventeen individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -1080,7 +1205,9 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(mods[12], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
         self.assertEqual(mods[13], {'Name': 'BaseBuildingItemStackandRepair', 'Id': '1896597833', 'Folder': '@BaseBuildingItemStackandRepair'})
         self.assertFalse(any('bleedtrail' in m['Name'].lower() for m in mods))
-        self.assertEqual(mods[-1], {'Name': 'SNAFU Weapons', 'Id': '2443122116', 'Folder': '@SNAFUWeapons'})
+        self.assertEqual(mods[14], {'Name': 'SNAFU Weapons', 'Id': '2443122116', 'Folder': '@SNAFUWeapons'})
+        self.assertEqual(mods[15], {'Name': 'MMG - Half Mega Inventory Size', 'Id': '2895332994', 'Folder': '@MMGHalfMegaInventory'})
+        self.assertEqual(mods[16], {'Name': 'CJ187-LootChest', 'Id': '2345073965', 'Folder': '@CJ187LootChest'})
         navigation = [m for m in mods if m['Id'] == '2792984722']
         self.assertEqual(len(navigation), 1)
         self.assertEqual(navigation[0]['Name'], 'DayZ-Expansion-Navigation')

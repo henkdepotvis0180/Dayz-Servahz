@@ -1,0 +1,136 @@
+{
+  "MaxChests": 256,
+  "CellSize": 850,
+  "MinimumSpacing": 350,
+  "MinimumPointRange": 1.0,
+  "Loadouts": {
+    "Food": [
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Tools"
+    ],
+    "Medical": [
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Medical"
+    ],
+    "Building": [
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Tools",
+      "LC_Table_Servahz_Tools",
+      "LC_Table_Servahz_Building",
+      "LC_Table_Servahz_Building",
+      "LC_Table_Servahz_Building",
+      "LC_Table_Servahz_Building"
+    ],
+    "General": [
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Tools",
+      "LC_Table_Servahz_Tools",
+      "LC_Table_Servahz_Building"
+    ],
+    "Weapons": [
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Food",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Drink",
+      "LC_Table_Servahz_Medical",
+      "LC_Table_Servahz_Tools"
+    ]
+  },
+  "LootCategories": [
+    {
+      "name": "LC_Table_Servahz_Food",
+      "Loot": [
+        "BakedBeansCan",
+        "PeachesCan",
+        "TunaCan",
+        "SardinesCan",
+        "SpaghettiCan",
+        "TacticalBaconCan",
+        "Rice",
+        "Marmalade",
+        "Honey",
+        "Crackers",
+        "Pajka",
+        "Pate"
+      ]
+    },
+    {
+      "name": "LC_Table_Servahz_Drink",
+      "Loot": [
+        "SodaCan_Cola",
+        "SodaCan_Pipsi",
+        "SodaCan_Spite",
+        "SodaCan_Kvass"
+      ]
+    },
+    {
+      "name": "LC_Table_Servahz_Medical",
+      "Loot": [
+        "BandageDressing",
+        "DisinfectantAlcohol",
+        "TetracyclineAntibiotics",
+        "CharcoalTablets",
+        "VitaminBottle",
+        "PainkillerTablets"
+      ]
+    },
+    {
+      "name": "LC_Table_Servahz_Tools",
+      "Loot": [
+        "SewingKit",
+        "LeatherSewingKit",
+        "WeaponCleaningKit",
+        "Whetstone",
+        "DuctTape",
+        "Battery9V",
+        "KitchenKnife",
+        "CanOpener"
+      ]
+    },
+    {
+      "name": "LC_Table_Servahz_Building",
+      "Loot": [
+        "NailBox",
+        "Rope",
+        "Rag",
+        "Hammer",
+        "Hatchet",
+        "HandSaw"
+      ]
+    }
+  ]
+}

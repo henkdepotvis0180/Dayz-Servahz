@@ -73,5 +73,15 @@
     "Name": "SNAFU Weapons",
     "Id": "2443122116",
     "Folder": "@SNAFUWeapons"
+  },
+  {
+    "Name": "MMG - Half Mega Inventory Size",
+    "Id": "2895332994",
+    "Folder": "@MMGHalfMegaInventory"
+  },
+  {
+    "Name": "CJ187-LootChest",
+    "Id": "2345073965",
+    "Folder": "@CJ187LootChest"
   }
 ]

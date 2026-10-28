@@ -21,13 +21,23 @@ try {
     [xml]$extra = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/extra_types.xml') -Raw
     [xml]$attachments = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/extra_spawnabletypes.xml') -Raw
     [xml]$groups = Get-Content -LiteralPath (Join-Path $layout.Mission 'mapgroupproto.xml') -Raw
-    foreach ($entry in @(@('building_types.xml', 'types'), @('extra_types.xml', 'types'), @('extra_spawnabletypes.xml', 'spawnabletypes'))) {
+    foreach ($entry in @(@('building_types.xml', 'types'), @('extra_types.xml', 'types'), @('extra_spawnabletypes.xml', 'spawnabletypes'), @('lootchest_types.xml', 'types'))) {
         if (@($core.SelectNodes('/economycore/ce[@folder="servahz_ce"]/file[@name="' + $entry[0] + '" and @type="' + $entry[1] + '"]')).Count -ne 1) {
             throw "CE-koppeling ontbreekt of is dubbel: $($entry[0]). Voer de installer opnieuw uit."
         }
     }
     if (@($extra.SelectNodes('/types/type')).Count -lt 1) { throw 'Extra modloot ontbreekt.' }
     Write-Host "Extra modloot: $(@($extra.SelectNodes('/types/type')).Count) itemtypen gekoppeld aan de economie."
+    $chestPath = Join-Path $layout.Profiles 'CJ_LootChests/LootChests_V106.json'
+    $chestConfig = Get-Content -LiteralPath $chestPath -Raw | ConvertFrom-Json
+    $chestCount = Assert-LootChestConfig $chestConfig
+    [xml]$chestTypes = Get-Content -LiteralPath (Join-Path $layout.Mission 'servahz_ce/lootchest_types.xml') -Raw
+    foreach ($name in @($chestConfig.LootChestsLocations | ForEach-Object { $_.chest } | Sort-Object -Unique)) {
+        $type = $chestTypes.SelectSingleNode('/types/type[@name="' + $name + '"]')
+        if ($null -eq $type -or [int]$type.nominal -ne 0 -or [int]$type.min -ne 0 -or [int]$type.lifetime -lt 86400) { throw 'CJ187-kisteconomie ontbreekt of laat losse extra kisten spawnen. Voer 01-Instellen.cmd uit.' }
+    }
+    Write-Host "CJ187 0.18: $chestCount voorraadkisten zonder sleutel ingesteld; inhoud wordt door de mod bij een serverstart gevuld."
+    Write-Host ('Locatielijst: ' + (Join-Path $layout.Profiles 'CJ_LootChests/Servahz-Lootkisten.csv'))
     $balance = Get-Content -LiteralPath (Join-Path (Split-Path $PSScriptRoot -Parent) 'config/loot-balance.json') -Raw | ConvertFrom-Json
     foreach ($set in $balance.WeaponSets) {
         $weapon = $extra.SelectSingleNode('/types/type[@name="' + $set.Weapon + '"]')
@@ -70,7 +80,7 @@ try {
             $unknown = @()
             foreach ($line in (Get-Content -LiteralPath $rpt.FullName -Tail 5000)) {
                 if ($line -match '(?i)(unknown|cannot|can.t spawn|not found|does not exist|doesn.t exist|no such|failed|no economy profile)') {
-                    foreach ($match in [regex]::Matches($line, '(?i)\b(?:SNAFU|GCGN|Expansion_)[A-Za-z0-9_]*\b')) { $unknown += $match.Value }
+                    foreach ($match in [regex]::Matches($line, '(?i)\b(?:SNAFU|GCGN|Expansion_|CJ_LootChest_)[A-Za-z0-9_]*\b')) { $unknown += $match.Value }
                 }
             }
             foreach ($name in @($unknown | Sort-Object -Unique | Select-Object -First 15)) { Write-Warning "RPT-waarschuwing met modklasse: $name. Controleer de modversie/spawnklasse." }

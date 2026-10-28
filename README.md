@@ -25,6 +25,25 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Voorraadkisten zonder sleutels en meer MMG-vakjes (v0.18.0)
+
+Download [update 0.18.0](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.0). Deze bevat ook alle wijzigingen tot en met 0.17.0; tussenliggende versies hoef je niet apart uit te voeren.
+
+1. Abonneer **host en alle spelers** op [MMG – Half Mega Inventory Size](https://steamcommunity.com/sharedfiles/filedetails/?id=2895332994) en [CJ187-LootChest](https://steamcommunity.com/sharedfiles/filedetails/?id=2345073965). Wacht totdat Steam beide volledig heeft gedownload. CF en MMG zelf zaten al in het pakket.
+2. Stop de server en voer alleen `Servahz-Update-v0.18.0.cmd` uit naast `01-Instellen.cmd`. De updater controleert de downloads, maakt een backup en voert instellen/controleren uit. Je hoeft 04, 05 of 06 niet te starten.
+3. Importeer de bijgewerkte `Mods.html` in de DayZ Launcher bij host en spelers: nu **17 mods**. Start met `02-Start-server.cmd`.
+4. `03-Controleren.cmd` toont **CJ187 0.18**, het ingestelde aantal sleutelvrije kisten en het pad naar **`Servahz/Profiles/CJ_LootChests/Servahz-Lootkisten.csv`** onder je DayZ Server-map. Open die lijst in Kladblok of Excel: X en Z zijn de kaartcoördinaten. Hiermee kun je direct een voorraadpunt opzoeken.
+
+**Wat zit erin?** Kisten met meerdere rollen uit voedsel-/drank-/medische-/tool-/bouwtabellen. Elke kist bevat voedsel en drank; militaire/politiekisten krijgen daarnaast één geselecteerd modwapen met bijpassend magazijn en passende losse munitie. De wapens wisselen tussen de bestaande gecontroleerde Expansion-/SNAFU-sets, zodat niet elke kist hetzelfde geweer krijgt. Geen kleding, sleutels, keycards of lege verpakkingen in deze tabellen. `keyclass` is leeg en `openable` staat op 2: gewoon openen, zonder sleutel, lockpick of breekgereedschap. Kisten krijgen hun inhoud bij een serverstart; volgens de CJ187-mod vullen geopende kisten niet tussendoor opnieuw.
+
+**Waar staan ze?** Bij de eerste installatie worden bestaande vloerpunten van de lokale Steam-missie gebruikt, met minimaal 1 meter vrije spawnstraal en 1 meter hoogte, één gekozen gebouw per vak van 850 meter en minstens 350 meter tussen kisten. Gekantelde gebouwen worden overgeslagen. Winkels/horeca, medische en militaire/politieplekken krijgen voorrang, daarna werkplaatsen/schuren en huizen. Geen zelf verzonnen terreinhoogtes of gekopieerde privé-basecoördinaten. Maximaal 256 kisten. Een bestaande privé-basecirkel uit de lootverversing wordt bij deze eerste generatie overgeslagen; die privé-instellingen blijven ongewijzigd. Met de gecontroleerde officiële Chernarus-data zijn het **195** (84 Food, 74 Building, 26 Weapons, 6 Medical, 5 General). Jouw Steam-data kan een ander aantal geven. De fysieke plaatsing, bereikbaarheid en inhoud moeten nog in-game worden gecontroleerd.
+
+**Meer dragen:** de Half Mega-uitbreiding vergroot bestaande MMG-rugzakken volgens de maker naar 250–500 vakjes en de ondersteunde MMG-shirts/broeken naar 250–300. De bestaande negen geselecteerde MMG-rugzakvarianten blijven vindbaar via dezelfde lootregels. Er worden geen extra kledingtypen of hogere kledingdoelen toegevoegd. Vanilla-kleding krijgt door deze mod geen extra vakjes; BetterVanillaClothing is niet toegevoegd.
+
+**Behoud:** geen wipe, lootopruiming of herhaalde 05/06-actie. Bestaande saves, wachtwoorden, testinstellingen, basecirkel en losse spullen blijven behouden. De kisten hebben eigen CE-records met doel/minimum 0: alleen CJ187 plaatst ze, niet de gewone economie als lege kisten. Het native profiel **`Profiles/CJ_LootChests/LootChests_V106.json`** wordt één keer aangemaakt; daarna blijft het byte voor byte behouden en wordt het geback-upt. Een bestaand ongeldig of vergrendeld profiel wordt gemeld en niet vervangen. De CSV is een afgeleide locatielijst en wordt bij instellen opnieuw uit dat profiel gemaakt. Eigen kistposities/voorraad pas je in het native profiel aan; `config/loot-chests.json` is alleen het sjabloon voor de eerste generatie. Gebruik de voorraadkisten als lootbron, niet als eigen baseopslag.
+
+**Controle in-game:** open een kist zonder hulpmiddelen, controleer voedsel en de juiste wapen/magazijn/munitie-combinatie, bekijk een ondersteunde MMG-rugzak en controleer na een normale serverherstart dat er geen dubbele kisten ontstaan. Dit pakket test de configuratie en updater; het bevat geen DayZ-engine- of mod-PBO-test. Modbestanden blijven via Steam gedownload; ze worden niet herverpakt. Bronnen: de hierboven gelinkte makerspagina’s, CJ187's V106-profielindeling en de lokale officiële `mapgrouppos.xml`/`mapgroupproto.xml`.
+
 ## Meer eten en minder herhaling (v0.17.0)
 
 Gebruik [update 0.17.0](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.17.0) als eten ondanks 0.15/0.16 schaars bleef. Stop de server, voer het ene updatescript uit en start weer. De bestaande lootverversing wordt niet opnieuw gestart en je base/opslag wordt niet opgeruimd.
@@ -231,7 +250,7 @@ Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe vel
 
 **Voor jouw ruime teststand: voer na het bijwerken `04-Teststand.cmd` opnieuw uit.** Alleen de nieuwe bestanden kopiëren schakelt het nieuwe veld `TestFastRestock` niet in. Je huidige saves en wachtwoorden blijven behouden. De hoeveelheid loot in je bestaande wereld is hier niet rechtstreeks gemeten; onderstaande wijzigingen nemen bekende CE-beperkingen weg, maar geven geen garantie op een item in iedere kamer.
 
-De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Host en alle spelers laden nu **vijftien mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
+De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Vanaf 0.18.0 laden host en alle spelers **zeventien mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
 
 **Nieuwe lootselectie:**
 

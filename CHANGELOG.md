@@ -4,6 +4,22 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.0] — 2026-10-28
+
+### Sleutelvrije CJ187-voorraadkisten en MMG Half Mega Inventory
+
+- Twee Workshop-mods toegevoegd: **CJ187-LootChest (2345073965)** en **MMG – Half Mega Inventory Size (2895332994)**. Manifest, launcher-preset en vereisten bevatten nu 17 mods. De MMG-uitbreiding laadt na MMG zelf; CF was al aanwezig.
+- Eenmalige generatie van het native `Profiles/CJ_LootChests/LootChests_V106.json`: alle kisten met lege `keyclass` en `openable=2`, dus geen sleutel, lockpick of gereedschap nodig. Geen sleutels/keycards aan de economie toegevoegd.
+- Voorraad met eten, drinken, medicijnen, reparatie/tools en bouwmateriaal. Militaire/politiekisten krijgen bovendien een geselecteerd modwapen met passend magazijn en losse munitie. Alle kisten bevatten meerdere voedsel-/drankrollen. Geen kleding in de nieuwe kisttabellen en geen hogere kledingdoelen of nieuwe kledingtypen in de CE.
+- Gebruikt bestaande ruime vloerpunten van de lokale Steam-missie en hun werkelijke gebouwpositie/rotatie; geen verdeelde derdepartij-mapconfig of modcode. Eén gekozen gebouw per vak van 850 meter, minstens 350 meter tussen kisten, gekantelde gebouwen overgeslagen, maximaal 256. Een bestaande privé-basecirkel uit de lootverversing wordt bij deze eerste generatie overgeslagen; die privé-instellingen blijven ongewijzigd. Officiële Chernarus-controle: 195 kisten, waarvan 84 bij winkels/horeca, 74 bouw/werkplaatsen, 26 militair/politie, 6 medisch en 5 huizen. Dit zijn configuratielocaties, geen bevestigde live spawns.
+- De twee kistklassen hebben een eigen CE-koppeling met doel/minimum 0 en opslaglevensduur; er spawnen via de normale economie geen extra lege kisten. CJ187 verzorgt plaatsing/vulling bij een serverstart. CSV met X/Z-posities onder `Profiles/CJ_LootChests/Servahz-Lootkisten.csv`; `03-Controleren.cmd` toont expliciet CJ187 0.18, het ingestelde aantal en het pad.
+- Bestaand CJ187-profiel blijft byte voor byte behouden en wordt met de beheerde configuratie geback-upt; de afgeleide CSV wordt opnieuw gemaakt. Ongeldige/vergrendelde profielen stoppen het instellen vóór wijziging van live missie/mods en worden niet stil vervangen. Coördinaten gebruiken ook op Nederlandse Windows decimalen met punten.
+- MMG Half Mega vergroot de ondersteunde bestaande uitrusting; de geselecteerde negen rugzakvarianten behouden hun lootregels. Geen BetterVanillaClothing toegevoegd. Bestaande voedselbalans 0.17, stamina, AI, saves, wachtwoorden, lokale instellingen en basebescherming blijven behouden. Geen wipe of automatische lootverversing.
+
+**Bijwerken:** abonneer host en spelers op beide nieuwe Workshop-mods en wacht op Steam. Stop de server en voer alleen `Servahz-Update-v0.18.0.cmd` uit naast `01-Instellen.cmd`. Deze bevat alle wijzigingen vanaf basis 0.13.0, inclusief 0.17.0; geen volledig pakket nodig. Importeer de bijgewerkte `Mods.html`, start met 02 en controleer met 03. Gebruik de CSV om een voorraadpunt op te zoeken. Start 04/05/06 niet voor deze update. Backups blijven privé onder `.local/Backups` en `Servahz/Backups`.
+
+**Controle:** PowerShell-integratietests voor sleutelvrije voorraad, plaatsing/rotatie en minimale afstand, Nederlandse getalnotatie, CE-records zonder losse kistspawns, passende wapensets, profiel-/wereld-/instellingenbehoud en foutpaden; officiële Chernarus-data en de volledige regressiesuite. Windows controleert ook PowerShell 5.1 en de echte cmd-updater. Nog in-game: CJ187-profielacceptatie door de huidige Workshop-versie, bereikbaarheid/inhoud/openen zonder hulpmiddelen, MMG-vakjes en geen dubbele kisten na herstart. Er is hier geen DayZ-engine of Workshop-PBO uitgevoerd.
+
 ## [0.17.0] — 2026-10-28
 
 ### Voedselschappen, minder munitie-overdaad en meer ruimte voor modwapens
