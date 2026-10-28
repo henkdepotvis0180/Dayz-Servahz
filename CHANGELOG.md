@@ -4,6 +4,19 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.12.0] — 2026-10-28
+
+### Boomstammen en bouwmaterialen stapelen
+
+- BaseBuildingItemStackandRepair toegevoegd als veertiende mod aan modlijst en launcher-preset, op server en alle clients vereist.
+- Volgens de modbeschrijving onder andere 20 boomstammen/brandhout, 50 planken/metaalplaten en 250 spijkers per stapel. De mod wijzigt ook gereedschapstapels en reparaties met ducttape/epoxy. Geen aanpassing van de eigen loot-, bot-, stamina- of profielinstellingen.
+- Splits stammen vóór bevestigen aan bouwkits: volgens de maker kan anders de hele stapel worden verbruikt. Splits gereedschap vóór gebruik om schade aan de hele stapel te voorkomen.
+- Geen SNAFU of Building Backpack toegevoegd. De Windows-ZIP bevat alle eerdere pakketupdates; modbestanden blijven via Steam geleverd.
+
+**Bijwerken vanaf 0.11.0:** stop de server, maak een wereldbackup en vervang `config/mods.json` en `Mods.html`. Abonneer host en spelers op BaseBuildingItemStackandRepair, wacht op Steam en importeer de nieuwe preset. Voer **`01-Instellen.cmd`** uit om bestaande loot-/testinstellingen te behouden, daarna `02-Start-server.cmd`. Behoud lokale configuratie, wachtwoorden, profielen en wereldsave. Geen wipe.
+
+**Controle:** pakkettests voor veertien afzonderlijke modpaden, preset en sleutels, bestaande loot/stamina/bouwinstellingen en save-/wachtwoordbehoud. Stapels, splitsen, reparaties, interactie met RaG/Expansion en herstartpersistentie moeten nog lokaal in-game worden gecontroleerd.
+
 ## [0.11.0] — 2026-10-27
 
 ### Compleet pakket met GoreZ, lootuitbreiding en minder sprintverbruik

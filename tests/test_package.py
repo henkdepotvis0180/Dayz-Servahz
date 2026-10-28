@@ -571,7 +571,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 13) { throw 'Expected thirteen individual mod objects' }
+if ($mods.Count -ne 14) { throw 'Expected fourteen individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -689,7 +689,8 @@ class ConfigTests(unittest.TestCase):
 
     def test_navigation_manifest_preset_and_settings(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
-        self.assertEqual(mods[-1], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
+        self.assertEqual(mods[12], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
+        self.assertEqual(mods[-1], {'Name': 'BaseBuildingItemStackandRepair', 'Id': '1896597833', 'Folder': '@BaseBuildingItemStackandRepair'})
         self.assertFalse(any('bleedtrail' in m['Name'].lower() for m in mods))
         navigation = [m for m in mods if m['Id'] == '2792984722']
         self.assertEqual(len(navigation), 1)
