@@ -25,17 +25,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.RELEASE_TAG }}
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Extract version notes
         run: python .github/scripts/release_notes.py "$RELEASE_TAG" > "$RUNNER_TEMP/release-notes.md"
-      - name: Package Windows scripts and public configuration
-        run: |
-          git archive --format=zip --prefix=Dayz-Servahz/ \
-            --output="$RUNNER_TEMP/Dayz-Servahz-$RELEASE_TAG-Windows.zip" HEAD \
-            01-Instellen.cmd 02-Start-server.cmd 03-Controleren.cmd 04-Teststand.cmd \
-            AGENTS.md CHANGELOG.md README.md Mods.html scripts config
+      - name: Build single-file Windows update
+        run: python .github/scripts/build_update.py "$RELEASE_TAG" "$RUNNER_TEMP/Servahz-Update-$RELEASE_TAG.cmd"
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -46,4 +43,4 @@ jobs:
           else
             gh release create "$RELEASE_TAG" --verify-tag --title "Servahz $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md"
           fi
-          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/Dayz-Servahz-$RELEASE_TAG-Windows.zip" --clobber
+          gh release upload "$RELEASE_TAG" "$RUNNER_TEMP/Servahz-Update-$RELEASE_TAG.cmd" --clobber

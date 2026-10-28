@@ -5,6 +5,7 @@ SERVAHZ_PWSH=/path/to/pwsh python -m unittest discover -s tests -v
 Optional SERVAHZ_VANILLA_MISSION=/path/to/dayzOffline.chernarusplus tests real CE data.
 """
 import json
+import importlib.util
 import os
 from pathlib import Path
 import shutil
@@ -644,6 +645,117 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
             thread.join(16)
             self.assertFalse(thread.is_alive())
             self.assertEqual(errors, [])
+
+
+
+    def make_update(self, *, missing_mod=False):
+        # Render a real embedded payload against this disposable installed base.
+        spec = importlib.util.spec_from_file_location('build_update', ROOT / '.github/scripts/build_update.py')
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+        base = {str(p.relative_to(self.package)).replace('\\', '/'): p.read_bytes()
+                for p in self.package.rglob('*') if p.is_file()
+                and p != self.local and '.local' not in p.parts}
+        target = dict(base)
+        name = 'config/mission/servahz_ce/extra_types.xml'
+        tree = ET.fromstring(target[name])
+        tree.find("type[@name='Snafu_ScarH_Black_GUN']/nominal").text = '31'
+        target[name] = ET.tostring(tree)
+        if missing_mod:
+            mods = json.loads(target['config/mods.json'])
+            mods.append({'Name': 'Missing test mod', 'Id': '999999', 'Folder': '@Missing'})
+            target['config/mods.json'] = json.dumps(mods).encode()
+        target['README.md'] = b'Updated documentation'
+        states = [{'version': 'v0.13.0', 'files': builder.hashes(base)},
+                  {'version': 'v0.14.0', 'files': builder.hashes(target)}]
+        command, manifest = builder.render('v0.14.0', base, target, states)
+        # Exercise the same PowerShell body as the cmd launcher, including ZIP
+        # verification, backup, installer and static post-install checker.
+        script = self.root / 'update.ps1'
+        self.update_launcher, body = command.split('# SERVAHZ_POWERSHELL\n', 1)
+        script.write_text(body, encoding='utf-8')
+        return script, manifest
+
+    def apply_update(self, script, *, ok=True):
+        process_env = os.environ.copy()
+        for key, directory in [('XDG_CACHE_HOME', 'cache'), ('XDG_CONFIG_HOME', 'xdg-config'), ('XDG_DATA_HOME', 'xdg-data')]:
+            process_env[key] = str(self.root / directory)
+        if os.name == 'nt':
+            cmd = self.root / 'Servahz-Update.cmd'
+            cmd.write_bytes((self.update_launcher + '# SERVAHZ_POWERSHELL\n' + script.read_text()).replace('\n', '\r\n').encode('utf-8'))
+            args = ['cmd.exe', '/d', '/c', cmd.name, str(self.package)]
+        else:
+            args = [PWSH, '-NoProfile', '-File', str(script), '-PackagePath', str(self.package)]
+        result = subprocess.run(args, cwd=self.root, input='', capture_output=True,
+                                text=True, timeout=60, env=process_env)
+        self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
+        return result
+
+    def test_single_file_update_preserves_world_settings_and_repeat(self):
+        self.install()
+        self.run_ps('Install-Server.ps1', '-TestMode')
+        settings = json.loads(self.local.read_text())
+        settings.update(ServerPassword='keep-secret', TestFastRestock=False)
+        self.local.write_text(json.dumps(settings))
+        self.install()
+        save = self.mission / 'storage_1/players.db'
+        save.parent.mkdir(exist_ok=True)
+        save.write_bytes(b'keep-player-world')
+        script, manifest = self.make_update()
+        self.assertEqual(set(manifest['files']), {'README.md', 'config/mission/servahz_ce/extra_types.xml'})
+        self.apply_update(script)
+        self.assertEqual(json.loads(self.local.read_text()), settings)
+        self.assertEqual(save.read_bytes(), b'keep-player-world')
+        self.assertEqual(ET.parse(self.mission / 'servahz_ce/extra_types.xml').findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '62')
+        backups = list((self.package / '.local/Backups').glob('update-v0.14.0-*'))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual((backups[0] / 'world/mission/storage_1/players.db').read_bytes(), b'keep-player-world')
+        self.assertEqual((backups[0] / 'package/config/mission/servahz_ce/extra_types.xml').read_bytes(),
+                         (ROOT / 'config/mission/servahz_ce/extra_types.xml').read_bytes())
+        self.apply_update(script)
+        self.assertEqual(len(list((self.package / '.local/Backups').glob('update-v0.14.0-*'))), 1)
+        # A newer installed version cannot be downgraded by an older cmd.
+        (self.package / '.local/package-version.txt').write_text('v0.15.0')
+        self.apply_update(script, ok=False)
+
+    def test_update_rejects_custom_changes_missing_mod_and_corruption(self):
+        self.install()
+        script, _ = self.make_update(missing_mod=True)
+        original = (self.package / 'config/mods.json').read_bytes()
+        result = self.apply_update(script, ok=False)
+        self.assertIn('Missing test mod', result.stderr)
+        self.assertEqual((self.package / 'config/mods.json').read_bytes(), original)
+        script, _ = self.make_update()
+        source = self.package / 'scripts/Install-Server.ps1'
+        original_script = source.read_bytes()
+        source.write_bytes(original_script + b'\n# own edit\n')
+        result = self.apply_update(script, ok=False)
+        self.assertIn('Eigen pakketwijzigingen', result.stderr)
+        source.write_bytes(original_script)
+        body = script.read_text()
+        body = body.replace("$payloadHash = '", "$payloadHash = '0", 1)
+        script.write_text(body)
+        result = self.apply_update(script, ok=False)
+        self.assertIn('beschadigd', result.stderr)
+        self.assertFalse((self.package / '.local/Backups').exists())
+
+    def test_update_retries_after_installer_failure(self):
+        self.install()
+        script, _ = self.make_update()
+        vanilla = self.baseline / 'db/types.xml'
+        original = vanilla.read_bytes()
+        vanilla.unlink()
+        self.apply_update(script, ok=False)
+        self.assertFalse((self.package / '.local/package-version.txt').exists())
+        self.assertTrue(list((self.package / '.local/Backups').glob('update-v0.14.0-*/world')))
+        vanilla.write_bytes(original)
+        self.apply_update(script)
+        self.assertEqual((self.package / '.local/package-version.txt').read_text(), 'v0.14.0')
+
+    def test_update_requires_installed_base(self):
+        script, _ = self.make_update()
+        result = self.apply_update(script, ok=False)
+        self.assertIn('Installeer eerst basispakket', result.stderr)
 
 
 class ConfigTests(unittest.TestCase):

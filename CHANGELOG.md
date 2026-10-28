@@ -4,6 +4,20 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.14.0] — 2026-10-28
+
+### Eén updatescript in plaats van opnieuw het complete pakket
+
+- Versie 0.13.0 is de vaste Windows-basis. Vanaf deze release is het enige zelf gepubliceerde downloadbestand `Servahz-Update-vX.Y.Z.cmd`; geen nieuwe volledige Windows-ZIP. GitHub toont daarnaast zelf de broncodearchieven.
+- Kies een updateversie op GitHub. Het offline script bevat alleen de publieke pakketbestanden die verschillen van 0.13.0, inclusief eerdere wijzigingen tot de gekozen versie. Tussenliggende updates zijn niet nodig. Geen verandering aan mods, loot, bots, stamina of bouwen in 0.14.0.
+- Het script herkent een ondersteunde, ongewijzigde pakketversie, weigert eigen pakketwijzigingen en downgrades, controleert moddownloads en stopt als DayZ nog draait. Een ontbrekende basis wordt niet automatisch overschreven of aangemaakt.
+- Automatische wereld-/profiel-/configuratiebackup en backup van te vervangen pakketbestanden; daarna bestandsvervanging, instellen en statische controle. Saves, wachtwoorden en lokale loot-/bijvulkeuzes blijven behouden. Geen Steam-downloads, wipe of automatische serverstart.
+- Herhalen na succes doet niets. Na een mislukte installer of controle kan hetzelfde script opnieuw instellen. Bij een gedeeltelijke bestandskopie of herstel van de live configuratie kan handmatig herstel uit de backup nodig zijn.
+
+**Bijwerken:** heb eerst basispakket 0.13.0 geïnstalleerd. Stop de server, zet `Servahz-Update-v0.14.0.cmd` naast `01-Instellen.cmd` en dubbelklik. Geen bestanden handmatig vervangen. Download je het script elders, geef dan de bestaande pakketmap op. Oudere installaties eerst met het volledige 0.13.0-pakket bijwerken; `config/server.local.json`, saves en profielen behouden. Backups onder `.local/Backups` bevatten privéwachtwoorden.
+
+**Controle:** integratietests voor de ingesloten payload, backup, save-/wachtwoord-/instellingenbehoud, opnieuw starten, ontbrekende basis, eigen bestandswijzigingen, ontbrekende mods, beschadigde payload en downgradeblokkering. Op Windows wordt ook de echte `.cmd`-launcher uitgevoerd. Echte DayZ-spelwerking en de lokale dubbelklik-/Windows-beveiligingsmeldingen blijven lokaal te controleren.
+
 ## [0.13.0] — 2026-10-28
 
 ### SNAFU-wapens met begrensd lootbudget

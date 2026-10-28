@@ -2,6 +2,25 @@
 
 **Updates:** [wijzigingen per versie](CHANGELOG.md) · [GitHub Releases en downloads](https://github.com/henkdepotvis0180/Dayz-Servahz/releases). De release notes vermelden wat je lokaal moet vervangen en welke controles zijn uitgevoerd.
 
+## Downloaden: eerst de basis, daarna jouw updateversie
+
+**Nieuwe installatie:** download eenmalig [basispakket 0.13.0 (Windows-ZIP)](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/download/v0.13.0/Dayz-Servahz-v0.13.0-Windows.zip), pak het uit en voer `01-Instellen.cmd` uit. Dit is de vaste basis, inclusief de mods tot en met SNAFU. Heb je 0.13.0 al, dan hoef je die niet opnieuw te downloaden.
+
+**Bijwerken vanaf 0.13.0:** kies op [GitHub Releases](https://github.com/henkdepotvis0180/Dayz-Servahz/releases) de gewenste versie vanaf **0.14.0**. Download onder **Assets** alleen **`Servahz-Update-vX.Y.Z.cmd`**. Iedere nieuwe release levert dat ene bestand, geen nieuw volledig Windows-pakket. De automatisch door GitHub getoonde “Source code”-archieven zijn niet nodig.
+
+1. Stop de DayZ-server. Download eventuele nieuwe Workshop-mods die in de release staan op host en clients.
+2. Zet het updatescript in je bestaande pakketmap, naast `01-Instellen.cmd`, en dubbelklik erop. Staat het ergens anders, dan vraagt het om die pakketmap.
+3. Het script controleert de basis, eigen bestandswijzigingen en vereiste moddownloads, maakt automatisch een wereld-/profiel-/configuratiebackup en een backup van te vervangen pakketbestanden, past de gewijzigde bestanden toe en voert instellen plus de statische controle uit.
+4. Importeer na een modwijziging de bijgewerkte `Mods.html` bij host en vrienden. Start met `02-Start-server.cmd`.
+
+Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvulling blijven behouden. Er wordt geen teststand aangezet. Backups staan in `.local/Backups/update-vX.Y.Z-...`; deze bevatten lokale wachtwoorden, dus houd ze privé. Het script downloadt geen mods en start de server niet automatisch.
+
+**Versies kiezen:** elke update bevat de wijzigingen van 0.13.0 tot de gekozen versie. Je kunt tussenliggende updates overslaan. Vereisten en eerdere wijzigingen tot die versie komen dus mee; dit is een keuze van updateversie. Downgraden wordt geblokkeerd. Een opnieuw gestart, al geslaagd script meldt dat de update al is toegepast. Zelf gewijzigde beheerde pakketbestanden worden vooraf geweigerd; lokale instellingen en live profielen mag je wel aanpassen.
+
+**Als instellen of controleren mislukt:** start de server nog niet. Los de gemelde fout op en start het updatescript opnieuw. Zijn alle pakketbestanden al vervangen, dan probeert het instellen opnieuw. Bij een gedeeltelijk mislukte bestandskopie herstel je eerst de pakketbestanden uit de genoemde backup; voor herstel van de wereld bevat `world` de missie, profielen en configuratie. De updater claimt geen automatische terugdraaiing van de live serverconfiguratie.
+
+Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
+
 Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation, plus RaG BaseBuilding, Building Fortifications, MMG en Expansion Weapons. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
