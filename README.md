@@ -6,15 +6,29 @@ Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion A
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.
 
+## SNAFU nu inbegrepen (v0.13.0)
+
+[SNAFU Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2443122116) is nu onderdeel van het complete pakket: **vijftien mods** op host en alle clients. Je Steam-abonnement downloadt de bestanden; de nieuwe modlijst, preset én lootregels hieronder zorgen voor de serverintegratie. De ZIP bevat alle voorgaande updates, inclusief GoreZ en BaseBuildingItemStackandRepair.
+
+De lootselectie bevat acht SNAFU-wapens: **SCAR-H Black, HK416, SR-25, M110 Black, M24, T5000, Honey Badger Black en Vector .45 ACP**. Inclusief acht passende magazijnen, twee SNAFU-vizieren en drie extra losse munitietypen (`GCGN_Ammo_762x51`, `SNAFU_Ammo_338`, `SNAFU_Ammo_300ACC`). Voor 5.56 en .45 ACP blijft de bestaande vanilla-munitie beschikbaar. Geen volledige import van alle camo's, .50-wapens of machinegeweren.
+
+Per nieuw SNAFU-wapen, magazijn en munitietype: doel **30**, minimum **24**; met `TestSuppliesEverywhere` doel **60**, minimum **48**, op alle 17 locatiecategorieën/tier 1–4. De twee vizieren krijgen elk doel 10/minimum 8, in de teststand 20/16. Alle acht wapens hebben bij nieuwe CE-spawns 80% kans op een passend magazijn. Hoeveelheden van nieuwe munitie/magazijnen staan op 80–100%. De werkelijke compatibiliteit van deze koppelingen moet nog in-game worden gecontroleerd.
+
+**Begrensd wapenbudget:** de doelen van acht Expansion-wapens (M9, G36, MPX, MP5, MP5SD, Kedr, Vityaz en M16) gaan van 60 naar 30 per type. Daarmee blijft het totale pakketdoel voor vuurwapens **780 normaal / 1560 in de teststand**, nu verdeeld over 21 in plaats van 13 typen. De nieuwe magazijnen en munitie voegen samen 330 normale doelen / 660 testdoelen toe; de vizieren voegen nog 20 / 40 toe. Vanilla-loot, rugzakken, barricades, bots, stamina en de keuze voor snelle herstartaanvulling veranderen niet. Bestaande wapens worden niet uit je inventaris of wereld verwijderd; de economie past toekomstige spawns aan.
+
+**Bijwerken:** stop de server en maak een wereldbackup. Vervang `scripts`, `config/mission`, `config/mods.json` en `Mods.html` in je bestaande pakketmap. Behoud `config/server.local.json`, profielen en saves. Host en alle spelers abonneren op SNAFU en wachten op Steam; importeer de nieuwe preset. Voer **`01-Instellen.cmd`** uit om jouw huidige loot-/testinstellingen te behouden en start met `02-Start-server.cmd`. `04-Teststand.cmd` alleen gebruiken als je bewust opnieuw alle testinstellingen, inclusief snelle herstartaanvulling, wilt aanzetten. `03-Controleren.cmd` moet nu **67 extra itemtypen** tonen.
+
+Klassennamen zijn vergeleken met de [SNAFU-communityconfiguraties bij Expansion](https://github.com/ExpansionModTeam/DayZ-Expansion-Unofficial-Market-Settings/tree/main/Market/Snafu) en de [SNAFU-wapenconfiguratie](https://github.com/Speedou94/DayZ-ExpansionTrader-Snafu). Dit zijn brongegevens voor de selectie, geen garantie voor elke Workshop-versie. Controleer de echte guns, magazijnen en munitie lokaal en bekijk het RPT bij onbekende klassen. Geen modcode wordt herverdeeld.
+
 ## Bouwmaterialen stapelen (v0.12.0)
 
-[BaseBuildingItemStackandRepair](https://steamcommunity.com/sharedfiles/filedetails/?id=1896597833) staat als veertiende mod in `Mods.html`, vereist op host en alle clients. De maker beschrijft stapels van 20 boomstammen, 20 brandhout, 50 planken, 50 metaalplaten, 250 spijkers, 80 korte stokken en 20 lange stokken. Het is een stapel-/reparatiemod, geen rugdraagframe: sprinten met boomstammen wordt hiermee niet gegarandeerd mogelijk. Expansion-lumber is niet expliciet onderdeel van de gedocumenteerde vanilla-stapels.
+[BaseBuildingItemStackandRepair](https://steamcommunity.com/sharedfiles/filedetails/?id=1896597833) staat als onderdeel van de modlijst in `Mods.html`, vereist op host en alle clients. De maker beschrijft stapels van 20 boomstammen, 20 brandhout, 50 planken, 50 metaalplaten, 250 spijkers, 80 korte stokken en 20 lange stokken. Het is een stapel-/reparatiemod, geen rugdraagframe: sprinten met boomstammen wordt hiermee niet gegarandeerd mogelijk. Expansion-lumber is niet expliciet onderdeel van de gedocumenteerde vanilla-stapels.
 
 **Belangrijk bij gebruik:** splits boomstammen vóór je ze aan een bouwkit toevoegt. De maker waarschuwt dat een volledige stapel anders kan worden verbruikt. Gereedschap kan ook stapelen; splits het vóór gebruik om schade aan de hele stapel te voorkomen. Test ook afzonderlijk met RaG- en Expansion-bouwdelen.
 
 De mod verandert daarnaast reparaties: ducttape kan volgens de maker alle items repareren en heeft meer inhoud; epoxy kan onder andere bouwgereedschap repareren. Dat is inbegrepen gedrag van deze mod, geen eigen pakketinstelling.
 
-**Alleen deze update toepassen:** stop de server, maak een wereldbackup en vervang `config/mods.json` en `Mods.html` in je bestaande pakketmap. Abonneer host en spelers op de nieuwe mod, wacht op Steam en importeer de preset. Voer **`01-Instellen.cmd`** uit om je huidige loot-/testinstellingen te behouden en start daarna met `02-Start-server.cmd`. De nieuwe ZIP bevat ook alle vorige updates; vanaf een oudere versie volg je daarnaast de complete bijwerkinstructies hieronder. Behoud je lokale configuratie en saves. SNAFU en Building Backpack zijn niet toegevoegd.
+**Alleen deze update toepassen:** stop de server, maak een wereldbackup en vervang `config/mods.json` en `Mods.html` in je bestaande pakketmap. Abonneer host en spelers op de nieuwe mod, wacht op Steam en importeer de preset. Voer **`01-Instellen.cmd`** uit om je huidige loot-/testinstellingen te behouden en start daarna met `02-Start-server.cmd`. De nieuwe ZIP bevat ook alle vorige updates; vanaf een oudere versie volg je daarnaast de complete bijwerkinstructies hieronder. Behoud je lokale configuratie en saves. Building Backpack is niet toegevoegd.
 
 Pakkettests controleren de veertien modpaden, preset, sleutels en behoud van bestaande instellingen/saves. De echte stapel-, reparatie- en bouwinteracties en herstartpersistentie moeten lokaal op de huidige DayZ-versie worden getest.
 
@@ -22,7 +36,7 @@ Pakkettests controleren de veertien modpaden, preset, sleutels en behoud van bes
 
 Deze ZIP bevat **alle wijzigingen uit 0.9.0 en 0.10.0, plus GoreZ**: barricades, MMG-rugzakken, Expansion-wapens met magazijnen/munitie, ruimere en sneller bijgevulde testloot, de bestaande RaG-bouwinstellingen en 43 ingestelde bots, én 75% minder stamina voor rechtop sprinten. Je hoeft geen oude ZIPs achtereenvolgens te installeren. Windstride en Survivor Missions zijn niet toegevoegd.
 
-[GoreZ](https://steamcommunity.com/sharedfiles/filedetails/?id=1648967877) voegt bloedeffecten, bloedplassen/-sporen en vliegen bij lichamen toe. Host en alle spelers laden nu **veertien mods** uit `Mods.html`. Installeer **geen aparte BleedTrail** naast GoreZ; die functionaliteit zit al in GoreZ. De modbestanden zelf worden via Steam geleverd, niet in deze ZIP.
+[GoreZ](https://steamcommunity.com/sharedfiles/filedetails/?id=1648967877) voegt bloedeffecten, bloedplassen/-sporen en vliegen bij lichamen toe. Host en alle spelers laden nu **vijftien mods** uit `Mods.html`. Installeer **geen aparte BleedTrail** naast GoreZ; die functionaliteit zit al in GoreZ. De modbestanden zelf worden via Steam geleverd, niet in deze ZIP.
 
 **Bestaande installatie in één keer bijwerken:**
 
@@ -37,11 +51,11 @@ Geen wipe nodig. Pakkettests controleren installatie, modpaden, loot- en stamina
 
 1. Pak dit pakket volledig uit op je Windows-pc, bijvoorbeeld naar `C:\DayZ-Servahz`. Bewaar deze map: de knoppen gebruiken de lokale configuratie hierin.
 2. Installeer **Steam → Bibliotheek → Tools → DayZ Server**, app-ID **223350**. De host en spelers hebben ook DayZ nodig. Start DayZ eenmaal om launcher en BattlEye te laten installeren.
-3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **veertien** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
+3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **vijftien** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
 4. Sluit een eventueel draaiende DayZ-server. Dubbelklik **`01-Instellen.cmd`**. De installer zoekt de Steam-bibliotheken en maakt `config/server.local.json` met jouw paden en een willekeurig adminwachtwoord.
 5. Open `config/server.local.json` in Kladblok. Vul voor een prive-server `ServerPassword` in, sla op en voer **`01-Instellen.cmd`** nogmaals uit. Gebruik een ander wachtwoord dan `AdminPassword`. Dit lokale bestand wordt door Git genegeerd.
 6. Dubbelklik **`02-Start-server.cmd`**. Laat het servervenster open en wacht enkele minuten. De eerste start maakt Expansion-profielen en de lootwereld aan. Voer **`03-Controleren.cmd`** uit voor configuratie- en querycontrole.
-7. Open de DayZ Launcher met alle veertien mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
+7. Open de DayZ Launcher met alle vijftien mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
 
 Windows kan gedownloade scripts blokkeren. Gebruik zo nodig **Eigenschappen → Blokkering opheffen** op de ZIP en pak opnieuw uit. De `.cmd`-knoppen gebruiken alleen voor hun eigen PowerShell-proces `ExecutionPolicy Bypass`; ze veranderen geen permanente Windows-instelling. Instellen vereist normaal geen administratorrechten als de Steam-map beschrijfbaar is.
 
@@ -133,22 +147,27 @@ Na een update moet je **`04-Teststand.cmd` opnieuw uitvoeren** om het nieuwe vel
 
 **Voor jouw ruime teststand: voer na het bijwerken `04-Teststand.cmd` opnieuw uit.** Alleen de nieuwe bestanden kopiëren schakelt het nieuwe veld `TestFastRestock` niet in. Je huidige saves en wachtwoorden blijven behouden. De hoeveelheid loot in je bestaande wereld is hier niet rechtstreeks gemeten; onderstaande wijzigingen nemen bekende CE-beperkingen weg, maar geven geen garantie op een item in iedere kamer.
 
-De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Host en alle spelers laden nu **veertien mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
+De nieuwe [Building Fortifications](https://steamcommunity.com/sharedfiles/filedetails/?id=2670506982), [MMG – Mightys Military Gear](https://steamcommunity.com/sharedfiles/filedetails/?id=2663169692) en [Expansion Weapons](https://steamcommunity.com/sharedfiles/filedetails/?id=2792985069) staan in `Mods.html`. Host en alle spelers laden nu **vijftien mods**. CF, Dabs Framework en Expansion Core waren al aanwezig. Geen modcode of gamebestanden worden meegeleverd.
 
 **Nieuwe lootselectie:**
 
 | Voorraad | Gewone pakketdoelen per type | Teststand per type |
 | --- | --- | --- |
-| 13 vuurwapens | doel 60 / minimum 45 | doel 120 / minimum 90 |
+| 8 Expansion-vuurwapens | doel 30 / minimum 23 | doel 60 / minimum 46 |
+| 5 Expansion-vuurwapens | doel 60 / minimum 45 | doel 120 / minimum 90 |
+| 8 SNAFU-vuurwapens | doel 30 / minimum 24 | doel 60 / minimum 48 |
 | 7 Expansion-magazijnen | doel 120 / minimum 90 | doel 240 / minimum 180 |
-| 3 losse munitietypen en 3 munitiedozen | doel 100 / minimum 80 | doel 200 / minimum 160 |
+| 8 SNAFU-magazijnen | doel 30 / minimum 24 | doel 60 / minimum 48 |
+| 3 Expansion-munitietypen en 3 munitiedozen | doel 100 / minimum 80 | doel 200 / minimum 160 |
+| 3 SNAFU-munitietypen | doel 30 / minimum 24 | doel 60 / minimum 48 |
+| 2 SNAFU-vizieren | doel 10 / minimum 8 | doel 20 / minimum 16 |
 | 7 vizieren/railadapters | doel 30 / minimum 20 | doel 60 / minimum 40 |
 | 9 MMG-rugzakvarianten | doel 75 / minimum 60 | doel 150 / minimum 120 |
 | 4 barricadekits | doel 40 / minimum 32 | doel 80 / minimum 64 |
 
 Dit zijn vaste pakketdoelen in `servahz_ce/extra_types.xml`, geen extra vermenigvuldiging met `LootMultiplier`. `TestSuppliesEverywhere` verdubbelt deze doelen en opent alle 17 usages/tier 1–4. Wapen- en itemcategorieën, tags en echte lootposities blijven gelden. De teststand heeft daarnaast nog de bestaande vanilla-, RaG- en Expansion-bouwloot.
 
-Wapens: **M9, G36, MPX, MP5, MP5SD, MP7, Kedr, Vityaz, M16, DT11, Benelli M4, AWM en Kar98**. De zeven aparte Expansion-magazijnen staan in de loot; MP5 en M16 gebruiken ook vanilla-magazijnen die al in de economie zitten. De 10 wapens met losse magazijnen hebben **80% kans op een passend magazijn** bij nieuwe CE-spawns. Losse munitie en magazijnen hebben een ingestelde hoeveelheid van 80–100%; munitiedozen blijven gewone dozen. Dit is geen garantie op een volledig geladen wapen. Er zijn geen RPG's, LAW's of granaatwerpers aan de gewone pakketloot toegevoegd.
+Wapens: **M9, G36, MPX, MP5, MP5SD, MP7, Kedr, Vityaz, M16, DT11, Benelli M4, AWM en Kar98**. De zeven aparte Expansion-magazijnen staan in de loot; MP5 en M16 gebruiken ook vanilla-magazijnen die al in de economie zitten. De 18 wapens met losse magazijnen hebben **80% kans op een passend magazijn** bij nieuwe CE-spawns. Losse munitie en magazijnen hebben een ingestelde hoeveelheid van 80–100%; munitiedozen blijven gewone dozen. Dit is geen garantie op een volledig geladen wapen. Er zijn geen RPG's, LAW's of granaatwerpers aan de gewone pakketloot toegevoegd.
 
 Rugzakken: zwarte **Assault Pack, Carrier Backpack, Camelback, Supplybag en MMPS**, plus groene en tan Supplybag/MMPS. Volgens de MMG-beschrijving lopen deze modellen van 80 tot 150 slots. Andere MMG-kleding en pantser worden met de mod geladen, maar zijn niet in deze gerichte lootselectie opgenomen.
 
@@ -164,7 +183,7 @@ Barricades: **kleine en middelgrote raamkit, deurkit en dubbele deurkit**. Plaat
 
 **Update:** stop de server en maak een wereldbackup. Abonneer host en spelers op de drie nieuwe mods, wacht op Steam en vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html`. Behoud `config/server.local.json`, je missie en saves. Voer **`04-Teststand.cmd`** uit, importeer de nieuwe preset, start met `02-Start-server.cmd` en laat de server laden. Een wereldwipe is niet nodig. Starten/bijvullen kan meer CPU en tijd kosten.
 
-`03-Controleren.cmd` controleert dat de nieuwe CE-bestanden zijn gekoppeld en dat de snelle bijvulwaarden zijn toegepast. In de console moet de extra modloot als **46 itemtypen** worden geteld. Controleer bij ontbrekende items ook het nieuwste RPT op onbekende klassen of modfouten; pakkettests starten geen echte DayZ-server.
+`03-Controleren.cmd` controleert dat de nieuwe CE-bestanden zijn gekoppeld en dat de snelle bijvulwaarden zijn toegepast. In de console moet de extra modloot als **67 itemtypen** worden geteld. Controleer bij ontbrekende items ook het nieuwste RPT op onbekende klassen of modfouten; pakkettests starten geen echte DayZ-server.
 
 **Terugzetten:** server stoppen, `TestFastRestock` op `false` zetten en `01-Instellen.cmd` uitvoeren. De vijf bijvulglobals, normale `restock`-waarden en gebouwcapaciteit worden dan uit de Steam-standaardmissie hersteld; andere globals blijven staan. `LootMultiplier`, andere testvelden en reeds bestaande loot blijven behouden. Zet voor herstel van de originele locaties ook `TestMilitaryEverywhere` en `TestSuppliesEverywhere` uit. De installer leest telkens de standaardmissie: herhaald instellen stapelt de capaciteitsfactor niet. `mapgroupproto.xml` is nu een beheerd bestand; bewerk de Steam-standaardmissie niet.
 
@@ -180,11 +199,11 @@ Bronnen: [Bohemia CE-configuratie](https://community.bistudio.com/wiki/DayZ:Cent
 - Controleer bij toetsconflicten **Options → Controls → Expansion**. Bestaande client-keybindings kunnen afwijken van de standaard.
 - Groepsgenoten en bots worden niet automatisch op de kaart getoond; deze configuratie levert geen groepsmod of radar.
 
-**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle veertien mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
+**Bestaande installatie bijwerken:** stop de server, abonneer je op Navigation en wacht op Steam. Kopieer uit de nieuwste pakketversie de mappen `scripts` en `config/mission`, plus `config/mods.json` en `Mods.html`, naar je bestaande pakketmap. Behoud `config/server.local.json`. Voer `01-Instellen.cmd` uit en start opnieuw. Importeer de nieuwe `Mods.html` in de clientlauncher; ook vrienden laden alle vijftien mods. Dit vergt geen wereldwipe. Controleer lokaal M en N na het inloggen; pakkettests bewijzen geen werkende in-game HUD.
 
 ## Makkelijker bouwen met RaG (v0.8.0)
 
-**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **veertien mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
+**Nieuw:** [RaG_Core](https://steamcommunity.com/sharedfiles/filedetails/?id=3556131153) en [RaG_BaseBuilding](https://steamcommunity.com/sharedfiles/filedetails/?id=3157695626). Server en alle spelers laden nu **vijftien mods** uit `Mods.html`. Expansion blijft aanwezig voor je bestaande gebouwen, codesloten, safes en andere functies. Er wordt geen modcode meegeleverd: abonneer je via Steam.
 
 **Update:** stop de server en maak een wereldbackup. Abonneer je op beide RaG-mods en wacht op Steam. Vervang `scripts`, `config/mission`, `config/profiles`, `config/mods.json` en `Mods.html` in je pakketmap. Behoud `config/server.local.json`, je missie en saves. Voer `01-Instellen.cmd` uit (of `04-Teststand.cmd` voor testloot), importeer de nieuwe preset en start opnieuw. Geen wipe nodig.
 
@@ -232,7 +251,7 @@ Test eerst op de host, daarna met een tweede pc in je LAN, daarna van buitenaf.
 
    Dit zijn de standaardpoorten. Het pakket reserveert `GamePort` t/m `GamePort+3`; pas bij andere poorten ook de routerregels aan. Er is geen TCP- of RCon-forward nodig. Het firewallscript wijzigt alleen zijn eigen `DayZ-Servahz-UDP`-regel, nooit de router.
 
-4. Vrienden importeren `Mods.html`, laden de veertien mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
+4. Vrienden importeren `Mods.html`, laden de vijftien mods en verbinden met **jouw publieke IPv4-adres**, gamepoort **2302** en het serverwachtwoord. De host gebruikt zelf het LAN-adres of `127.0.0.1`.
 5. Laat iemand buiten je LAN testen: sommige routers ondersteunen geen NAT-loopback. Een TCP-poortchecker test deze UDP-server niet.
 
 LAN werkt, internet niet? Vergelijk het WAN-adres van je router met je publieke IPv4. **CGNAT**, bijvoorbeeld een WAN-adres in `100.64.0.0/10`, of dubbele NAT kan inkomende verbindingen blokkeren. Vraag je provider om publiek IPv4 of configureer beide routers/bridge mode. Een mesh-VPN zoals Tailscale is een alternatief; host en vrienden moeten dat zelf installeren, dit pakket configureert het niet.
@@ -290,7 +309,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 
 | Probleem | Controle |
 | --- | --- |
-| Ontbrekende PBO, verkeerde versie/signature | Alle veertien mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Ontbrekende PBO, verkeerde versie/signature | Alle vijftien mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | Launcher toont modnamen als een gecombineerde regel | Gebruik de nieuwste scripts; Windows PowerShell 5.1 gaf eerder een geneste modlijst door. In het RPT moeten modpaden met puntkomma's gescheiden zijn, met voor elke mod zijn eigen pad |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
@@ -306,7 +325,7 @@ Begin voor een kleine groep met een recente CPU, SSD en ongeveer **16 GB RAM in 
 ## Lokale acceptatiecontrole
 
 - `03-Controleren.cmd` slaagt: configuratie/modbestanden kloppen en de verwachte servernaam antwoordt op A2S_INFO. Dat bewijst nog geen speelbaarheid.
-- Je kunt met alle veertien mods inloggen, bewegen en loot oprapen.
+- Je kunt met alle vijftien mods inloggen, bewegen en loot oprapen.
 - AI verschijnt bij Balota/Stary/NWAF; bewegen, vechten en looten werken. Controleer routes op obstakels.
 - **M** toont de kaart met je positie; **N vasthouden** toont GPS/minimap en kort N wisselt modus.
 - Een Expansion-kit plaatsen, bouwen en een codeslot gebruiken werkt.

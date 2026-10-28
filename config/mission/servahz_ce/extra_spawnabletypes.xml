@@ -50,4 +50,44 @@
             <item name="Mag_Expansion_AWM_5Rnd" chance="1.00" />
         </attachments>
     </type>
+    <type name="Snafu_ScarH_Black_GUN">
+        <attachments chance="0.80">
+            <item name="Snafu_ScarH_25RND_Mag_BK" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="GCGN_HK416">
+        <attachments chance="0.80">
+            <item name="GCGN_HK416_Mag" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="SNAFU_SR25_Gun">
+        <attachments chance="0.80">
+            <item name="SNAFU_SR25_Mag" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="GCGN_M110_Black">
+        <attachments chance="0.80">
+            <item name="GCGN_M110_Mag" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="SNAFUM24_GUN">
+        <attachments chance="0.80">
+            <item name="SNAFUM24_Mag" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="SNAFUT5000_Dkmcc_GUN">
+        <attachments chance="0.80">
+            <item name="SNAFUT5000_Mag" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="SNAFUHoneyBadger_Black">
+        <attachments chance="0.80">
+            <item name="SNAFUHoneyBadger_30rdMag_Black" chance="1.00" />
+        </attachments>
+    </type>
+    <type name="SNAFUVECTOR_45acp_GUN">
+        <attachments chance="0.80">
+            <item name="SNAFUVECTOR_45acp_Mag" chance="1.00" />
+        </attachments>
+    </type>
 </spawnabletypes>

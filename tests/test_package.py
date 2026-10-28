@@ -312,6 +312,10 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '240')
         self.assertEqual(extra.findtext("type[@name='MMG_mmps_bag_black']/nominal"), '150')
         self.assertEqual(extra.findtext("type[@name='BF_DoorBarricadeKit']/nominal"), '80')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '60')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '60')
+        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '60')
+        self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '60')
         for node in extra.findall('type'):
             self.assertEqual(len(node.findall('usage')), 17, node.get('name'))
             self.assertTrue({'Tier1', 'Tier2', 'Tier3', 'Tier4'} <= {n.get('name') for n in node.findall('value')})
@@ -571,7 +575,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 14) { throw 'Expected fourteen individual mod objects' }
+if ($mods.Count -ne 15) { throw 'Expected fifteen individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -648,7 +652,7 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual([m['Id'] for m in mods[9:12]], ['2670506982', '2663169692', '2792985069'])
         extra = ET.parse(ROOT / 'config/mission/servahz_ce/extra_types.xml')
         names = [n.get('name') for n in extra.findall('type')]
-        self.assertEqual(len(names), 46)
+        self.assertEqual(len(names), 67)
         self.assertEqual(len(names), len(set(names)))
         building = ET.parse(ROOT / 'config/mission/servahz_ce/building_types.xml')
         self.assertFalse(set(names) & {n.get('name') for n in building.findall('type')})
@@ -661,6 +665,10 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(len([n for n in names if n.startswith('MMG_')]), 9)
         self.assertEqual(len([n for n in names if n.startswith('BF_')]), 4)
         spawn = ET.parse(ROOT / 'config/mission/servahz_ce/extra_spawnabletypes.xml')
+        guns = {n.get('name') for n in spawn.findall('type')} | {'Expansion_DT11', 'Expansion_BenelliM4', 'Expansion_Kar98'}
+        self.assertEqual(len(guns), 21)
+        self.assertEqual(sum(int(n.findtext('nominal')) for n in extra.findall('type') if n.get('name') in guns), 780)
+        self.assertTrue({'Snafu_ScarH_Black_GUN', 'GCGN_HK416', 'SNAFUHoneyBadger_Black', 'SNAFUM24_GUN'} <= guns)
         for node in spawn.findall('type'):
             self.assertIn(node.get('name'), names)
             self.assertEqual(node.find('attachments').get('chance'), '0.80')
@@ -690,8 +698,9 @@ class ConfigTests(unittest.TestCase):
     def test_navigation_manifest_preset_and_settings(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
         self.assertEqual(mods[12], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
-        self.assertEqual(mods[-1], {'Name': 'BaseBuildingItemStackandRepair', 'Id': '1896597833', 'Folder': '@BaseBuildingItemStackandRepair'})
+        self.assertEqual(mods[13], {'Name': 'BaseBuildingItemStackandRepair', 'Id': '1896597833', 'Folder': '@BaseBuildingItemStackandRepair'})
         self.assertFalse(any('bleedtrail' in m['Name'].lower() for m in mods))
+        self.assertEqual(mods[-1], {'Name': 'SNAFU Weapons', 'Id': '2443122116', 'Folder': '@SNAFUWeapons'})
         navigation = [m for m in mods if m['Id'] == '2792984722']
         self.assertEqual(len(navigation), 1)
         self.assertEqual(navigation[0]['Name'], 'DayZ-Expansion-Navigation')

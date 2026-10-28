@@ -68,5 +68,10 @@
     "Name": "BaseBuildingItemStackandRepair",
     "Id": "1896597833",
     "Folder": "@BaseBuildingItemStackandRepair"
+  },
+  {
+    "Name": "SNAFU Weapons",
+    "Id": "2443122116",
+    "Folder": "@SNAFUWeapons"
   }
 ]

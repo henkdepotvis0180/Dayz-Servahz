@@ -4,6 +4,20 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.13.0] — 2026-10-28
+
+### SNAFU-wapens met begrensd lootbudget
+
+- SNAFU Weapons toegevoegd als vijftiende mod, op server en alle clients. Het eerdere Steam-abonnement alleen maakte de mod nog niet onderdeel van het pakket; deze release voegt modlijst, preset en lootkoppelingen toe.
+- Acht wapens: SCAR-H Black, HK416, SR-25, M110 Black, M24, T5000, Honey Badger Black en Vector .45 ACP. Inclusief acht magazijntypen, drie extra munitietypen, twee vizieren en 80% kans op een passend magazijn bij nieuwe CE-wapenspawns.
+- Nieuwe SNAFU-wapens, magazijnen en munitie: doel 30/minimum 24; in de teststand 60/48 op alle 17 locatiecategorieën/tier 1–4. De twee vizieren krijgen elk 10/8 normaal en 20/16 in de teststand. Nu 67 extra CE-itemtypen in totaal.
+- Acht bestaande Expansion-wapendoelen van 60 naar 30: totaal pakketdoel voor vuurwapens blijft 780 normaal / 1560 test, verdeeld over 21 typen. De nieuwe magazijnen/munitie voegen 330 normale / 660 testdoelen toe; twee vizieren voegen nog 20 normale / 40 testdoelen toe. Geen massale import van alle SNAFU-varianten.
+- Bestaande loot, saves, wachtwoorden en profielen worden niet verwijderd. Bots, stamina en bijvulinstellingen blijven gelijk. De complete ZIP bevat alle eerdere updates.
+
+**Bijwerken:** stop de server en maak een wereldbackup. Vervang `scripts`, `config/mission`, `config/mods.json` en `Mods.html`. Behoud `config/server.local.json` en saves/profielen. Host en spelers laden SNAFU naast de bestaande mods, importeren de preset en wachten op Steam. Voer **`01-Instellen.cmd`** uit om je huidige test-/bijvulkeuze te behouden; daarna `02-Start-server.cmd`. `03-Controleren.cmd` moet 67 extra itemtypen tonen. Geen wipe.
+
+**Controle:** pakkettests voor vijftien afzonderlijke modpaden, preset, nieuwe CE-typen en magazijnkoppelingen, gelijkblijvend vuurwapenbudget, testdoelen, herhaald instellen en behoud van saves/wachtwoorden. Echte modcompatibiliteit, spawnklassen, richten/schieten, magazijnen, munitie en persistentie blijven lokaal in-game te controleren.
+
 ## [0.12.0] — 2026-10-28
 
 ### Boomstammen en bouwmaterialen stapelen
