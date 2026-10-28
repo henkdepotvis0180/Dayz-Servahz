@@ -95,6 +95,23 @@ try {
             }
         }
     }
+    $refreshRequest = Join-Path $layout.Profiles 'Servahz/LootRefresh-request.json'
+    $refreshReport = Join-Path $layout.Profiles 'Servahz/LootRefresh-report.json'
+    if (Test-Path -LiteralPath $refreshRequest) {
+        $pending = Get-Content -LiteralPath $refreshRequest -Raw | ConvertFrom-Json
+        Write-Host "Beschermde cirkel: X=$($pending.CenterX) Z=$($pending.CenterZ), straal $($pending.Radius) meter, ongeacht hoogte."
+        $report = $null
+        if (Test-Path -LiteralPath $refreshReport) {
+            try { $report = Get-Content -LiteralPath $refreshReport -Raw | ConvertFrom-Json }
+            catch { Write-Warning 'Scanrapport wordt geschreven of is onvolledig; controleer straks opnieuw.' }
+        }
+        if ($null -ne $report -and $report.RequestId -eq $pending.RequestId) {
+            Write-Host "Lootverversing: $($report.Status), $($report.Cells)/225 vakken, kandidaten $($report.Candidates), verwijderd $($report.Deleted), overgeslagen $($report.Protected)."
+            if ($report.PSObject.Properties.Name -contains 'Samples') {
+                foreach ($sample in @($report.Samples | Select-Object -First 10)) { Write-Host "  Voorbeeld: $sample" }
+            }
+        } else { Write-Host 'Lootverversing ingepland; wacht op de scan na de volgende serverstart. Laat spelers uitgelogd.' }
+    }
     Write-Host 'Configuratie, missie, AI, loot, kaart/minimap, modbestanden en sleutels: OK.'
     if (!$StaticOnly) {
         # Valve A2S_INFO, including challenge support. An open UDP port alone is not a check.

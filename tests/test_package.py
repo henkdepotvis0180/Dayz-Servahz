@@ -752,6 +752,71 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         self.assertEqual(groups_path.read_bytes(),source_groups)
         self.assertEqual(save.read_bytes(),b'keep player')
 
+    def prepare_refresh(self):
+        self.install()
+        init = 'class CustomMission {}\nMission CreateCustomMission(string path) { return new CustomMission(); }\n'
+        (self.mission / 'init.c').write_text(init)
+        save = self.mission / 'storage_1/players.db'
+        save.parent.mkdir(exist_ok=True); save.write_bytes(b'precious-world')
+        return init
+
+    def test_loot_refresh_preview_apply_backup_and_disable(self):
+        init = self.prepare_refresh()
+        settings = self.local.read_bytes()
+        self.run_ps('Queue-LootRefresh.ps1', '-CenterX',8000,'-CenterZ',7000)
+        folder = self.server / 'Servahz/Profiles/Servahz'
+        request_path = folder / 'LootRefresh-request.json'
+        preview = json.loads(request_path.read_text())
+        self.assertTrue(preview['PreviewOnly'])
+        self.assertEqual((preview['CenterX'],preview['CenterZ'],preview['Radius']),(8000,7000,500))
+        self.assertNotIn('NailBox',preview['AllowedTypes'])
+        self.assertNotIn('ExpansionFloorKit',preview['AllowedTypes'])
+        self.assertIn('GCGN_Ammo_762x51',preview['AllowedTypes'])
+        self.assertIn('AmmoBox_Expansion_338_15rnd',preview['AllowedTypes'])
+        self.assertIn('SNAFUHoneyBadger_Black',preview['AllowedTypes'])
+        self.assertEqual((Path(preview['BackupPath']) / 'mission/storage_1/players.db').read_bytes(),b'precious-world')
+        patched = (self.mission / 'init.c').read_text()
+        self.assertEqual(patched.count('#include'),1)
+        self.assertIn('return new ServahzRefreshMission();',patched)
+        # Installer updates preserve the optional hook without duplicating it.
+        self.install()
+        self.assertEqual((self.mission / 'init.c').read_text(),patched)
+        report_path = folder / 'LootRefresh-report.json'
+        report_path.write_text('{')  # A live writer must not block server checks.
+        self.run_ps('Test-Server.ps1','-StaticOnly')
+        report = {'RequestId':preview['RequestId'],'PolicyHash':preview['PolicyHash'],
+                  'Status':'PreviewCompleted','PreviewOnly':True,'Cells':225,
+                  'CenterX':8000,'CenterZ':7000,'Radius':500,
+                  'Candidates':10,'Deleted':0,'Protected':2,'Message':'test report'}
+        report_path.write_text(json.dumps(report))
+        # A different protection circle cannot reuse a completed preview.
+        self.run_ps('Queue-LootRefresh.ps1','-Apply','-Radius',600,ok=False)
+        self.assertEqual(json.loads(request_path.read_text()),preview)
+        self.run_ps('Queue-LootRefresh.ps1','-Apply')
+        apply = json.loads(request_path.read_text())
+        self.assertFalse(apply['PreviewOnly'])
+        self.assertNotEqual(apply['RequestId'],preview['RequestId'])
+        self.assertEqual(apply['PolicyHash'],preview['PolicyHash'])
+        self.assertNotEqual(apply['BackupPath'],preview['BackupPath'])
+        self.assertEqual(self.local.read_bytes(),settings)
+        self.assertEqual((self.mission / 'storage_1/players.db').read_bytes(),b'precious-world')
+        self.run_ps('Queue-LootRefresh.ps1','-Disable')
+        self.assertFalse(request_path.exists())
+        self.assertNotIn('#include',(self.mission / 'init.c').read_text())
+        self.assertIn('return new CustomMission();',(self.mission / 'init.c').read_text())
+
+    def test_loot_refresh_requires_preview_and_valid_zone(self):
+        init = self.prepare_refresh()
+        for args in [('-CenterX',8000,'-CenterZ',7000,'-Apply'),
+                     ('-CenterX',0,'-CenterZ',7000),
+                     ('-CenterX',8000,'-CenterZ',7000,'-Radius',499),
+                     ('-CenterX',8000)]:
+            self.run_ps('Queue-LootRefresh.ps1',*args,ok=False)
+            self.assertEqual((self.mission / 'init.c').read_text(),init)
+        (self.mission / 'init.c').write_text('// own mission factory')
+        self.run_ps('Queue-LootRefresh.ps1','-CenterX',8000,'-CenterZ',7000,ok=False)
+        self.assertFalse((self.package / '.local/loot-refresh-settings.json').exists())
+
     def make_update(self, *, missing_mod=False):
         # Render a real embedded payload against this disposable installed base.
         spec = importlib.util.spec_from_file_location('build_update', ROOT / '.github/scripts/build_update.py')

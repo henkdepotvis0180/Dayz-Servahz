@@ -4,6 +4,24 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.16.0] — 2026-10-28
+
+### Eenmalige lootverversing met beschermde basecirkel
+
+- Optionele missiecode voor een proefscan en daarna een eenmalige verversing van geselecteerde losse wapens, magazijnen, munitie en houdbare voeding op Chernarus. Installeren van de update alleen verwijdert niets en plant geen opruiming in.
+- Beschermde cirkel met minimaal 500 meter straal, op lokale X/Z-coördinaten; hoogte telt niet mee. Alle doelitems in die cirkel worden door deze actie overgeslagen. Coördinaten worden alleen lokaal opgeslagen, niet als publieke pakketinstelling.
+- Buiten de cirkel alleen expliciete doelklassen op de grond, zonder inventarisouder of cargo/opslag, ook niet in hun attachments. Gebouwen, baseonderdelen, voertuigen, opslag en gedragen items vallen buiten de selectie. Ook zelf gedropte doelitems buiten de cirkel kunnen worden verwijderd.
+- `05-Loot-proefscan.cmd`: vraagt eenmalig om de basecoördinaten, maakt een wereldbackup en plant een scan zonder verwijdering. `03-Controleren.cmd` toont cirkel, voortgang, aantallen en voorbeelden. `06-Loot-verversen.cmd`: vereist een afgeronde proefscan met dezelfde cirkel en selectie, maakt opnieuw een wereldbackup en plant de echte uitvoering.
+- Beide acties starten twee minuten na de volgende serverstart en lopen in 225 kleine scanvakken. Echte spelers moeten uitgelogd blijven; bij een verbonden speler stopt de actie. AI-inventarissen blijven via hun inventarisouder beschermd.
+- Iedere aanvraag wordt vóór de eerste actie eenmalig gemarkeerd. Een afgeronde, onderbroken of mislukte aanvraag wordt na herstart niet automatisch herhaald. Nieuwe loot komt vervolgens via de gewone economie; geen belofte van directe herbezetting van alle plekken.
+- De normale vervaltijd van los gedropte spullen blijft gelden, ook binnen de beschermde cirkel. De bescherming geldt voor deze verversing, niet als permanente anti-despawnzone.
+
+**Bijwerken:** gebruik het enkele bestand `Servahz-Update-v0.16.0.cmd` vanaf basis 0.13.0 of een latere ondersteunde update. Daarna is niets gewist. Stop de server, start `05-Loot-proefscan.cmd`, vul `X Z` in, start de server en laat iedereen uitgelogd. Wacht tot `03-Controleren.cmd` `PreviewCompleted` en nul verwijderingen meldt. Controleer de cirkel en voorbeelden. Stop de server normaal; start daarna `06-Loot-verversen.cmd` en opnieuw de server, zonder spelers. Wacht op `ApplyCompleted` voordat je gaat spelen. Backups staan privé onder `.local/Backups/loot-refresh-...`.
+
+**Uitschakelen:** stop de server en voer `05-Loot-proefscan.cmd -Disable` uit. Dit verwijdert de missiehook en de ingeplande aanvraag; het herstelt geen items. Voor herstel gebruik je de wereldbackup, met bijbehorende missie/profielen/configuratie. Gebruik geen opslagbestandenwipe.
+
+**Controle:** PowerShell-integratietests voor coördinaten/radius, proefscanvereiste, dezelfde selectie bij uitvoering, wereldbackup, behoud van saves/wachtwoorden, herhaald instellen en uitschakelen. De objectvrije selectievoorwaarde wordt rechtstreeks uit de Enforce-bron met een C++-compiler getest op cirkelgrenzen, verschillende hoogtes, inventarissen en opslag. Dit is geen DayZ-engine- of compilatietest. De nieuwe missiecode en werkelijke objectselectie moeten eerst met de niet-destructieve proefscan op de lokale server worden gecontroleerd; bij een scriptfout de hook uitschakelen.
+
 ## [0.15.0] — 2026-10-28
 
 ### Bruikbare wapenvoorraad en meer eten in winkels en huizen

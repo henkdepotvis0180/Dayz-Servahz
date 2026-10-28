@@ -21,6 +21,24 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Loot opnieuw verdelen met bescherming voor je base (v0.16.0)
+
+Deze optionele actie ververst geselecteerde losse wapens, magazijnen, munitie en houdbare voeding buiten een beschermde cirkel. **De update installeren wist niets.** Alle doelitems binnen de cirkel worden overgeslagen, ongeacht hoogte of wie ze heeft neergelegd. Opslag (ook in attachments), baseonderdelen, voertuigen en inventarissen worden overal overgeslagen. De nieuwe lootbalans uit 0.15.0 zit ook in deze update.
+
+1. Installeer de gewenste update vanaf basis 0.13.0. Stop de DayZ-server normaal.
+2. Dubbelklik **`05-Loot-proefscan.cmd`**. Vul de basepositie in als `X Z`, in meters, gescheiden door een spatie. De cirkel heeft standaard 500 meter straal. Je coördinaten blijven lokaal in `.local/loot-refresh-settings.json` en de aanvraag/rapportage in je serverprofielen; ze worden niet op GitHub gepubliceerd.
+3. Start met `02-Start-server.cmd`. **Laat iedereen uitgelogd.** De scan begint na twee minuten en loopt in kleine stappen; grote lootwerelden kunnen langer nodig hebben. Gebruik `03-Controleren.cmd` voor de voortgang.
+4. Wacht op **`PreviewCompleted`** en **0 verwijderd**. Controleer de weergegeven X/Z, straal en voorbeelden van kandidaten buiten de cirkel. Het volledige rapport met maximaal 50 voorbeelden staat onder `<DayZServer>/Servahz/Profiles/Servahz/LootRefresh-report.json`.
+5. Stop de server normaal. Dubbelklik **`06-Loot-verversen.cmd`**. Deze vereist de afgeronde proefscan met dezelfde selectie en cirkel en maakt opnieuw een volledige wereldbackup. Start de server weer en laat iedereen uitgelogd tot `03-Controleren.cmd` **`ApplyCompleted`** toont.
+
+**Reikwijdte:** ook zelf gedropte doelitems buiten de cirkel kunnen verdwijnen. Binnen de cirkel raakt deze actie geen items aan. De normale DayZ-vervaltijd van losliggende spullen blijft echter gelden; bewaar belangrijke bouwvoorraad in opslag. De scanner werkt op door de server vindbare objecten. De economie vult vrijgekomen plekken vervolgens volgens de huidige balans; niet ieder gebouw is onmiddellijk opnieuw gevuld.
+
+De aanvraag wordt vóór de eerste scan eenmalig vastgelegd. Een herstart voert dezelfde aanvraag niet nogmaals uit, ook niet na een onderbreking. Bij een verbonden speler stopt de scan. Voor een nieuwe poging begin je opnieuw met een proefscan. Verder installeren of toekomstige updates activeren de actie niet opnieuw.
+
+**Backup en uitschakelen:** vóór elke ingeplande scan/uitvoering komt een wereld-/profiel-/configuratiebackup onder `.local/Backups/loot-refresh-...`. Deze bevat privéwachtwoorden. Stop de server en voer `05-Loot-proefscan.cmd -Disable` uit om de hook en de aanvraag te verwijderen, ook als de server door een scriptfout niet start. Dat herstelt geen verwijderde items; daarvoor heb je de wereldbackup nodig. Verwijder nooit `storage_1` om alleen loot te verversen.
+
+De DayZ-missiecode kan hier niet in de echte game-engine worden uitgevoerd of gecompileerd. Daarom is de lokale proefscan verplicht voordat de uitvoering kan worden ingepland. Er zijn geen nieuwe Workshop-mods of clientupdates nodig. API-bron: [Bohemia GetObjectsAtPosition](https://github.com/BohemiaInteractive/DayZ-Script-Diff/blob/main/scripts/3_game/global/game.c) en [JsonFileLoader](https://github.com/BohemiaInteractive/DayZ-Script-Diff/blob/main/scripts/3_game/tools/jsonfileloader.c).
+
 ## Lootbalans (v0.15.0)
 
 De nieuwste update maakt wapenloot bruikbaarder en voegt meer eten in winkels en huizen toe. **Geen nieuwe mods nodig.** Stop de server en gebruik [de gewenste update op GitHub](https://github.com/henkdepotvis0180/Dayz-Servahz/releases); vanaf basis 0.13.0 kun je direct naar 0.15.0.
