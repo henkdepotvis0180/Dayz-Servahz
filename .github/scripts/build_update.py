@@ -30,6 +30,21 @@ def hashes(files):
     return {name: hashlib.sha256(data).hexdigest() for name, data in files.items()}
 
 
+def text_hashes(files):
+    result = {}
+    for name, data in files.items():
+        try:
+            text = data.decode('utf-8-sig').replace('\r\n', '\n').replace('\r', '\n').rstrip('\n')
+        except UnicodeDecodeError:
+            continue
+        result[name] = hashlib.sha256(text.encode('utf-8')).hexdigest()
+    return result
+
+
+def file_state(version, files):
+    return {'version': version, 'files': hashes(files), 'text': text_hashes(files)}
+
+
 def render(version, base_files, target_files, states):
     removed = set(base_files) - set(target_files)
     if removed:
@@ -74,8 +89,8 @@ def main():
     states = []
     for tag in sorted(tags):
         if re.fullmatch(r'v\d+\.\d+\.\d+', tag) and version_tuple(BASE) <= version_tuple(tag) < version_tuple(args.version):
-            states.append({'version': tag, 'files': hashes(snapshot(tag))})
-    states.append({'version': args.version, 'files': hashes(target)})
+            states.append(file_state(tag, snapshot(tag)))
+    states.append(file_state(args.version, target))
     command, manifest = render(args.version, base, target, states)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_bytes(command.replace('\r\n', '\n').replace('\n', '\r\n').encode('utf-8'))

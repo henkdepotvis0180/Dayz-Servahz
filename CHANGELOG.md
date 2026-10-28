@@ -4,6 +4,20 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.16.1] — 2026-10-28
+
+### Updater herkent gemengde officiële bestanden en Windows-regeleinden
+
+- De oude controle vereiste één exact overeenkomende pakketversie. Nu wordt ieder beheerd bestand apart vergeleken met de gepubliceerde versies vanaf 0.13.0. Een mix na eerdere handmatige of gedeeltelijke updates wordt daardoor geaccepteerd en tot de gekozen versie bijgewerkt.
+- Naast de oorspronkelijke bytehash worden UTF-8-teksthashes gebruikt. Windows-/Unix-regeleinden, een UTF-8-BOM en extra laatste regeleinden blokkeren de update niet. Code- en configuratiewijzigingen worden hiermee niet genegeerd.
+- Oude, aangepaste of ontbrekende README/CHANGELOG/AGENTS-documentatie geldt niet meer als ongeldige serverbasis. Bestaande documentatie wordt vóór vervanging geback-upt. Ontbrekende bestanden die al in de update zitten, worden opnieuw geplaatst; ontbrekende ongewijzigde basisbestanden blijven een fout.
+- Onbekende inhoud in beheerde scripts/configuraties wordt niet overschreven. De melding noemt voortaan alle afwijkende bestandsnamen. Een diagnostiekbestand onder `.local/UpdateDiagnostics` bevat alleen relatieve bestandsnamen en redenen, geen bestandsinhoud, wachtwoorden of saves.
+- Saves, lokale serverinstellingen, privé-basecoördinaten, profielen en de optionele proefscan/lootverversing veranderen niet. De complete update bevat de eerdere uitbreidingen; installeren plant nog steeds geen lootverversing in.
+
+**Bijwerken:** gebruik `Servahz-Update-v0.16.1.cmd` in je bestaande pakketmap, naast `01-Instellen.cmd`, met de server gestopt. Je hoeft 0.16.0 niet eerst werkend te krijgen. De wereld- en pakketbackup en de installatie-/statische controles blijven verplicht onderdeel van het script. Als nog een conflict wordt gemeld, deel alleen de genoemde bestandsnamen/diagnostiek, niet `server.local.json`.
+
+**Controle:** integratietests voor een gemengde gedeeltelijke update, UTF-8-BOM/CRLF/laatste regeleinden, oude eigen documentatie en de backup daarvan, herstel van ontbrekende payloadbestanden, weigering van echte wijzigingen en ontbrekende basisbestanden, concrete diagnostiek en behoud van saves/instellingen. De Windows-suite voert de echte cmd-launcher uit. Er is geen wijziging aan de DayZ-missiecode; de proefscan uit 0.16.0 blijft de vereiste lokale controle vóór lootverversing.
+
 ## [0.16.0] — 2026-10-28
 
 ### Eenmalige lootverversing met beschermde basecirkel

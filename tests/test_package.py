@@ -817,7 +817,7 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         self.run_ps('Queue-LootRefresh.ps1','-CenterX',8000,'-CenterZ',7000,ok=False)
         self.assertFalse((self.package / '.local/loot-refresh-settings.json').exists())
 
-    def make_update(self, *, missing_mod=False):
+    def make_update(self, *, missing_mod=False, second_change=False):
         # Render a real embedded payload against this disposable installed base.
         spec = importlib.util.spec_from_file_location('build_update', ROOT / '.github/scripts/build_update.py')
         builder = importlib.util.module_from_spec(spec)
@@ -835,8 +835,12 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
             mods.append({'Name': 'Missing test mod', 'Id': '999999', 'Folder': '@Missing'})
             target['config/mods.json'] = json.dumps(mods).encode()
         target['README.md'] = b'Updated documentation'
-        states = [{'version': 'v0.13.0', 'files': builder.hashes(base)},
-                  {'version': 'v0.14.0', 'files': builder.hashes(target)}]
+        if second_change:
+            name = 'scripts/Test-Server.ps1'
+            target[name] += b'\n# Official fixture update\n'
+        self.update_target = target
+
+        states = [builder.file_state('v0.13.0',base), builder.file_state('v0.14.0',target)]
         command, manifest = builder.render('v0.14.0', base, target, states)
         # Exercise the same PowerShell body as the cmd launcher, including ZIP
         # verification, backup, installer and static post-install checker.
@@ -900,12 +904,46 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         source.write_bytes(original_script + b'\n# own edit\n')
         result = self.apply_update(script, ok=False)
         self.assertIn('Eigen pakketwijzigingen', result.stderr)
+        self.assertIn('scripts/Install-Server.ps1',result.stdout)
+        diagnostics = list((self.package / '.local/UpdateDiagnostics').glob('*.txt'))
+        self.assertEqual(len(diagnostics),1)
+        self.assertEqual(diagnostics[0].read_text().strip(),'Onbekende inhoud: scripts/Install-Server.ps1')
         source.write_bytes(original_script)
         body = script.read_text()
         body = body.replace("$payloadHash = '", "$payloadHash = '0", 1)
         script.write_text(body)
         result = self.apply_update(script, ok=False)
         self.assertIn('beschadigd', result.stderr)
+        self.assertFalse((self.package / '.local/Backups').exists())
+
+    def test_update_accepts_mixed_official_files_bom_crlf_and_old_docs(self):
+        self.install()
+        docs = self.package / 'README.md'
+        docs.write_text('Original public documentation')
+        script, _ = self.make_update(second_change=True)
+        # A partial manual update: one critical file is already from the target,
+        # another payload file is missing, and the rest is still from the base.
+        (self.package / 'scripts/Test-Server.ps1').write_bytes(self.update_target['scripts/Test-Server.ps1'])
+        (self.package / 'config/mission/servahz_ce/extra_types.xml').unlink()
+        install = self.package / 'scripts/Install-Server.ps1'
+        content = install.read_text(encoding='utf-8-sig').replace('\r\n','\n').rstrip('\n')
+        install.write_bytes(b'\xef\xbb\xbf' + (content + '\n\n').replace('\n','\r\n').encode('utf-8'))
+        docs.write_text('My retained local notes')
+        settings = self.local.read_bytes()
+        self.apply_update(script)
+        self.assertEqual(self.local.read_bytes(),settings)
+        self.assertTrue((self.package / 'config/mission/servahz_ce/extra_types.xml').exists())
+        backups = list((self.package / '.local/Backups').glob('update-v0.14.0-*/package/README.md'))
+        self.assertEqual(len(backups),1)
+        self.assertEqual(backups[0].read_text(),'My retained local notes')
+        self.assertEqual(docs.read_text(),'Updated documentation')
+
+    def test_update_reports_missing_required_base_file(self):
+        self.install()
+        script, _ = self.make_update()
+        (self.package / 'config/server.example.json').unlink()
+        result = self.apply_update(script,ok=False)
+        self.assertIn('Ontbreekt: config/server.example.json',result.stdout)
         self.assertFalse((self.package / '.local/Backups').exists())
 
     def test_update_retries_after_installer_failure(self):
