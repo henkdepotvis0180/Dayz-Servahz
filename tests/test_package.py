@@ -411,7 +411,7 @@ class PackageTests(unittest.TestCase):
         settings['ServerPassword'] = 'DO-NOT-PRINT-PASSWORD'
         self.local.write_text(json.dumps(settings))
         (profiles / 'script_test.log').write_text('''SCRIPT (E): 18:22:31 NULL pointer to instance
-Private player SOME-PRIVATE-PLAYER at 192.0.2.123 used pin 549
+Private player SOME-PRIVATE-PLAYER at 192.0.2.123 used pin DIAGNOSTIC-PRIVATE-PIN
 Class: ActionDialCombinationLockOnTarget
 Function: OnFinishProgressServer
 File: RaG_BB_Door.c
@@ -434,7 +434,7 @@ File: RaG_BB_Door.c
         reports = list((self.package / '.local/BuildDiagnostics').glob('*.txt'))
         self.assertEqual(len(reports), 1)
         for output in [result.stdout, result.stderr, reports[0].read_text(encoding='utf-8-sig')]:
-            for private in ['DO-NOT-PRINT-PROFILE', 'DO-NOT-PRINT-PASSWORD', 'SOME-PRIVATE-PLAYER', '192.0.2.123', '549', 'private-coordinates']:
+            for private in ['DO-NOT-PRINT-PROFILE', 'DO-NOT-PRINT-PASSWORD', 'SOME-PRIVATE-PLAYER', '192.0.2.123', 'DIAGNOSTIC-PRIVATE-PIN', 'private-coordinates']:
                 self.assertNotIn(private, output)
         self.assertEqual(self.local.read_bytes(), local_before)
         self.assertEqual(before, {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()})
