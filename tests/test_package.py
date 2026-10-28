@@ -52,7 +52,7 @@ class PackageTests(unittest.TestCase):
             for name, value in {'RestartSpawn': 0, 'RespawnTypes': 12, 'RespawnLimit': 20, 'RespawnAttempt': 2, 'LootSpawnAvoidance': 100}.items():
                 ET.SubElement(tree.getroot(), 'var', name=name, type='0', value=str(value))
             tree.write(self.baseline / 'db/globals.xml')
-            (self.baseline / 'mapgroupproto.xml').write_text('<map><defaults><default name="group" lootmax="6"/></defaults><group name="House" lootmax="4"><container name="lootFloor" lootmax="2"><category name="tools"/><point pos="1 2 3"/></container></group><group name="NoLoot" lootmax="0"/></map>')
+            (self.baseline / 'mapgroupproto.xml').write_text('<prototype><defaults><default name="group" lootmax="6"/></defaults><group name="House" lootmax="4"><container name="lootFloor" lootmax="2"><category name="tools"/><point pos="1 2 3"/></container></group><group name="NoLoot" lootmax="0"/></prototype>')
             (self.baseline / "init.c").write_text("// TEST FIXTURE")
             (self.baseline / "db/types.xml").write_text(
                 '<types><type name="NailBox"><nominal>10</nominal><min>5</min>'
@@ -279,7 +279,16 @@ class PackageTests(unittest.TestCase):
                 self.assertEqual(int(current.find(f"var[@name='{name}']").get('value')), amount)
             self.assertEqual(current.find("var[@name='CustomUnrelated']").get('value'), '123')
             generated = ET.parse(self.mission / 'mapgroupproto.xml')
-            for before, after in zip(source.iter(), generated.iter()):
+            # Food partitioning is tested separately; compare unchanged groups
+            # here to isolate the optional fast-refill capacity multiplier.
+            filtered_source = ET.fromstring(ET.tostring(source.getroot()))
+            filtered_generated = ET.fromstring(ET.tostring(generated.getroot()))
+            for group in list(filtered_generated.findall('group')):
+                if group.find("container[@name='ServahzFood']") is not None:
+                    old = filtered_source.find(f"group[@name='{group.get('name')}']")
+                    filtered_source.remove(old)
+                    filtered_generated.remove(group)
+            for before, after in zip(filtered_source.iter(), filtered_generated.iter()):
                 expected = dict(before.attrib)
                 if 'lootmax' in expected:
                     expected['lootmax'] = str(int(expected['lootmax']) * 2)
@@ -293,7 +302,12 @@ class PackageTests(unittest.TestCase):
         self.install()
         self.assertEqual(ET.parse(self.mission / 'db/types.xml').findtext("type[@name='NailBox']/restock"), '3600')
         restored = ET.parse(self.mission / 'mapgroupproto.xml')
-        self.assertEqual([n.attrib for n in restored.iter()], [n.attrib for n in source.iter()])
+        original = ET.fromstring(ET.tostring(source.getroot()))
+        for group in list(restored.findall('group')):
+            if group.find("container[@name='ServahzFood']") is not None:
+                original.remove(original.find(f"group[@name='{group.get('name')}']"))
+                restored.getroot().remove(group)
+        self.assertEqual([n.attrib for n in restored.iter()], [n.attrib for n in original.iter()])
         current = ET.parse(path)
         baseline = ET.parse(self.baseline / 'db/globals.xml')
         for name in ('RestartSpawn', 'RespawnTypes', 'RespawnLimit', 'RespawnAttempt', 'LootSpawnAvoidance'):
@@ -309,15 +323,17 @@ class PackageTests(unittest.TestCase):
         extra_path = self.mission / 'servahz_ce/extra_types.xml'
         first = extra_path.read_bytes()
         extra = ET.parse(extra_path)
-        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '120')
-        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '240')
+        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '60')
+        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '120')
         self.assertEqual(extra.findtext("type[@name='MMG_mmps_bag_black']/nominal"), '150')
         self.assertEqual(extra.findtext("type[@name='BF_DoorBarricadeKit']/nominal"), '80')
         self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '60')
-        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '60')
-        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '60')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '120')
+        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '200')
         self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '60')
         for node in extra.findall('type'):
+            if int(node.findtext('nominal')) == 0:
+                continue
             self.assertEqual(len(node.findall('usage')), 17, node.get('name'))
             self.assertTrue({'Tier1', 'Tier2', 'Tier3', 'Tier4'} <= {n.get('name') for n in node.findall('value')})
         for _ in range(2):
@@ -648,6 +664,94 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
 
 
 
+    def test_static_check_detects_unusable_ammo_supply(self):
+        self.install()
+        path = self.mission / 'servahz_ce/extra_types.xml'
+        types = ET.parse(path)
+        types.find("type[@name='SNAFU_Ammo_338']/quantmin").text = '10'
+        types.write(path)
+        result = self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False)
+        self.assertIn('SNAFU_Ammo_338',result.stderr)
+
+    def test_food_slots_weapon_caps_and_matching_supplies(self):
+        path = self.baseline / 'db/types.xml'
+        types = ET.parse(path)
+        def add_type(name, nominal, minimum, category, *, deloot='0', crafted='0'):
+            old = types.find(f"type[@name='{name}']")
+            if old is not None:
+                types.getroot().remove(old)
+            node = ET.SubElement(types.getroot(), 'type', name=name)
+            for key, amount in [('nominal', nominal), ('min', minimum), ('lifetime', 14400), ('quantmin', 10), ('quantmax', 30)]:
+                ET.SubElement(node, key).text = str(amount)
+            ET.SubElement(node, 'flags', deloot=deloot, crafted=crafted)
+            ET.SubElement(node, 'category', name=category)
+            ET.SubElement(node, 'usage', name='Hunting')
+            ET.SubElement(node, 'value', name='Tier3')
+        for name, nominal, minimum, category, flags in [
+            ('BakedBeansCan',15,12,'food',{}), ('Apple',0,0,'food',{}),
+            ('Izh18',50,35,'weapons',{}), ('SVD',4,2,'weapons',{'deloot':'1'}),
+            ('Ammo_308Win',50,30,'weapons',{}), ('Mag_STANAG_30Rnd',5,2,'weapons',{})]:
+            add_type(name,nominal,minimum,category,**flags)
+        types.write(path)
+        groups_path = self.baseline / 'mapgroupproto.xml'
+        groups = ET.parse(groups_path)
+        for name, limit in [('Land_City_Store_Test',8), ('Land_House_1W_Test',8), ('Land_Workshop1_Test',8), ('Land_House_Disabled_Test',0)]:
+            group = ET.SubElement(groups.getroot(),'group',name=name,lootmax=str(limit))
+            ET.SubElement(group,'usage',name='Town')
+            shelf = ET.SubElement(group,'container',name='lootshelves',lootmax='6')
+            for category in ['tools','food']:
+                ET.SubElement(shelf,'category',name=category)
+            ET.SubElement(shelf,'tag',name='shelves')
+            for i in range(6):
+                ET.SubElement(shelf,'point',pos=f'{i} 0 0',range='0.2',height='0.5')
+        groups.write(groups_path)
+        source_types = path.read_bytes()
+        source_groups = groups_path.read_bytes()
+        self.install()
+        save = self.mission / 'storage_1/players.db'
+        save.parent.mkdir(); save.write_bytes(b'keep player')
+        for test_mode in [False, True]:
+            settings = json.loads(self.local.read_text())
+            settings['TestSuppliesEverywhere'] = test_mode
+            settings['TestFastRestock'] = False
+            self.local.write_text(json.dumps(settings))
+            previous = None
+            for _ in range(2):
+                self.install()
+                generated = ET.parse(self.mission / 'db/types.xml')
+                self.assertEqual(generated.findtext("type[@name='BakedBeansCan']/nominal"), '225')
+                self.assertEqual(generated.findtext("type[@name='BakedBeansCan']/min"), '180')
+                self.assertEqual(generated.findtext("type[@name='Apple']/nominal"), '0')
+                self.assertEqual(generated.findtext("type[@name='SVD']/nominal"), '20')
+                self.assertEqual(generated.findtext("type[@name='Izh18']/nominal"), '60' if test_mode else '30')
+                for name in ['Ammo_308Win','Mag_STANAG_30Rnd']:
+                    node = generated.find(f"type[@name='{name}']")
+                    self.assertEqual(node.findtext('quantmin'),'80')
+                    self.assertEqual(node.findtext('quantmax'),'100')
+                    expected_usages = {'Town','Village','Military'} if name == 'Ammo_308Win' or test_mode else {'Military'}
+                    self.assertTrue(expected_usages <= {u.get('name') for u in node.findall('usage')})
+                    expected_tiers = {'Tier1','Tier2','Tier3','Tier4'} if name == 'Ammo_308Win' or test_mode else {'Tier3','Tier4'}
+                    self.assertEqual({v.get('name') for v in node.findall('value')},expected_tiers)
+                updated = ET.parse(self.mission / 'mapgroupproto.xml')
+                for before in groups.findall('group'):
+                    after = updated.find(f"group[@name='{before.get('name')}']")
+                    self.assertEqual(sorted(tuple(sorted(x.attrib.items())) for x in before.findall('.//point')),
+                                     sorted(tuple(sorted(x.attrib.items())) for x in after.findall('.//point')))
+                    self.assertEqual(after.get('lootmax'),before.get('lootmax'))
+                for name, count in [('Land_City_Store_Test',3),('Land_House_1W_Test',2)]:
+                    food = updated.find(f"group[@name='{name}']/container[@name='ServahzFood']")
+                    self.assertEqual(len(food.findall('point')),count)
+                    self.assertEqual([n.get('name') for n in food.findall('category')],['food'])
+                for name in ['Land_Workshop1_Test','Land_House_Disabled_Test']:
+                    self.assertIsNone(updated.find(f"group[@name='{name}']/container[@name='ServahzFood']"))
+                current = ((self.mission / 'db/types.xml').read_bytes(),(self.mission / 'mapgroupproto.xml').read_bytes())
+                if previous is not None:
+                    self.assertEqual(current,previous)
+                previous = current
+        self.assertEqual(path.read_bytes(),source_types)
+        self.assertEqual(groups_path.read_bytes(),source_groups)
+        self.assertEqual(save.read_bytes(),b'keep player')
+
     def make_update(self, *, missing_mod=False):
         # Render a real embedded payload against this disposable installed base.
         spec = importlib.util.spec_from_file_location('build_update', ROOT / '.github/scripts/build_update.py')
@@ -779,11 +883,19 @@ class ConfigTests(unittest.TestCase):
         spawn = ET.parse(ROOT / 'config/mission/servahz_ce/extra_spawnabletypes.xml')
         guns = {n.get('name') for n in spawn.findall('type')} | {'Expansion_DT11', 'Expansion_BenelliM4', 'Expansion_Kar98'}
         self.assertEqual(len(guns), 21)
-        self.assertEqual(sum(int(n.findtext('nominal')) for n in extra.findall('type') if n.get('name') in guns), 780)
+        self.assertEqual(sum(int(n.findtext('nominal')) for n in extra.findall('type') if n.get('name') in guns), 630)
         self.assertTrue({'Snafu_ScarH_Black_GUN', 'GCGN_HK416', 'SNAFUHoneyBadger_Black', 'SNAFUM24_GUN'} <= guns)
+        balance = json.loads((ROOT / 'config/loot-balance.json').read_text())
+        sets = {entry['Weapon']: entry for entry in balance['WeaponSets']}
+        self.assertEqual(set(sets), guns)
+        for name in ['Snafu_ScarH_Black_GUN','SNAFU_SR25_Gun','GCGN_M110_Black']:
+            self.assertEqual(sets[name]['Ammo'],'Ammo_308Win')
+        self.assertEqual(sets['Expansion_Kedr']['Ammo'],'Ammo_380')
+        self.assertEqual(extra.findtext("type[@name='GCGN_Ammo_762x51']/nominal"),'0')
+
         for node in spawn.findall('type'):
             self.assertIn(node.get('name'), names)
-            self.assertEqual(node.find('attachments').get('chance'), '0.80')
+            self.assertEqual(node.find('attachments').get('chance'), '0.95')
             magazine = node.find('attachments/item').get('name')
             self.assertTrue(magazine in names or magazine in ('Mag_MP5_30Rnd', 'Mag_STANAG_30Rnd'))
 

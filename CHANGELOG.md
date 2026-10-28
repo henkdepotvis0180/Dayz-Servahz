@@ -4,6 +4,22 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.15.0] — 2026-10-28
+
+### Bruikbare wapenvoorraad en meer eten in winkels en huizen
+
+- Alle 21 geselecteerde modvuurwapens krijgen doel 30/minimum 24, in de teststand 60/48. Vijf voorheen dubbel zo hoge Expansion-wapendoelen zijn verlaagd; totaal 630 normaal / 1260 test. Gewone actieve vanilla-vuurwapens worden na de bestaande vermenigvuldigers begrensd op 30 normaal / 60 met testvoorraad. Event-/crafted-/uitgeschakelde klassen blijven ongemoeid.
+- De 18 wapens met losse magazijnen krijgen bij nieuwe CE-spawns 95% kans op hun geselecteerde magazijn. De vijftien losse modmagazijnen krijgen gelijkere doelen: 60/48 normaal, 120/96 test. Gecontroleerde wapen-magazijn-munitiekoppelingen staan in `config/loot-balance.json`.
+- SCAR-H, SR-25 en M110 gekoppeld aan vanilla `.308 Winchester`; de eerdere aparte `GCGN_Ammo_762x51` wordt niet meer als losse CE-loot gespawnd (doel/minimum 0). Bestaande items worden niet verwijderd. SNAFU .338 en .300 AAC verhoogd naar 100/80, in testvoorraad 200/160.
+- Bijpassende losse munitie/magazijnen krijgen minstens tweemaal het individuele wapendoel, 80–100% hoeveelheid en dezelfde locatiecategorieën/tiers als het bijbehorende modwapen. Dit reserveert geen complete set per gebouw en garandeert geen geladen wapen.
+- 27 bestaande houdbare voedsel-/dranktypen krijgen driemaal hun huidige doelen/minima, ook Town/Village en tiers 1–4. Geen activering van uitgeschakeld, geopend, rauw of speciaal eventvoedsel.
+- Winkels, horeca en huizen met bruikbare schappen krijgen aparte food-only plekken: maximaal zes bestaande schapposities in winkels/horeca en twee in huizen. Posities worden verplaatst uit het gemengde schap; geen nieuwe of dubbele coördinaten, geen verhoging van het totale gebouwdoel. Nul-capaciteit blijft uitgeschakeld.
+- Geen wijziging aan mods, bots, stamina, savebestanden, wachtwoorden of de keuze voor snelle bijvulling. Bestaande wereldloot verdwijnt niet direct; de nieuwe verdeling komt via nieuwe spawns/bijvulling beschikbaar.
+
+**Bijwerken:** stop de server en dubbelklik `Servahz-Update-v0.15.0.cmd` in de bestaande pakketmap. Vereist basis 0.13.0; 0.14.0 mag worden overgeslagen. Het script maakt een backup en vervangt automatisch de gewijzigde bestanden, inclusief de nieuwe balansconfiguratie. Geen nieuwe Workshop-mods, handmatig kopiëren, teststand opnieuw aanzetten of wipe nodig.
+
+**Controle:** pakkettests en controles met officiële Chernarus-CE-data voor wapendoelen, passende voorraad, voedseldoelen, food-only plekken, behoud van bestaande coördinaten/uitgeschakelde typen, herhaald instellen en save-/instellingenbehoud. Windows-tests controleren ook de één-bestandsupdater. De echte spreiding per gebouw, laden/schieten met de actuele Workshop-versies en het tempo waarin een bestaande wereld bijvult moeten lokaal in-game worden beoordeeld.
+
 ## [0.14.0] — 2026-10-28
 
 ### Eén updatescript in plaats van opnieuw het complete pakket

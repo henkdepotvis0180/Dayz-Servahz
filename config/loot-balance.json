@@ -1,0 +1,196 @@
+{
+  "VanillaFirearms": [
+    "AK101",
+    "AK74",
+    "AKM",
+    "AKS74U",
+    "ASVAL",
+    "Aug",
+    "AugShort",
+    "B95",
+    "CZ527",
+    "CZ527_Woodland",
+    "CZ550",
+    "CZ61",
+    "CZ75",
+    "Colt1911",
+    "Deagle",
+    "Deagle_Gold",
+    "Derringer_Grey",
+    "Engraved1911",
+    "FAL",
+    "FAMAS",
+    "FNX45",
+    "Glock19",
+    "Izh18",
+    "Izh18Shotgun",
+    "Izh43Shotgun",
+    "Longhorn",
+    "M14",
+    "M16A2",
+    "M4A1",
+    "M79",
+    "MKII",
+    "MP5K",
+    "Magnum",
+    "Magnum_Gold",
+    "MakarovIJ70",
+    "Mosin9130",
+    "Mosin9130_Woodland",
+    "Mp133Shotgun",
+    "P1",
+    "PM73Rak",
+    "PP19",
+    "R12",
+    "Repeater",
+    "Ruger1022",
+    "SKS",
+    "SKS_Woodland",
+    "SSG82",
+    "SV98",
+    "SVD",
+    "Saiga",
+    "Scout",
+    "Scout_Chernarus",
+    "UMP45",
+    "VSS",
+    "Vikhr",
+    "Winchester70"
+  ],
+  "ShelfFood": [
+    "BakedBeansCan",
+    "BoxCerealCrunchin",
+    "BrisketSpread",
+    "Chips",
+    "Crackers",
+    "Honey",
+    "Lunchmeat",
+    "Marmalade",
+    "Pajka",
+    "Pate",
+    "PeachesCan",
+    "PorkCan",
+    "PowderedMilk",
+    "Rice",
+    "SaltySticks",
+    "SardinesCan",
+    "SpaghettiCan",
+    "TacticalBaconCan",
+    "TunaCan",
+    "Zagorky",
+    "ZagorkyChocolate",
+    "ZagorkyPeanuts",
+    "SodaCan_Cola",
+    "SodaCan_Fronta",
+    "SodaCan_Kvass",
+    "SodaCan_Pipsi",
+    "SodaCan_Spite"
+  ],
+  "WeaponSets": [
+    {
+      "Weapon": "Expansion_M9",
+      "Magazine": "Mag_Expansion_M9_15Rnd",
+      "Ammo": "Ammo_9x19"
+    },
+    {
+      "Weapon": "Expansion_MPX",
+      "Magazine": "Mag_Expansion_MPX_50Rnd",
+      "Ammo": "Ammo_9x19"
+    },
+    {
+      "Weapon": "Expansion_MP5",
+      "Magazine": "Mag_MP5_30Rnd",
+      "Ammo": "Ammo_9x19"
+    },
+    {
+      "Weapon": "Expansion_MP5SD",
+      "Magazine": "Mag_MP5_30Rnd",
+      "Ammo": "Ammo_9x19"
+    },
+    {
+      "Weapon": "Expansion_VityazSN",
+      "Magazine": "Mag_Expansion_Vityaz_30Rnd",
+      "Ammo": "Ammo_9x19"
+    },
+    {
+      "Weapon": "Expansion_Kedr",
+      "Magazine": "Mag_Expansion_Kedr_20Rnd",
+      "Ammo": "Ammo_380"
+    },
+    {
+      "Weapon": "Expansion_G36",
+      "Magazine": "Mag_Expansion_G36_30Rnd",
+      "Ammo": "Ammo_556x45"
+    },
+    {
+      "Weapon": "Expansion_M16",
+      "Magazine": "Mag_STANAG_30Rnd",
+      "Ammo": "Ammo_556x45"
+    },
+    {
+      "Weapon": "GCGN_HK416",
+      "Magazine": "GCGN_HK416_Mag",
+      "Ammo": "Ammo_556x45"
+    },
+    {
+      "Weapon": "SNAFUVECTOR_45acp_GUN",
+      "Magazine": "SNAFUVECTOR_45acp_Mag",
+      "Ammo": "Ammo_45ACP"
+    },
+    {
+      "Weapon": "Snafu_ScarH_Black_GUN",
+      "Magazine": "Snafu_ScarH_25RND_Mag_BK",
+      "Ammo": "Ammo_308Win"
+    },
+    {
+      "Weapon": "SNAFU_SR25_Gun",
+      "Magazine": "SNAFU_SR25_Mag",
+      "Ammo": "Ammo_308Win"
+    },
+    {
+      "Weapon": "GCGN_M110_Black",
+      "Magazine": "GCGN_M110_Mag",
+      "Ammo": "Ammo_308Win"
+    },
+    {
+      "Weapon": "Expansion_MP7",
+      "Magazine": "Mag_Expansion_MP7_40Rnd",
+      "Ammo": "Ammo_Expansion_46x30"
+    },
+    {
+      "Weapon": "Expansion_AWM",
+      "Magazine": "Mag_Expansion_AWM_5Rnd",
+      "Ammo": "Ammo_Expansion_338"
+    },
+    {
+      "Weapon": "Expansion_Kar98",
+      "Magazine": null,
+      "Ammo": "Expansion_Ammo_8mm"
+    },
+    {
+      "Weapon": "Expansion_DT11",
+      "Magazine": null,
+      "Ammo": "Ammo_12gaPellets"
+    },
+    {
+      "Weapon": "Expansion_BenelliM4",
+      "Magazine": null,
+      "Ammo": "Ammo_12gaPellets"
+    },
+    {
+      "Weapon": "SNAFUM24_GUN",
+      "Magazine": "SNAFUM24_Mag",
+      "Ammo": "SNAFU_Ammo_338"
+    },
+    {
+      "Weapon": "SNAFUT5000_Dkmcc_GUN",
+      "Magazine": "SNAFUT5000_Mag",
+      "Ammo": "SNAFU_Ammo_338"
+    },
+    {
+      "Weapon": "SNAFUHoneyBadger_Black",
+      "Magazine": "SNAFUHoneyBadger_30rdMag_Black",
+      "Ammo": "SNAFU_Ammo_300ACC"
+    }
+  ]
+}

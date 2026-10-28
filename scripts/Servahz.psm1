@@ -264,6 +264,109 @@ function Set-TestSupplies {
     Save-Xml $xml $Path
 }
 
+function Set-SurvivalLoot {
+    param([string]$Path, [string]$ExtraPath, [bool]$TestSupplies)
+    $balance = Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/loot-balance.json') -Raw | ConvertFrom-Json
+    [xml]$xml = Get-Content -LiteralPath $Path -Raw
+    [xml]$extra = Get-Content -LiteralPath $ExtraPath -Raw
+    $cap = 30
+    if ($TestSupplies) { $cap = 60 }
+    foreach ($type in $xml.SelectNodes('/types/type')) {
+        $name = $type.GetAttribute('name')
+        $nominal = $type.SelectSingleNode('nominal')
+        $flags = $type.SelectSingleNode('flags')
+        if ($null -eq $nominal -or [int]$nominal.InnerText -le 0 -or $null -eq $flags -or
+            $flags.GetAttribute('crafted') -eq '1' -or $flags.GetAttribute('deloot') -eq '1') { continue }
+        if ($name -in $balance.VanillaFirearms -and [int]$nominal.InnerText -gt $cap) {
+            $nominal.InnerText = [string]$cap
+            $minimum = $type.SelectSingleNode('min')
+            if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Min([int]$minimum.InnerText, [int]($cap * 0.8)) }
+        }
+        if ($name -in $balance.ShelfFood) {
+            $nominal.InnerText = [string]([int]$nominal.InnerText * 3)
+            $minimum = $type.SelectSingleNode('min')
+            if ($null -ne $minimum) { $minimum.InnerText = [string]([int]$minimum.InnerText * 3) }
+            foreach ($pair in @(@('usage', @('Town', 'Village')), @('value', @('Tier1', 'Tier2', 'Tier3', 'Tier4')))) {
+                foreach ($value in $pair[1]) {
+                    if ($null -eq $type.SelectSingleNode($pair[0] + '[@name="' + $value + '"]')) {
+                        $node = $xml.CreateElement($pair[0]); $node.SetAttribute('name', $value)
+                        $type.AppendChild($node) | Out-Null
+                    }
+                }
+            }
+        }
+    }
+    # Match the locations and tiers of each selected mod gun to its actual ammo
+    # and magazine; quantities turn loose rounds and spare magazines into useful finds.
+    foreach ($set in $balance.WeaponSets) {
+        $weapon = $extra.SelectSingleNode('/types/type[@name="' + $set.Weapon + '"]')
+        foreach ($name in @($set.Ammo, $set.Magazine)) {
+            if (!$name) { continue }
+            $type = $xml.SelectSingleNode('/types/type[@name="' + $name + '"]')
+            if ($null -eq $type) { $type = $extra.SelectSingleNode('/types/type[@name="' + $name + '"]') }
+            if ($null -eq $type) { continue } # Older Steam baselines may omit a class.
+            $flags = $type.SelectSingleNode('flags')
+            if ($null -eq $flags -or $flags.GetAttribute('deloot') -eq '1' -or $flags.GetAttribute('crafted') -eq '1') { continue }
+            $nominal = $type.SelectSingleNode('nominal')
+            if ($null -eq $nominal -or [int]$nominal.InnerText -le 0) { continue }
+            $floor = [int]$weapon.SelectSingleNode('nominal').InnerText * 2
+            $nominal.InnerText = [string][Math]::Max([int]$nominal.InnerText, $floor)
+            $minimum = $type.SelectSingleNode('min')
+            if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Max([int]$minimum.InnerText, [int]($floor * 0.8)) }
+            foreach ($key in @('quantmin', 'quantmax')) {
+                $quantity = $type.SelectSingleNode($key)
+                if ($null -ne $quantity) { if ($key -eq 'quantmin') { $quantity.InnerText = '80' } else { $quantity.InnerText = '100' } }
+            }
+            foreach ($key in @('usage', 'value')) {
+                foreach ($source in $weapon.SelectNodes($key)) {
+                    $value = $source.GetAttribute('name')
+                    if ($null -eq $type.SelectSingleNode($key + '[@name="' + $value + '"]')) {
+                        $node = $type.OwnerDocument.CreateElement($key); $node.SetAttribute('name', $value)
+                        $type.AppendChild($node) | Out-Null
+                    }
+                }
+            }
+        }
+    }
+    Save-Xml $xml $Path
+    Save-Xml $extra $ExtraPath
+}
+
+function Set-FoodShelves {
+    param([string]$Path)
+    # Input is freshly copied/generated from Steam on every install. Move existing
+    # shelf positions; never duplicate coordinates or invent new spawn positions.
+    [xml]$xml = Get-Content -LiteralPath $Path -Raw
+    foreach ($group in $xml.SelectNodes('/*/group')) {
+        $name = $group.GetAttribute('name')
+        $shop = $name -match '^Land_(City_(Store|Stand_(Grocery|FastFood))|Village_(store|Pub)|House_1B01_Pub|FuelStation_Build|Workshop_FuelStation)'
+        $isHouse = $name -match '^Land_House(Block)?_'
+        if (!$shop -and !$isHouse) { continue }
+        if ($group.HasAttribute('lootmax') -and [int]$group.GetAttribute('lootmax') -eq 0) { continue }
+        if ($null -ne $group.SelectSingleNode('container[@name="ServahzFood"]')) { continue }
+        foreach ($shelf in @($group.SelectNodes('container[category[@name="food"] and tag[@name="shelves"]]'))) {
+            $points = @($shelf.SelectNodes('point'))
+            if ($points.Count -lt 2) { continue }
+            if ($shelf.HasAttribute('lootmax') -and [int]$shelf.GetAttribute('lootmax') -eq 0) { continue }
+            $limit = 2
+            if ($shop) { $limit = 6 }
+            $reserve = [Math]::Min($limit, [int][Math]::Floor($points.Count / 2))
+            $food = $xml.CreateElement('container')
+            $food.SetAttribute('name', 'ServahzFood'); $food.SetAttribute('lootmax', [string]$reserve)
+            $category = $xml.CreateElement('category'); $category.SetAttribute('name', 'food')
+            $food.AppendChild($category) | Out-Null
+            foreach ($tag in $shelf.SelectNodes('tag')) { $food.AppendChild($tag.CloneNode($true)) | Out-Null }
+            for ($i = 0; $i -lt $reserve; $i++) { $food.AppendChild($points[$i]) | Out-Null }
+            if ($shelf.HasAttribute('lootmax')) {
+                $shelf.SetAttribute('lootmax', [string][Math]::Min([int]$shelf.GetAttribute('lootmax'), $points.Count - $reserve))
+            }
+            $group.AppendChild($food) | Out-Null
+            break
+        }
+    }
+    Save-Xml $xml $Path
+}
+
 function Save-Xml {
     param([xml]$Xml, [string]$Path)
     $settings = New-Object Xml.XmlWriterSettings

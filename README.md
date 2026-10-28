@@ -21,6 +21,34 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Lootbalans (v0.15.0)
+
+De nieuwste update maakt wapenloot bruikbaarder en voegt meer eten in winkels en huizen toe. **Geen nieuwe mods nodig.** Stop de server en gebruik [de gewenste update op GitHub](https://github.com/henkdepotvis0180/Dayz-Servahz/releases); vanaf basis 0.13.0 kun je direct naar 0.15.0.
+
+- **Minder herhaling:** alle 21 modwapens doel 30/minimum 24, in testvoorraad 60/48. De vijf uitschieters worden verlaagd. Gewone actieve vanilla-vuurwapens hebben een maximum van 30 per type, of 60 met `TestSuppliesEverywhere`; eventloot en uitgeschakelde klassen worden niet aangezet.
+- **Passende voorraad:** de 18 wapens met losse magazijnen krijgen 95% magazijnkans. Vijftien losse modmagazijnen doel 60/minimum 48, in testvoorraad 120/96. Bijbehorende munitie/magazijnen komen in dezelfde locatiecategorieën en tiers als hun wapen, met minstens tweemaal het individuele wapendoel en 80–100% hoeveelheid bij losse spawns. Dit garandeert geen complete set in ieder huis of een geladen wapen.
+- **Meer voedsel:** 27 bestaande houdbare voedsel-/dranktypen krijgen 3× hun huidige doelen/minima en ook Town/Village, tiers 1–4. Bijvoorbeeld BakedBeansCan: bij de standaard 5× loot doel 225, bij 8× testloot 360. Uitgeschakeld, geopend, rauw en speciaal eventvoedsel wordt niet aangezet.
+- **Voedselplekken:** winkels/horeca krijgen maximaal zes bestaande schapposities alleen voor eten; huizen maximaal twee. Andere spullen kunnen deze plekken niet innemen. De totale gebouwcapaciteit en de echte coördinaten blijven gelijk; kleine of volle gebouwen hoeven niet direct eten te bevatten.
+
+De selectie van bijpassende klassen staat in `config/loot-balance.json`. Deze tabel helpt de belangrijkste SNAFU-wapens herkennen:
+
+| Wapen | Geselecteerd magazijn | Losse munitie |
+| --- | --- | --- |
+| SCAR-H Black | Snafu_ScarH_25RND_Mag_BK | Ammo_308Win (.308 Winchester) |
+| SR-25 | SNAFU_SR25_Mag | Ammo_308Win (.308 Winchester) |
+| M110 Black | GCGN_M110_Mag | Ammo_308Win (.308 Winchester) |
+| HK416 | GCGN_HK416_Mag | Ammo_556x45 (5.56×45) |
+| M24 | SNAFUM24_Mag | SNAFU_Ammo_338 (.338) |
+| T5000 | SNAFUT5000_Mag | SNAFU_Ammo_338 (.338) |
+| Honey Badger Black | SNAFUHoneyBadger_30rdMag_Black | SNAFU_Ammo_300ACC (.300 AAC) |
+| Vector .45 ACP | SNAFUVECTOR_45acp_Mag | Ammo_45ACP (.45 ACP) |
+
+De eerdere losse `GCGN_Ammo_762x51` wordt niet meer gespawnd. SNAFU .338 en .300 AAC krijgen elk doel 100/minimum 80, in testvoorraad 200/160. De klasse blijft met doel 0 in de CE-configuratie staan; je bestaande spullen worden niet verwijderd. Er staan nog 67 extra CE-klassen geregistreerd, waarvan 66 actief.
+
+Bronnen: de [SNAFU-compatibiliteitsinventaris](https://gist.github.com/KrisSeanMac/0b15c8463b8907d6e8691c469c976c08) noemt de ondersteunde munitie en magazijnen per klasse; voor Expansion onder andere de [Kedr-configuratie (.380)](https://github.com/salutesh/DayZ-Expansion-Scripts/blob/experimental/DayZExpansion/Objects/Weapons/Firearms/SMG/P99/config.cpp). Controleer de actuele Workshop-versies lokaal door te laden/schieten. De pakkettests starten geen echte DayZ-server.
+
+**Bestaande wereld:** bestaande loot wordt niet gewist of direct omgezet. Laat de economie nieuwe items spawnen/bijvullen en beoordeel ook verse locaties. Bots, stamina, wachtwoorden, saves en je huidige test-/bijvulinstellingen blijven behouden. De oudere tabellen en updatebeschrijvingen hieronder beschrijven hun oorspronkelijke versies; bovenstaande balans vervangt de oude aantallen.
+
 Een lokaal serverpakket voor **Windows 10/11 + Chernarus**, met DayZ Expansion AI, BaseBuilding en Navigation, plus RaG BaseBuilding, Building Fortifications, MMG en Expansion Weapons. Installeer de officiele game/server en Workshop-mods via Steam, voer de installer uit en start de server. Gamebestanden en mods worden niet meegeleverd.
 
 **Getest:** installatie met testbestanden, configuratiegeneratie, behoud van saves, opnieuw instellen zonder 25× loot, modupdates, backups en het queryprotocol. **Nog lokaal te testen:** de echte Windows-server starten, verbinden, AI-gedrag en bouwen. De Linux-cloudomgeving kan deze Windows/Steam-speltest niet uitvoeren.

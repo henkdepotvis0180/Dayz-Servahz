@@ -28,6 +28,32 @@ try {
     }
     if (@($extra.SelectNodes('/types/type')).Count -lt 1) { throw 'Extra modloot ontbreekt.' }
     Write-Host "Extra modloot: $(@($extra.SelectNodes('/types/type')).Count) itemtypen gekoppeld aan de economie."
+    $balance = Get-Content -LiteralPath (Join-Path (Split-Path $PSScriptRoot -Parent) 'config/loot-balance.json') -Raw | ConvertFrom-Json
+    foreach ($set in $balance.WeaponSets) {
+        $weapon = $extra.SelectSingleNode('/types/type[@name="' + $set.Weapon + '"]')
+        if ($null -eq $weapon -or [int]$weapon.nominal -le 0) { throw "Wapenvoorraad ontbreekt: $($set.Weapon). Voer 01-Instellen.cmd uit." }
+        if ($set.Magazine) {
+            $attachment = $attachments.SelectSingleNode('/spawnabletypes/type[@name="' + $set.Weapon + '"]/attachments[item[@name="' + $set.Magazine + '"]]')
+            if ($null -eq $attachment -or $attachment.GetAttribute('chance') -ne '0.95') { throw "Magazijnkoppeling ontbreekt: $($set.Weapon)." }
+        }
+        foreach ($name in @($set.Ammo, $set.Magazine)) {
+            if (!$name) { continue }
+            $supply = $types.SelectSingleNode('/types/type[@name="' + $name + '"]')
+            if ($null -eq $supply) { $supply = $extra.SelectSingleNode('/types/type[@name="' + $name + '"]') }
+            if ($null -eq $supply) { continue }
+            if ([int]$supply.nominal -lt ([int]$weapon.nominal * 2) -or [int]$supply.quantmin -ne 80 -or [int]$supply.quantmax -ne 100) {
+                throw "Bijpassende voorraad is niet toegepast: $name. Voer 01-Instellen.cmd uit."
+            }
+        }
+    }
+    $obsolete = $extra.SelectSingleNode('/types/type[@name="GCGN_Ammo_762x51"]')
+    if ($null -ne $obsolete -and [int]$obsolete.nominal -ne 0) { throw 'Oude 7.62x51-loot is nog actief; de geselecteerde SNAFU-geweren gebruiken .308 Winchester.' }
+    foreach ($food in $groups.SelectNodes('/*/group/container[@name="ServahzFood"]')) {
+        if ($food.SelectNodes('category').Count -ne 1 -or $null -eq $food.SelectSingleNode('category[@name="food"]') -or $food.SelectNodes('point').Count -lt 1) {
+            throw 'Voedselplekken zijn niet correct ingericht. Voer 01-Instellen.cmd uit.'
+        }
+    }
+    Write-Host "Lootbalans: passende wapenvoorraden; $($groups.SelectNodes('/*/group/container[@name="ServahzFood"]').Count) gebouwtypen met aparte voedselplekken."
     [xml]$globals = Get-Content -LiteralPath (Join-Path $layout.Mission 'db/globals.xml') -Raw
     if ($settings.TestFastRestock) {
         $expected = @{ RestartSpawn = 50; RespawnTypes = 30; RespawnLimit = 50; RespawnAttempt = 4; LootSpawnAvoidance = 50 }
