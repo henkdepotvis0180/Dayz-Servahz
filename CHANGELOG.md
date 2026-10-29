@@ -4,6 +4,24 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.2] — 2026-10-29
+
+### Opslagdiagnose bij verdwijnende bouwdelen
+
+- Nieuwe zelfstandige **`08-Opslagdiagnose.cmd`** voor gebruik terwijl de bestaande DayZ-server draait. Kan zonder update/installatie naast 01 worden neergezet; zo hoeft een verdachte startopdracht niet eerst door een herstart verloren te gaan. Ook opgenomen in de gewone cumulatieve update. Geen extra release-asset of volledig pakket.
+- Vergelijkt met Windows CIM de executable, absolute config-/profielpaden en spelpoort van maximaal vier draaiende DayZ-serverprocessen met de pakketinstellingen. Meldt dubbele, relatieve, onleesbare of ontbrekende argumenten zonder er een actieve wereld uit af te leiden. Signaleert expliciete `-mission`- en `-storage`-overrides en meerdere processen. Toont geen startopdrachten, padnamen of argumentwaarden.
+- Leest uitsluitend geselecteerde numerieke `instanceId`-/`storageAutoFix`-instellingen, of de missienaam met het pakket overeenkomt, en bestand-/procesdatums. Configuratie-inspectie betreft huidige tekstbestanden, niet noodzakelijk de instellingen die een eerder gestart proces heeft geladen. Verandert geen instanceId, missie, opslaglocatie of opslagherstelbeleid.
+- Toont metadata van de verwachte `storage_1`, gevonden `storage_<nummer>`-mappen onder maximaal 32 missies per gevonden installatie en absolute lokale missie-/opslag-overrides. Geen schijfbrede zoekactie, uitlezen van save-inhoud, schrijftest of rechtenwijziging. Relatieve paden worden niet tegen een gegokte werkmap opgelost; UNC-paden worden niet gevolgd.
+- Controleert bovendien XML-leesbaarheid van hoofdtypes en de RaG-economiekoppeling, geselecteerde kit-levensduren, de `load`/`save`-vlaggen in `economy.xml` en aantallen bouw-/`cheatCheck`-regels in `cfgIgnoreList.xml`. Externe XML-entiteiten/DTD's worden geweigerd. Geen wijziging van deze bestanden en geen aanname dat tekstinspectie daadwerkelijke engineacceptatie bewijst. Bohemia [waarschuwde bij 1.27](https://feedback.bistudio.com/T189577) voor het oude `cheatCheck`-probleem; dit is een gerichte controle, geen vastgestelde oorzaak op de huidige server.
+- Zoekt in maximaal acht recente logstaarten per gevonden lokaal profiel naar opslag-/schrijf-/corruptiemeldingen. Alleen vaste categorieën en kloktijden, geen volledige logregels, bestandsnamen, spelersgegevens, codes of wachtwoorden. Een signaal of recente opslagmap is een aanwijzing en bewijst niet waar een speler verbonden is of dat een bouwdeel verwijderd is.
+- Schrijft uitsluitend een privérapport onder **`.local/StorageDiagnostics`**. Geen wipe, herstel, serverstop/start, profielwijziging, modwijziging, materiaalteruggave of lootverversing. Geen bewezen reparatie voor verdwenen RaG-bouwdelen; de oudere diagnose controleerde alleen de vaste pakketopslag.
+
+**Direct onderzoeken zonder de server te stoppen:** download [08-Opslagdiagnose.cmd van tag v0.18.2](https://raw.githubusercontent.com/henkdepotvis0180/Dayz-Servahz/v0.18.2/08-Opslagdiagnose.cmd), sla op naast `01-Instellen.cmd` en voer uit terwijl de bestaande server draait. Controleer dat de extensie `.cmd` blijft. Deel alleen het gemaakte tekstbestand. Voor deze zelfstandige controle zijn geen update, 01, 04, 05 of 06 nodig. Bij voorkeur geen nieuwe bouwmaterialen besteden totdat de actieve opslag is opgehelderd.
+
+**Gewoon bijwerken:** stop de server normaal en voer `Servahz-Update-v0.18.2.cmd` uit naast 01. Behoudt saves, wachtwoorden, lokale instellingen en profielen; de gebruikelijke updater maakt een backup. Voer 08 na starten uit. Als juist de bestaande startopdracht onderzocht moet worden, gebruik eerst de zelfstandige knop hierboven; een herstart kan dat bewijs veranderen.
+
+**Controle:** tests met geciteerde paden met spaties, gelijke en afwijkende startselecties, andere opslaginstanties, meerdere processen, dubbele/relatieve argumenten, ontbrekende procesinformatie, CE-koppelingen, ignore-/save-vlaggen, verboden externe XML-entiteiten en privacyfilters bij opslagfouten; wereld-/configuratie-/profielbehoud. Volledige regressiesuite en de echte CMD-knop op Windows PowerShell 5.1. Geen DayZ-engine uitgevoerd; actieve live opslag en de oorzaak van het verlies worden pas met het lokale rapport beoordeeld.
+
 ## [0.18.1] — 2026-10-28
 
 ### Alleen-lezen diagnose bij RaG-deuren en combinatiesloten

@@ -37,6 +37,18 @@ Het ontbreken van aparte CE-lootregels voor geplaatste RaG-delen is **geen bewez
 
 Bij verlies van bouwdelen: stop normaal en bewaar eerst een aparte actuele wereld-/profielbackup met `scripts/Backup-World.ps1` volgens de backupinstructies hieronder. De diagnose toont alleen of oudere wereldbackupmappen aanwezig zijn, niet of zij jouw deur bevatten of volledig herstelbaar zijn. Een volledige oude wereld terugzetten kan recente bouw- en spelersvoortgang vervangen; er wordt hier niets automatisch teruggezet. Controleer met het lokale rapport en de in-game situatie voordat een herstelkeuze wordt gemaakt.
 
+## Opslag controleren terwijl de server draait (v0.18.2)
+
+Als geplaatste muren/deuren verdwijnen en de wereldbestanden in 07 een oude schrijftijd hebben, controleer dan eerst of de draaiende server dezelfde installatie, missie en opslag gebruikt. Een oude map alleen bewijst geen opschoonfout. DayZ ondersteunt andere configuratie-, missie- en opslagpaden in de [startparameters](https://community.bohemia.net/wiki/DayZ:Server_Configuration).
+
+**Zonder de bestaande server te stoppen:** download [08-Opslagdiagnose.cmd](https://raw.githubusercontent.com/henkdepotvis0180/Dayz-Servahz/v0.18.2/08-Opslagdiagnose.cmd), sla het bestand met extensie `.cmd` op naast 01 en dubbelklik. Dit is een zelfstandige leescontrole; installatie van een update, 01 of een herstart is niet nodig. Laat de server met zijn bestaande startopdracht draaien om juist die te onderzoeken. Deel alleen **`.local/StorageDiagnostics/<datum-tijd>.txt`**. Als de server al gestopt is, herstart hem niet uitsluitend voor dit rapport zonder eerst de actuele wereld veilig te stellen. Geen teststand of lootverversing gebruiken.
+
+08 vergelijkt de executable, absolute config-/profielpaden en poort van de draaiende Windows-processen met het pakket. Toont ook overrides voor missie/opslag, meerdere processen, geselecteerde numerieke configvelden, opslagmetadata en privacyveilige categorieën voor mogelijke opslagfouten. Relatieve of onleesbare procespaden blijven **ONBEKEND**; de werkmap wordt niet gegokt. Een recente map is niet automatisch de actieve wereld, een gelijke startselectie bewijst geen geslaagde opslag, en huidige configtekst kan na de serverstart zijn gewijzigd. De controle ontleedt geen saves en doet geen schrijftest onder het serveraccount.
+
+08 controleert ook de XML en koppeling naar `servahz_ce/building_types.xml`, geselecteerde RaG-kit-levensduren, opslagvlaggen in `economy.xml` en bouw-/`cheatCheck`-regels in `cfgIgnoreList.xml`. Het oude [door Bohemia bevestigde cheatCheck-probleem](https://feedback.bistudio.com/T189577) is een reden om de aanwezige ignorelijst te controleren; dit bewijst niet dat die op jouw huidige server fout staat. Voeg geen RaG-implementatieklassen of regels aan de ignorelijst toe als algemene verdwijnreparatie.
+
+Alleen het eigen rapport wordt geschreven. Geen wereldherstel, instance-wissel, save-/profiel-/modwijziging of herstart. 08 zit ook in [update 0.18.2](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.2); voor gewoon bijwerken gelden de normale stop-/backupstappen. Dat bijwerken is voor deze losse diagnose niet nodig. Geen losse extra release-asset: de release houdt het ene cumulatieve updatescript.
+
 ## Voorraadkisten zonder sleutels en meer MMG-vakjes (v0.18.0)
 
 Download [update 0.18.0](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.0). Deze bevat ook alle wijzigingen tot en met 0.17.0; tussenliggende versies hoef je niet apart uit te voeren.

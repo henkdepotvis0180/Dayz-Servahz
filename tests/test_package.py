@@ -462,6 +462,126 @@ File: RaG_BB_Door.c
         self.assertNotIn('PRIVATE-INVALID-CONTENT', result.stdout + result.stderr)
         self.assertEqual(profile.read_bytes(), previous)
 
+    def run_storage_probe(self, processes=None, *, unavailable=False):
+        # The one-file CMD is also usable on existing packages without stopping
+        # the process whose launch selection we need to inspect.
+        command = (ROOT / '08-Opslagdiagnose.cmd').read_text()
+        (self.package / '08-Opslagdiagnose.cmd').write_text(command)
+        (self.package / 'scripts/storage-processes.json').write_text(json.dumps(processes or []))
+        mock = "throw 'PRIVATE-CIM-ERROR'" if unavailable else """
+foreach ($process in $script:storageProcesses) {
+    $process.CreationDate = [DateTime]$process.CreationDate
+    $process
+}
+"""
+        (self.package / 'scripts/StorageProbe.ps1').write_text('''
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+$script:storageProcesses = Get-Content (Join-Path $PSScriptRoot 'storage-processes.json') -Raw | ConvertFrom-Json
+function Get-CimInstance {
+    param($ClassName, $Filter, $ErrorAction)
+''' + mock + '''
+}
+$root = Split-Path $PSScriptRoot -Parent
+$command = [IO.File]::ReadAllText((Join-Path $root '08-Opslagdiagnose.cmd'))
+$body = ($command -split "# SERVAHZ_STORAGE_POWERSHELL`n", 2)[1]
+& ([scriptblock]::Create($body)) -PackageRoot $root
+''')
+        return self.run_ps('StorageProbe.ps1')
+
+    def storage_process(self, command):
+        return dict(ExecutablePath=str(self.server / 'DayZServer_x64.exe'), CommandLine=command,
+                    CreationDate='2026-10-29T17:00:00Z')
+
+    def test_storage_diagnostic_compares_quoted_live_launch_and_preserves_files(self):
+        self.install()
+        profiles = self.server / 'Servahz/Profiles'
+        world = self.mission / 'storage_1/data/types.bin'
+        world.parent.mkdir(parents=True)
+        world.write_bytes(b'WORLD-MUST-NOT-CHANGE')
+        (profiles / 'PRIVATE-log-name.RPT').write_text(
+            '18:03:01 Storage write failed: access denied PRIVATE-player PRIVATE-pin PRIVATE-path\n'
+            '18:03:02 Persistence corrupt, repair PRIVATE-password\n')
+        before = {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()}
+        local_before = self.local.read_bytes()
+        command = (f'"{self.server / "DayZServer_x64.exe"}" '
+                   f'"-config={self.server / "Servahz/serverDZ.cfg"}" '
+                   f'-profiles="{profiles}" -port=2302 -password=PRIVATE-command-password')
+        result = self.run_storage_probe([self.storage_process(command)])
+        for token in ['executable t.o.v. pakket=GELIJK', '-config t.o.v. pakket=GELIJK',
+                      '-profiles t.o.v. pakket=GELIJK', 'poort t.o.v. pakket=GELIJK',
+                      'Proces #1 config instanceId=1', 'config missie t.o.v. pakket=GELIJK',
+                      'toegang/schrijven', 'beschadiging/herstel', 'Verwachte pakketopslag storage_1: bestanden=1']:
+            self.assertIn(token, result.stdout)
+        reports = list((self.package / '.local/StorageDiagnostics').glob('*.txt'))
+        self.assertEqual(len(reports), 1)
+        for output in (reports[0].read_text(), result.stderr):
+            for private in ['PRIVATE-', str(self.server), str(self.workshop), 'WORLD-MUST-NOT-CHANGE']:
+                self.assertNotIn(private, output)
+        self.assertNotIn('PRIVATE-', result.stdout)
+        self.assertEqual(self.local.read_bytes(), local_before)
+        self.assertEqual(before, {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()})
+
+    def test_storage_diagnostic_reports_overrides_other_slots_and_ambiguity(self):
+        self.install()
+        other = self.server / 'mpmissions/PRIVATE-mission/storage_2'
+        other.mkdir(parents=True)
+        (other / 'types.bin').write_bytes(b'OTHER-WORLD')
+        os.utime(other / 'types.bin', (1793296800, 1793296800))
+        config = self.root / 'PRIVATE-config.cfg'
+        config.write_text('instanceId = 2;\nstorageAutoFix = 1;\ntemplate = "PRIVATE-mission";\npasswordAdmin="PRIVATE-admin";')
+        processes = [self.storage_process(f'-config="{config}" -mission="{other.parent}" -storage=PRIVATE-relative -port=9999'),
+                     self.storage_process('-config=PRIVATE-relative -profiles=PRIVATE-a -profiles=PRIVATE-b')]
+        result = self.run_storage_probe(processes)
+        for token in ['Meerdere processen', '-config t.o.v. pakket=ANDERS', 'config instanceId=2',
+                      'config missie t.o.v. pakket=ANDERS', '-mission=AANWEZIG', '-storage=AANWEZIG',
+                      '-storage: relatief', 'storage_2: bestanden=1', 'poort t.o.v. pakket=ANDERS',
+                      '-config t.o.v. pakket=ONBEKEND', '-profiles=DUBBEL']:
+            self.assertIn(token, result.stdout)
+        self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
+        self.assertEqual((other / 'types.bin').read_bytes(), b'OTHER-WORLD')
+
+    def test_storage_diagnostic_reports_missing_and_unavailable_process_data(self):
+        self.install()
+        self.assertIn('Geen actief proces', self.run_storage_probe().stdout)
+        result = self.run_storage_probe(unavailable=True)
+        self.assertIn('Procescontrole niet beschikbaar', result.stdout)
+        self.assertNotIn('PRIVATE-CIM-ERROR', result.stdout + result.stderr)
+        result = self.run_storage_probe([self.storage_process('"PRIVATE-unbalanced')])
+        self.assertIn('startselectie niet beschikbaar', result.stdout)
+        self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
+
+    def test_storage_diagnostic_checks_economy_ignore_and_rejects_external_xml(self):
+        self.install()
+        ignore = self.mission / 'cfgIgnoreList.xml'
+        ignore.write_text('<ignore><type name="Fence" cheatCheck="1"/><type name="RaG_BB_Low_Wall"/><type name="PRIVATE-class"/></ignore>')
+        economy = self.mission / 'economy.xml'
+        economy.write_text('<economy><building load="1" save="0"/><dynamic load="1" save="1"/><vehicles load="1" save="1"/></economy>')
+        result = self.run_storage_probe()
+        for token in ['koppelingen naar servahz_ce/building_types.xml=1',
+                      'RaG_BB_DoorKit aantal=1 lifetime=14400', 'RaG_BB_Low_WallKit aantal=1 lifetime=14400',
+                      'ignorelijst actieve cheatCheck-regels=1; bouwgerelateerde regels=2',
+                      'economy building save=0']:
+            self.assertIn(token, result.stdout)
+        self.assertNotIn('PRIVATE-class', result.stdout + result.stderr)
+        self.assertIn('cheatCheck="1"', ignore.read_text())
+        ignore.write_text('<!DOCTYPE ignore [<!ENTITY secret SYSTEM "file:///PRIVATE-xml-path">]><ignore>&secret;</ignore>')
+        result = self.run_storage_probe()
+        self.assertIn('cfgIgnoreList.xml ontbreekt of ongeldig', result.stdout)
+        self.assertNotIn('PRIVATE-xml-path', result.stdout + result.stderr)
+
+    @unittest.skipUnless(os.name == 'nt', 'Real one-file CMD launcher requires Windows')
+    def test_storage_diagnostic_native_cmd_launcher(self):
+        self.install()
+        command = self.package / '08-Opslagdiagnose.cmd'
+        # Exact GitHub raw download bytes, without an installer converting lines.
+        command.write_bytes((ROOT / command.name).read_bytes())
+        result = subprocess.run(['cmd.exe', '/d', '/c', command.name], cwd=self.package,
+                                input='', capture_output=True, text=True, timeout=45)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('opslagdiagnose 0.18.2', result.stdout)
+        self.assertEqual(len(list((self.package / '.local/StorageDiagnostics').glob('*.txt'))), 1)
+
     def test_lootchests_unlocked_contents_placement_and_culture(self):
         # Deliberately use a non-symmetric local point and a 90-degree building.
         (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>
