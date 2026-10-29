@@ -6,6 +6,12 @@ function Assert-LootChestConfig {
     }
     $tables = @($Config.LootCategories | ForEach-Object { $_.name })
     $weapons = @($Config.LCPredefinedWeapons | ForEach-Object { $_.defname })
+    if (@($tables | Select-Object -Unique).Count -ne $tables.Count -or @($weapons | Select-Object -Unique).Count -ne $weapons.Count) { throw 'CJ187-profiel bevat dubbele tabel- of wapensetnamen; eigen profiel blijft behouden.' }
+    foreach ($table in $Config.LootCategories) {
+        foreach ($item in $table.Loot) {
+            if ($item -like 'LC_predefined_*' -and $item -notin $weapons) { throw 'CJ187-loottabel verwijst naar een ontbrekende wapenset; eigen profiel blijft behouden.' }
+        }
+    }
     $count = 0
     foreach ($location in $Config.LootChestsLocations) {
         if ($location.keyclass -ne '' -or [int]$location.openable -ne 2) { throw 'CJ187-profiel bevat vergrendelde kisten. Maak keyclass leeg en zet openable op 2; eigen profiel blijft behouden.' }
@@ -97,7 +103,7 @@ function New-LootChestConfig {
         $candidate = [pscustomobject]@{ X = $x; Y = $y; Z = $z; Yaw = $rpy[2]; Kind = $prototype.Kind; Priority = $prototype.Priority; CellX = $cellX; CellZ = $cellZ; Building = $name }
         if (!$cells.ContainsKey($cell) -or $candidate.Priority -lt $cells[$cell].Priority) { $cells[$cell] = $candidate }
     }
-    $selected = @(); $locations = @(); $definitions = @(); $weaponIndex = 0
+    $selected = @(); $locations = @(); $definitions = @(); $weaponTables = @(); $weaponIndex = 0
     $weaponSets = @($balance.WeaponSets | Where-Object { $_.Magazine })
     foreach ($candidate in @($cells.Values | Sort-Object CellZ, CellX)) {
         $near = $false
@@ -111,7 +117,10 @@ function New-LootChestConfig {
             $set = $weaponSets[$weaponIndex % $weaponSets.Count]
             $definition = 'LC_predefined_Servahz_' + $weaponIndex
             $definitions += [pscustomobject]@{ defname = $definition; weapon = $set.Weapon; magazine = $set.Magazine; attachments = @(); optic = ''; opticbattery = 0 }
-            $loot += @($definition, $set.Ammo, $set.Ammo, $set.Magazine)
+            $table = 'LC_Table_Weapons_Servahz_' + $weaponIndex
+            $weaponTables += [pscustomobject]@{ name = $table; Loot = @($definition) }
+            # CJ187's weapon table route, before general supplies consume cargo space.
+            $loot = @($table, $set.Magazine, $set.Ammo, $set.Ammo) + $loot
             $weaponIndex++
         }
         $position = [string]::Format($culture, '{0:F3} {1:F3} {2:F3}|{3:F3} 0 0', [object[]]@($candidate.X, $candidate.Y, $candidate.Z, $candidate.Yaw))
@@ -123,9 +132,75 @@ function New-LootChestConfig {
         }
         if ($locations.Count -ge $recipe.MaxChests) { break }
     }
-    $config = [pscustomobject]@{ EnableDebug = 0; DeleteLogs = 0; MaxSpareMags = 2; RandomQuantity = 0; LootChestsLocations = $locations; LCPredefinedWeapons = $definitions; LootCategories = @($recipe.LootCategories) }
+    $config = [pscustomobject]@{ EnableDebug = 0; DeleteLogs = 0; MaxSpareMags = 2; RandomQuantity = 0; LootChestsLocations = $locations; LCPredefinedWeapons = $definitions; LootCategories = @($recipe.LootCategories) + $weaponTables }
     $null = Assert-LootChestConfig $config
     return $config
+}
+
+function Update-MilitaryLootChestConfig {
+    param($Config)
+    # Migrate only the exact old package loadout. Never regenerate positions or
+    # replace custom loot, definition attachments, private settings or other chests.
+    $balance = Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/loot-balance.json') -Raw | ConvertFrom-Json
+    $recipe = Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/loot-chests.json') -Raw | ConvertFrom-Json
+    $oldSupplies = @('LC_Table_Servahz_Food', 'LC_Table_Servahz_Food', 'LC_Table_Servahz_Food',
+        'LC_Table_Servahz_Drink', 'LC_Table_Servahz_Drink', 'LC_Table_Servahz_Medical', 'LC_Table_Servahz_Tools')
+    $changed = 0
+    foreach ($location in $Config.LootChestsLocations) {
+        if ($location.name -notmatch '^Servahz_Weapons_[0-9]+_[0-9]+$' -or @($location.chest).Count -ne 1 -or $location.chest[0] -ne 'CJ_LootChest_Olive_Large') { continue }
+        $definitions = @($location.loot | Where-Object { $_ -cmatch '^LC_predefined_Servahz_[0-9]+$' })
+        if ($definitions.Count -ne 1) { continue }
+        $definition = @($Config.LCPredefinedWeapons | Where-Object { $_.defname -ceq $definitions[0] })
+        if ($definition.Count -ne 1) { continue }
+        $sets = @($balance.WeaponSets | Where-Object { $_.Weapon -ceq $definition[0].weapon -and $_.Magazine -ceq $definition[0].magazine })
+        if ($sets.Count -ne 1) { continue }
+        $set = $sets[0]
+        $expected = $oldSupplies + @($definitions[0], $set.Ammo, $set.Ammo, $set.Magazine)
+        # Exact ordered comparison: an administrator's additions/reordering stay intact.
+        if ((ConvertTo-Json -InputObject @($location.loot) -Compress) -cne (ConvertTo-Json -InputObject $expected -Compress)) { continue }
+        $suffix = $definitions[0].Substring('LC_predefined_Servahz_'.Length)
+        $tableName = 'LC_Table_Weapons_Servahz_' + $suffix
+        $table = @($Config.LootCategories | Where-Object { $_.name -ceq $tableName })
+        if ($table.Count -gt 0) {
+            if ($table.Count -ne 1 -or @($table[0].Loot).Count -ne 1 -or $table[0].Loot[0] -cne $definitions[0]) { continue }
+        } else {
+            $Config.LootCategories = @($Config.LootCategories) + @([pscustomobject]@{ name = $tableName; Loot = @($definitions[0]) })
+        }
+        $location.loot = @($tableName, $set.Magazine, $set.Ammo, $set.Ammo) + @($recipe.Loadouts.Weapons)
+        $changed++
+    }
+    return $changed
+}
+
+function Get-MilitaryLootChestSummary {
+    param($Config)
+    $military = @($Config.LootChestsLocations | Where-Object { $_.chest -contains 'CJ_LootChest_Olive_Large' })
+    $routed = 0; $legacy = 0
+    foreach ($location in $military) {
+        if (@($location.loot | Where-Object { $_ -like 'LC_Table_Weapons_*' }).Count -gt 0) { $routed++ }
+        if (@($location.loot | Where-Object { $_ -like 'LC_predefined_*' }).Count -gt 0) { $legacy++ }
+    }
+    return [pscustomobject]@{ Military = $military.Count; WeaponTables = $routed; DirectSets = $legacy }
+}
+
+function Get-LootChestLogSummary {
+    param([string]$ProfilesPath)
+    $folder = Join-Path $ProfilesPath 'CJ_LootChests'
+    $files = @()
+    if (Test-Path -LiteralPath $folder) {
+        $files = @(Get-ChildItem -LiteralPath $folder -Recurse -File -ErrorAction SilentlyContinue | Where-Object { $_.Name -match '(?i)^LootChests.*LOG.*\.(txt|log)$' } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 3)
+    }
+    $space = 0; $classes = 0; $unreadable = 0
+    foreach ($file in $files) {
+        try { $lines = @(Get-Content -LiteralPath $file.FullName -Tail 200 -ErrorAction Stop) }
+        catch { $unreadable++; continue }
+        foreach ($line in $lines) {
+            if ($line -match '(?i)not fit|doesn.t fit|no space|too (big|large)|oversiz|\bfull\b') { $space++ }
+            if ($line -match '(?i)(class|type|weapon).{0,60}(not found|unknown|invalid|not exist)|(unknown|invalid|missing).{0,40}(class|weapon)') { $classes++ }
+        }
+    }
+    # Never return raw lines, filenames, player names, coordinates or codes.
+    return [pscustomobject]@{ Files = $files.Count; Space = $space; Classes = $classes; Unreadable = $unreadable }
 }
 
 function Write-LootChestLocations {

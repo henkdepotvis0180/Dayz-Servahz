@@ -106,6 +106,11 @@ try {
         $chestConfig = $newChestConfig
     }
     $chestCount = Assert-LootChestConfig $chestConfig
+    $chestUpdates = Update-MilitaryLootChestConfig $chestConfig
+    if ($chestUpdates -gt 0) {
+        $newChestConfig = $chestConfig
+        $null = Assert-LootChestConfig $chestConfig
+    }
     if ((Test-Path -LiteralPath $layout.Runtime) -and !(Test-Path -LiteralPath $layout.Marker)) {
         throw "De map $($layout.Runtime) bestaat zonder Servahz-marker. Kies een andere serverinstallatie; bestaande bestanden worden niet overschreven."
     }
@@ -180,6 +185,7 @@ try {
     if ($null -ne $newChestConfig) {
         Write-Utf8File $chestPath ($newChestConfig | ConvertTo-Json -Depth 20)
     }
+    if ($chestUpdates -gt 0) { Write-Host "CJ187 0.18.6: $chestUpdates bestaande militaire pakketkisten bijgewerkt; oorspronkelijke posities en eigen profielen behouden, backup onder Servahz/Backups. Nieuwe inhoud na herstart." }
     Write-LootChestLocations -Config $chestConfig -Path (Join-Path $layout.Profiles 'CJ_LootChests/Servahz-Lootkisten.csv')
     Write-Host "CJ187: $chestCount voorraadkisten zonder sleutel; locaties in Profiles/CJ_LootChests/Servahz-Lootkisten.csv."
     Write-Host 'MMG Half Mega: meer vakjes in bestaande MMG-spullen; geen extra kleding aan de economie toegevoegd.'

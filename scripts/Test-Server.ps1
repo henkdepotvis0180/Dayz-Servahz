@@ -60,6 +60,11 @@ try {
         if ($null -eq $type -or [int]$type.nominal -ne 0 -or [int]$type.min -ne 0 -or [int]$type.lifetime -lt 86400) { throw 'CJ187-kisteconomie ontbreekt of laat losse extra kisten spawnen. Voer 01-Instellen.cmd uit.' }
     }
     Write-Host "CJ187 0.18: $chestCount voorraadkisten zonder sleutel ingesteld; inhoud wordt door de mod bij een serverstart gevuld."
+    $militaryChests = Get-MilitaryLootChestSummary $chestConfig
+    Write-Host "CJ187 militair 0.18.6: $($militaryChests.Military) groene locaties, $($militaryChests.WeaponTables) met wapentabel, $($militaryChests.DirectSets) met losse oude wapensetverwijzing. Configuratieaantallen, geen telling van gespawnde wapens."
+    if ($militaryChests.DirectSets -gt 0) { Write-Warning 'Oude/eigen militaire kistinhoud gevonden. Alleen herkenbare ongewijzigde pakketinhoud wordt automatisch bijgewerkt; eigen inhoud blijft behouden.' }
+    $chestLogs = Get-LootChestLogSummary -ProfilesPath $layout.Profiles
+    if ($chestLogs.Files -gt 0) { Write-Host "CJ187-logsignalen: $($chestLogs.Files) recente logs; ruimte/te groot=$($chestLogs.Space), ontbrekende/ongeldige klasse=$($chestLogs.Classes), onleesbaar=$($chestLogs.Unreadable). Trefwoorden uit maximaal 200 regels per log; geen bewijs van een actuele oorzaak." }
     Write-Host ('Locatielijst: ' + (Join-Path $layout.Profiles 'CJ_LootChests/Servahz-Lootkisten.csv'))
     $balance = Get-Content -LiteralPath (Join-Path (Split-Path $PSScriptRoot -Parent) 'config/loot-balance.json') -Raw | ConvertFrom-Json
     foreach ($set in $balance.WeaponSets) {

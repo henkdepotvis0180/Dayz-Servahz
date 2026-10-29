@@ -4,6 +4,20 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.6] — 2026-10-29
+
+### Expliciete wapenroutes en minder algemene spullen in groene kisten
+
+- Groene militaire/politiekisten gebruiken nu per bestaande wapenset een native `LC_Table_Weapons_Servahz_...`-tabel. De tabel staat vóór de passende extra magazijn-/munitievoorraad en algemene spullen in de vullijst. De oude directe `LC_predefined_...`-verwijzing achter zeven algemene keuzes vervalt. Het V106-voorbeeld en de makersdocumentatie gebruiken de speciale wapentabelprefix.
+- Daarna volgen één voedsel-, één drank- en één medische keuze, zonder de algemene toolkeuze. Bruine voedsel-/bouw-/medische kisten veranderen niet. De bestaande 18 gecontroleerde wapencombinaties blijven behouden. Geen nieuwe mods of nieuwe wapentypen toegevoegd.
+- Migreert bij instellen ook bestaande groene `Servahz_Weapons_...`-pakketlocaties, alleen als hun vullijst exact overeenkomt met de oude pakketversie en de wapen/magazijn-combinatie herkend wordt. Behoudt posities, aantallen, sleutelvrije toegang, wapendefinities/attachments, andere kisten en onbekende velden. Eigen aangepaste inhoud en botsende eigen tabelnamen blijven ongemoeid. Oorspronkelijk CJ187-profiel wordt vóór schrijven geback-upt; geen nieuwe locatiegeneratie of savewijziging. Herhaald instellen verandert een bijgewerkt profiel niet opnieuw.
+- Valideert ook wapensetverwijzingen binnen tabellen en dubbele tabel-/wapensetnamen vóór live wijzigingen. 03 toont aantallen groene locaties met wapentabel of losse oude verwijzing. Een privacyveilige samenvatting telt ruimte-/formaat- en ontbrekende-klasse-signalen in maximaal drie recente CJ187-logstaarten van elk 200 regels. Geen ruwe logregels, spelersgegevens, codes of coördinaten.
+- Dit verbetert de configuratieroute en geeft wapens voorrang op algemene voorraad. Zonder het actieve serverprofiel, modlog en enginecontrole is niet bewezen waarom op de gemelde server alleen algemene spullen zichtbaar waren. CJ187 meldt zelf dat wapens kunnen ontbreken door te weinig ruimte of te grote SNAFU-modellen. De update claimt geen enginegarantie voor ieder wapen.
+
+**Bijwerken:** stop normaal met `#shutdown` en wacht tot het proces uit is. Voer **`Servahz-Update-v0.18.6.cmd`** uit naast 01 en start met 02. Dit ene cumulatieve bestand bevat ook persoonlijke territoryrespawn en alle eerdere updates sinds basis 0.13.0; de vereiste mods staan in `Mods.html`. De updater maakt eerst een volledige wereld-/profielbackup; het oorspronkelijke kistprofiel staat ook onder `Servahz/Backups/config-.../Profiles/CJ_LootChests`. Geen wipe, 04, 05/06 of nieuwe codeslotlevering nodig. Gebruik CJ187-lootkisten niet als eigen opslag: de mod vult ze bij een herstart. Wacht na starten ongeveer een minuut op CJ187-initialisatie en controleer een verse groene kist plus 03.
+
+**Controle:** gerichte regressies voor wapentabelroutes, volgorde en passende munitie; exacte oude-profielmigratie, backup, herhalen, behoud van eigen posities/inhoud/velden en saves/wachtwoorden/init; weigeren van ontbrekende wapensetverwijzingen en behoud bij eigen tabelnaamconflict; privacy en alleen-lezen logcontrole. Cumulatieve 0.18.5→0.18.6-update met officiële CE-data en ontbrekende-mod-foutpad. Volledige regressiesuite en Windows PowerShell 5.1 vóór publicatie. Geen DayZ-engine uitgevoerd: feitelijke wapenvulling, cargo-afmetingen, modklasseregistratie en vullen na herstart moeten lokaal in-game worden bevestigd.
+
 ## [0.18.5] — 2026-10-29
 
 ### Persoonlijke respawn bij je eigen territory

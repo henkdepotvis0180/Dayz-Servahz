@@ -62,12 +62,8 @@
     ],
     "Weapons": [
       "LC_Table_Servahz_Food",
-      "LC_Table_Servahz_Food",
-      "LC_Table_Servahz_Food",
       "LC_Table_Servahz_Drink",
-      "LC_Table_Servahz_Drink",
-      "LC_Table_Servahz_Medical",
-      "LC_Table_Servahz_Tools"
+      "LC_Table_Servahz_Medical"
     ]
   },
   "LootCategories": [

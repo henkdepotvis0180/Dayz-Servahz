@@ -817,6 +817,122 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         self.assertTrue((self.server / 'Servahz/Profiles/Servahz/CodeLockDelivery-request.json').exists())
         self.assertNotIn(recipient, result.stdout + result.stderr)
 
+    def prepare_military_chests(self):
+        (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>
+          <group name="Land_Mil_Barracks1" lootmax="4"><usage name="Military"/>
+            <container name="lootFloor" lootmax="4"><point pos="0 0 0" range="1.5" height="2"/></container></group>
+          <group name="Land_Village_store" lootmax="4"><usage name="Town"/>
+            <container name="lootFloor" lootmax="4"><point pos="0 0 0" range="1.5" height="2"/></container></group>
+          </prototype>''')
+        (self.baseline / 'mapgrouppos.xml').write_text('''<map>
+          <group name="Land_Mil_Barracks1" pos="4000 100 5000" rpy="0 0 0"/>
+          <group name="Land_Mil_Barracks1" pos="8000 100 9000" rpy="0 0 0"/>
+          <group name="Land_Village_store" pos="2000 100 3000" rpy="0 0 0"/>
+          </map>''')
+        self.install()
+        return self.server / 'Servahz/Profiles/CJ_LootChests/LootChests_V106.json'
+
+    def old_military_loadout(self, config, location):
+        table_name = location['loot'][0]
+        table = next(t for t in config['LootCategories'] if t['name'] == table_name)
+        definition = next(d for d in config['LCPredefinedWeapons'] if d['defname'] == table['Loot'][0])
+        sets = json.loads((ROOT / 'config/loot-balance.json').read_text())['WeaponSets']
+        pair = next(s for s in sets if (s['Weapon'], s['Magazine']) == (definition['weapon'], definition['magazine']))
+        return (['LC_Table_Servahz_Food'] * 3 + ['LC_Table_Servahz_Drink'] * 2 +
+                ['LC_Table_Servahz_Medical', 'LC_Table_Servahz_Tools', definition['defname'],
+                 pair['Ammo'], pair['Ammo'], pair['Magazine']])
+
+    def test_military_chests_weapon_tables_first_matching_supplies_and_private_log_summary(self):
+        profile = self.prepare_military_chests()
+        config = json.loads(profile.read_text())
+        military = [l for l in config['LootChestsLocations'] if l['name'].startswith('Servahz_Weapons_')]
+        self.assertEqual(len(military), 2)
+        sets = json.loads((ROOT / 'config/loot-balance.json').read_text())['WeaponSets']
+        for location in military:
+            table = next(t for t in config['LootCategories'] if t['name'] == location['loot'][0])
+            self.assertTrue(table['name'].startswith('LC_Table_Weapons_Servahz_'))
+            self.assertEqual(len(table['Loot']), 1)
+            definition = next(d for d in config['LCPredefinedWeapons'] if d['defname'] == table['Loot'][0])
+            pair = next(s for s in sets if s['Weapon'] == definition['weapon'])
+            self.assertEqual(location['loot'][1:4], [pair['Magazine'], pair['Ammo'], pair['Ammo']])
+            self.assertEqual(location['loot'][4:], ['LC_Table_Servahz_Food', 'LC_Table_Servahz_Drink', 'LC_Table_Servahz_Medical'])
+            self.assertFalse(any(x.startswith('LC_predefined_') for x in location['loot']))
+        log = profile.parent / 'LootChests_LOG.txt'
+        log.write_text('Weapon does not fit, chest full PRIVATE-player PRIVATE-coordinates PRIVATE-PIN\n'
+                       'Weapon class not found PRIVATE-item PRIVATE-password\n')
+        before = profile.read_bytes(), log.read_bytes()
+        result = self.run_ps('Test-Server.ps1', '-StaticOnly')
+        self.assertIn('2 groene locaties, 2 met wapentabel, 0 met losse oude', result.stdout)
+        self.assertIn('ruimte/te groot=1', result.stdout)
+        self.assertIn('klasse=1', result.stdout)
+        self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
+        self.assertEqual((profile.read_bytes(), log.read_bytes()), before)
+
+    def test_military_chests_upgrade_exact_old_loadout_preserves_custom_positions_world_and_backup(self):
+        profile = self.prepare_military_chests()
+        config = json.loads(profile.read_text())
+        military = [l for l in config['LootChestsLocations'] if l['name'].startswith('Servahz_Weapons_')]
+        expected = list(military[0]['loot'])
+        for location in military:
+            location['loot'] = self.old_military_loadout(config, location)
+        military[0]['pos'] = ['4100 123 5100|19 0 0']  # Existing private placement must survive.
+        military[0]['UnknownLocationField'] = 'keep private preference'
+        military[1]['loot'].append('NailBox')  # Real administrator change must not be overwritten.
+        custom = json.loads(json.dumps(military[1]))
+        brown = next(l for l in config['LootChestsLocations'] if l['name'].startswith('Servahz_Food_'))
+        brown_before = json.loads(json.dumps(brown))
+        config['LootCategories'] = [t for t in config['LootCategories'] if not t['name'].startswith('LC_Table_Weapons_')]
+        config['PrivateUnknownField'] = {'Keep': 'PRIVATE-profile'}
+        profile.write_text(json.dumps(config))
+        before = profile.read_bytes()
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'keep existing base and gear')
+        local = self.local.read_bytes()
+        init = (self.mission / 'init.c').read_bytes()
+        result = self.install()
+        self.assertIn('1 bestaande militaire pakketkisten bijgewerkt', result.stdout)
+        updated = json.loads(profile.read_text())
+        self.assertEqual(len(updated['LootChestsLocations']), len(config['LootChestsLocations']))
+        upgraded = next(l for l in updated['LootChestsLocations'] if l['name'] == military[0]['name'])
+        self.assertEqual(upgraded['loot'], expected)
+        self.assertEqual(upgraded['pos'], military[0]['pos'])
+        self.assertEqual(upgraded['UnknownLocationField'], military[0]['UnknownLocationField'])
+        self.assertIn(custom, updated['LootChestsLocations'])
+        self.assertIn(brown_before, updated['LootChestsLocations'])
+        self.assertEqual(updated['LCPredefinedWeapons'], config['LCPredefinedWeapons'])
+        self.assertEqual(updated['PrivateUnknownField'], config['PrivateUnknownField'])
+        self.assertEqual(world.read_bytes(), b'keep existing base and gear')
+        self.assertEqual(self.local.read_bytes(), local)
+        self.assertEqual((self.mission / 'init.c').read_bytes(), init)
+        backups = list((self.server / 'Servahz/Backups').glob('config-*/Profiles/CJ_LootChests/LootChests_V106.json'))
+        self.assertTrue(any(p.read_bytes() == before for p in backups))
+        stable = profile.read_bytes()
+        self.install()
+        self.assertEqual(profile.read_bytes(), stable)
+
+    def test_military_chests_refuse_missing_weapon_table_definition_and_preserve_name_collision(self):
+        profile = self.prepare_military_chests()
+        config = json.loads(profile.read_text())
+        table = next(t for t in config['LootCategories'] if t['name'].startswith('LC_Table_Weapons_'))
+        original = list(table['Loot'])
+        table['Loot'] = ['LC_predefined_Missing']
+        profile.write_text(json.dumps(config))
+        before = profile.read_bytes()
+        mission_before = (self.mission / 'db/types.xml').read_bytes()
+        self.assertIn('ontbrekende wapenset', ' '.join(self.install(ok=False).stderr.split()))
+        self.assertEqual(profile.read_bytes(), before)
+        self.assertEqual((self.mission / 'db/types.xml').read_bytes(), mission_before)
+        table['Loot'] = original
+        location = next(l for l in config['LootChestsLocations'] if l['loot'][0] == table['name'])
+        location['loot'] = self.old_military_loadout(config, location)
+        other = next(d['defname'] for d in config['LCPredefinedWeapons'] if d['defname'] != original[0])
+        table['Loot'] = [other]  # An administrator's table with our new name.
+        profile.write_text(json.dumps(config))
+        before = profile.read_bytes()
+        self.install()
+        self.assertEqual(profile.read_bytes(), before)
+
     def test_lootchests_unlocked_contents_placement_and_culture(self):
         # Deliberately use a non-symmetric local point and a 90-degree building.
         (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>
@@ -895,7 +1011,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
             self.assertIn((weapon['weapon'], weapon['magazine']), pairs)
         if os.environ.get('SERVAHZ_VANILLA_MISSION'):
             vanilla_names = {n.get('name') for n in ET.parse(self.baseline / 'db/types.xml').findall('type')}
-            self.assertFalse({n for table in config['LootCategories'] for n in table['Loot']} - vanilla_names)
+            self.assertFalse({n for table in config['LootCategories'] if not table['name'].startswith('LC_Table_Weapons_') for n in table['Loot']} - vanilla_names)
             self.assertGreater(len(locations), 100)
             self.assertGreater(len(config['LCPredefinedWeapons']), 5)
             self.assertEqual({x['name'].split('_')[1] for x in locations}, {'Food', 'General', 'Medical', 'Weapons', 'Building'})
