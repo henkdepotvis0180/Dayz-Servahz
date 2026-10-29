@@ -95,6 +95,7 @@ try {
             throw "Handtekeningsleutel ontbreekt voor $($mod.Name). Laat Steam de mod opnieuw downloaden."
         }
     }
+    $respawnPlan = Get-RespawnSettingsPlan $layout
     # Prepare and validate the new profile before changing the live mission/mods.
     $chestPath = Join-Path $layout.Profiles 'CJ_LootChests/LootChests_V106.json'
     $newChestConfig = $null
@@ -155,6 +156,10 @@ try {
         New-Item -ItemType Directory -Path (Split-Path $target -Parent) -Force | Out-Null
         Copy-Item -LiteralPath $file.FullName -Destination $target -Force
     }
+    if ($respawnPlan.Write) {
+        Write-Utf8File $respawnPlan.Path ($respawnPlan.Config | ConvertTo-Json -Depth 30)
+    }
+    Write-Host 'Persoonlijke respawn: eigen Expansion-territory of normale spawn na overlijden; bestaande personages en missiecode blijven behouden.'
     if ($settings.TestSuppliesEverywhere) {
         Set-TestSupplies (Join-Path $layout.Mission 'db/types.xml')
         Set-TestSupplies (Join-Path $layout.Mission 'servahz_ce/building_types.xml')

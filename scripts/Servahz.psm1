@@ -133,7 +133,7 @@ function Save-ManagedBackup {
     $dest = Join-Path $Layout.Runtime ('Backups/config-' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff'))
     foreach ($relative in @('db/types.xml', 'db/globals.xml', 'mapgroupproto.xml', 'cfgeconomycore.xml', 'cfggameplay.json',
             'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json',
-            'expansion/settings/MapSettings.json',
+            'expansion/settings/MapSettings.json', 'expansion/settings/SpawnSettings.json',
             'servahz_ce/building_types.xml', 'servahz_ce/extra_types.xml', 'servahz_ce/extra_spawnabletypes.xml', 'servahz_ce/lootchest_types.xml')) {
         $source = Join-Path $Layout.Mission $relative
         if (Test-Path -LiteralPath $source) {
@@ -531,6 +531,39 @@ class Missions
 };
 "@
     Write-Utf8File $Path $text
+}
+
+function Get-RespawnSettingsPlan {
+    param($Layout)
+    # Expansion moves this old profile file over the mission file at startup.
+    # Refuse ambiguity before changing any live mission/mod files.
+    if (Test-Path -LiteralPath (Join-Path $Layout.Profiles 'ExpansionMod/Settings/SpawnSettings.json')) {
+        throw 'Oude respawninstellingen in Profiles/ExpansionMod/Settings/SpawnSettings.json gevonden. Bewaar die apart en verplaats ze naar de missie expansion/settings/SpawnSettings.json voordat je instelt; geen live bestanden gewijzigd.'
+    }
+    $target = Join-Path $Layout.Mission 'expansion/settings/SpawnSettings.json'
+    $existing = Test-Path -LiteralPath $target
+    $source = Join-Path (Split-Path $PSScriptRoot -Parent) 'config/expansion/SpawnSettings.json'
+    if ($existing) { $source = $target }
+    try {
+        $config = Get-Content -LiteralPath $source -Raw | ConvertFrom-Json
+        if ($config -isnot [pscustomobject] -or $config.m_Version -ne 7) { throw 'Unsupported schema' }
+        if ($config.SpawnLocations -isnot [array]) { throw 'Invalid spawn list' }
+        if ($config.StartingClothing -isnot [pscustomobject] -or $config.StartingGear -isnot [pscustomobject]) { throw 'Incomplete gear configuration' }
+        foreach ($name in @('EnableSpawnSelection', 'SpawnOnTerritory', 'UseLoadouts', 'SpawnHealthValue', 'SpawnEnergyValue', 'SpawnWaterValue', 'EnableRespawnCooldowns')) {
+            if ($config.PSObject.Properties.Name -notcontains $name) { throw 'Incomplete configuration' }
+        }
+        foreach ($location in $config.SpawnLocations) {
+            if ($location -isnot [pscustomobject] -or [string]::IsNullOrWhiteSpace($location.Name) -or $location.Positions -isnot [array] -or $location.Positions.Count -eq 0) { throw 'Invalid spawn location' }
+        }
+    } catch {
+        throw 'SpawnSettings.json is ongeldig, onvolledig of geen ondersteund schema 7. Bewaar eigen instellingen; laat Expansion een actuele volledige configuratie maken voordat je instelt. Geen live bestanden gewijzigd.'
+    }
+    # Only the two explicitly requested switches change in an existing config.
+    # Keep custom spawn points, loadouts, cooldowns and unknown fields.
+    $write = !$existing -or !$config.EnableSpawnSelection -or !$config.SpawnOnTerritory
+    $config.EnableSpawnSelection = 1
+    $config.SpawnOnTerritory = 1
+    return [pscustomobject]@{ Path = $target; Config = $config; Write = $write }
 }
 
 function Get-LaunchArguments {

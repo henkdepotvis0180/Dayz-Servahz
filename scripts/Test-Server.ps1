@@ -138,6 +138,9 @@ try {
     if (!$map.EnableMap -or !$map.EnableHUDGPS -or !$map.CanOpenMapWithKeyBinding -or $map.NeedGPSItemForKeyBinding -or $map.NeedMapItemForKeyBinding) {
         throw 'Kaart/minimap is uitgeschakeld of vereist nog een kaart/GPS-item. Controleer MapSettings.json.'
     }
+    $respawn = Get-RespawnSettingsPlan $layout
+    if ($respawn.Write) { throw 'Persoonlijke respawn is nog niet ingesteld. Voer 01-Instellen.cmd uit met gestopte server.' }
+    Write-Host 'Persoonlijke respawn: selectie en eigen territory ingeschakeld; alleen na overlijden/nieuw personage. Territorylidmaatschap en werkelijke spawn in-game controleren.'
     foreach ($mod in (Get-ModManifest)) {
         $path = Join-Path $layout.Runtime ('Mods/' + $mod.Folder)
         if (@(Get-ChildItem -LiteralPath (Join-Path $path 'Addons') -Filter '*.pbo').Count -eq 0) { throw "PBO ontbreekt: $($mod.Name)" }

@@ -4,6 +4,20 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.5] — 2026-10-29
+
+### Persoonlijke respawn bij je eigen territory
+
+- Voegt **DayZ-Expansion-Spawn-Selection**, Workshop **2804241648**, toe aan de modlijst en launcher-preset: nu 18 mods. De vereiste CF/Dabs/Expansion Core en BaseBuilding zijn al aanwezig. Geen bed-/slaapzakmod nodig voor deze persoonlijke respawnoptie.
+- Schakelt `EnableSpawnSelection` en `SpawnOnTerritory` in. Expansion maakt per speler een lijst van territories waarvan die eigenaar/lid is. Spelers met een eigen territory krijgen elk hun eigen base-optie; leden van een gedeeld territory kunnen dezelfde base kiezen. De mod plaatst de respawn naast de vlag. Een vlag zonder gekoppeld Expansion-territory/lidmaatschap is niet voldoende.
+- De nieuwe schema-7-beginconfiguratie biedt daarnaast **Normale kustspawn** met `0 0 0`: de native mod gebruikt daarvoor de oorspronkelijke DayZ-spawnpositie. Geen privécoördinaten of Steam-ID's in de configuratie. Wachttijden en multispawnstraf staan standaard uit; de bestaande missie verzorgt kleding/uitrusting, geen extra Expansion-loadout.
+- `config/expansion/SpawnSettings.json` staat buiten de map die telkens over de missie wordt gekopieerd. Een bestaande volledige actieve configuratie behoudt locaties, uitrusting, wachttijden en onbekende velden; alleen de twee gevraagde inschakelopties worden aangepast en het oude bestand wordt eerst geback-upt. Een al ingeschakelde configuratie blijft bytegelijk. Ongeldige/onbekende schema's of een oude profielconfiguratie worden vóór live wijzigingen geweigerd.
+- 03 toont de ingestelde respawnopties zonder spelersgegevens of spawncoördinaten. De controle bewijst geen engineacceptatie of territorylidmaatschap. De bestaande `init.c`, codeslotlevering en lootverversingshooks blijven behouden. Alleen na overlijden/nieuw personage verschijnt de selectie; een bestaand levend personage wordt niet gereset of verplaatst door de pakketupdate.
+
+**Bijwerken:** abonneer host en spelers op [Expansion Spawn Selection](https://steamcommunity.com/sharedfiles/filedetails/?id=2804241648) en wacht op de download. Sluit de server normaal af met `#shutdown`. Voer **`Servahz-Update-v0.18.5.cmd`** uit naast 01, importeer de bijgewerkte `Mods.html` bij iedereen en start met 02. Dit ene cumulatieve updatescript bevat ook 0.18.4 en eerdere wijzigingen vanaf de vaste basis. Saves, wachtwoorden en lokale instellingen/profielen blijven bewaard; de updater maakt eerst een wereld-/profielbackup. Geen wipe, 04, 05, 06 of nieuwe 09-actie nodig. Controleer je eigenaarschap/lidmaatschap bij je bestaande Expansion-territory en laat naast de vlag ruimte vrij. De eerstvolgende keer dat je echt respawnt kun je je territory kiezen.
+
+**Controle:** pakkettests voor nieuw instellen en herhalen, alleen inschakelopties aanpassen met backup van eigen respawninstellingen, ongeldige/oude instellingen vooraf weigeren, ontbrekende Workshop-download zonder live wijzigingen, behoud van wereld/personage, wachtwoorden, profielen en bestaande missie-/leveringshooks. Cumulatieve 0.18.4→0.18.5-updater met officiële CE-data getest op save-/configuratiebehoud en foutpaden; volledige regressiesuite en Windows PowerShell 5.1-controle vóór publicatie. De stabiele Expansion-broncode ondersteunt schema 7, territorylidmaatschap en de nulvector-fallback. Geen DayZ-engine uitgevoerd: modladen, spawnmenu, daadwerkelijke respawn naast de vlag, onafhankelijke keuzes voor twee spelers en beginuitrusting moeten lokaal in-game worden bevestigd.
+
 ## [0.18.4] — 2026-10-29
 
 ### Eenmalig een digitaal codeslot aan je eigen personage geven

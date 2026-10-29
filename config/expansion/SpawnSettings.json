@@ -1,0 +1,38 @@
+{
+  "m_Version": 7,
+  "SpawnLocations": [
+    {
+      "Name": "Normale kustspawn",
+      "Positions": ["0 0 0"],
+      "UseCooldown": 0
+    }
+  ],
+  "StartingClothing": {"EnableCustomClothing": 0},
+  "EnableSpawnSelection": 1,
+  "SpawnOnTerritory": 1,
+  "StartingGear": {
+    "EnableStartingGear": 0,
+    "ApplyEnergySources": 0,
+    "SetRandomHealth": 0,
+    "UpperGear": [],
+    "PantsGear": [],
+    "BackpackGear": [],
+    "VestGear": [],
+    "PrimaryWeapon": null,
+    "SecondaryWeapon": null
+  },
+  "UseLoadouts": 0,
+  "MaleLoadouts": [],
+  "FemaleLoadouts": [],
+  "SpawnHealthValue": 100.0,
+  "SpawnEnergyValue": 500.0,
+  "SpawnWaterValue": 500.0,
+  "EnableRespawnCooldowns": 0,
+  "RespawnCooldown": 120,
+  "TerritoryRespawnCooldown": 240,
+  "PunishMultispawn": 0,
+  "PunishCooldown": 120,
+  "PunishTimeframe": 300,
+  "CreateDeathMarker": 1,
+  "BackgroundImagePath": "DayZExpansion/SpawnSelection/GUI/textures/wood_background.edds"
+}

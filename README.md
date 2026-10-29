@@ -25,6 +25,23 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Respawnen bij je eigen base (v0.18.5)
+
+Iedere speler kan na overlijden zijn eigen **Expansion-territory** als respawnplek kiezen. Met een eigen territory krijgt iedereen dus een eigen plek; leden van hetzelfde territory delen die base-optie. Er is geen bed of slaapzak nodig. Een bestaande vlag telt als respawnplek als deze ook een Expansion-territory met jou als eigenaar/lid heeft; alleen een losse, niet geclaimde vlag is niet voldoende.
+
+1. Abonneer host en spelers op **[DayZ-Expansion-Spawn-Selection](https://steamcommunity.com/sharedfiles/filedetails/?id=2804241648)**. De andere afhankelijkheden zitten al in het pakket. Wacht tot Steam klaar is.
+2. Stop de server normaal met `#shutdown` en wacht tot het proces gestopt is. Voer [update 0.18.5](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.5) uit naast 01. De update bewaart wereld, personages, wachtwoorden, RaG-/CJ187-profielen en de bestaande codeslot-/lootverversingshooks.
+3. Importeer de bijgewerkte `Mods.html` bij host en spelers: **18 mods**. Start met 02. Je bestaande personage logt gewoon weer op zijn bestaande plek in.
+4. Controleer dat je lid/eigenaar bent van je Expansion-territory. **Bij de volgende dood/nieuw personage** verschijnt de spawnkeuze: kies je territory of **Normale kustspawn**. Je hoeft niet speciaal dood te gaan om de update te installeren. Houd de ruimte direct naast de vlag vrij; Expansion plaatst je daar, niet op een gekozen bed.
+
+Bij een nieuwe respawnconfiguratie staan wachttijden uit. De gewone spawn gebruikt de door DayZ al gekozen spawnpositie; er worden geen vaste openbare basecoördinaten toegevoegd. Beginuitrusting blijft via je bestaande missie lopen: Expansion-clothing, extra gear en loadouts staan in de nieuwe configuratie uit. De mod wordt via Steam geleverd; het pakket bevat geen modbroncode of extra slaap-/vermoeidheidssysteem.
+
+Actieve instellingen staan in `DayZServer/mpmissions/servahz.chernarusplus/expansion/settings/SpawnSettings.json`. Bij het eerste instellen wordt `config/expansion/SpawnSettings.json` als beginconfiguratie gebruikt. Bij een bestaande volledige schema-7-configuratie schakelt 01 alleen `EnableSpawnSelection` en `SpawnOnTerritory` in. Eigen spawnlocaties, startuitrusting, wachttijden en onbekende velden blijven bewaard; vóór aanpassen wordt het oude bestand onder `Servahz/Backups/config-...` geback-upt. Reeds ingeschakelde bestanden blijven bytegelijk. Een ongeldig/onbekend schema of een oude profielconfiguratie wordt vooraf geweigerd zodat Expansion die niet ongemerkt over de missieconfiguratie heen kan verplaatsen.
+
+03 meldt of de twee opties zijn ingesteld; dit is geen bewijs dat de engine de mod heeft geladen of dat je territorylidmaatschap klopt. Savebehoud, herhaald instellen, ontbrekende mod, configuratiebehoud en missiecompatibiliteit worden automatisch getest. De spawninterface en een respawn bij de vlag moeten lokaal in-game worden bevestigd. Geen wipe, lootverversing of nieuwe codeslotlevering nodig.
+
+Bronnen: [Expansion SpawnSettings](https://github.com/salutesh/DayZ-Expansion-Scripts/wiki/%5BServer-Hosting%5D-SpawnSettings) en de stabiele [respawnhandler](https://github.com/salutesh/DayZ-Expansion-Scripts/blob/release/DayZExpansion/SpawnSelection/Scripts/5_Mission/DayZExpansion_SpawnSelection/Classes/Modules/RespawnHandler/ExpansionRespawnHandlerModule.c). Deze bepaalt de lijst per speler op basis van territorylidmaatschap en gebruikt bij `0 0 0` de oorspronkelijke DayZ-spawnpositie.
+
 ## Eenmalig een digitaal codeslot krijgen (v0.18.4)
 
 Als het gewone combinatieslot niet bruikbaar is, kan de server eenmalig **1 `DigitalCodeLock` met toetsenpaneel** in je inventaris geven. RaG Core ondersteunt dat vanilla item al; geen extra Workshop-abonnement nodig. De nieuwe knop levert geen slot met cijferwieltjes en stelt geen PIN in.
@@ -191,11 +208,11 @@ Geen wipe nodig. Pakkettests controleren installatie, modpaden, loot- en stamina
 
 1. Pak dit pakket volledig uit op je Windows-pc, bijvoorbeeld naar `C:\DayZ-Servahz`. Bewaar deze map: de knoppen gebruiken de lokale configuratie hierin.
 2. Installeer **Steam → Bibliotheek → Tools → DayZ Server**, app-ID **223350**. De host en spelers hebben ook DayZ nodig. Start DayZ eenmaal om launcher en BattlEye te laten installeren.
-3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **vijftien** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
+3. Open **[Mods.html](Mods.html)**. Abonneer je op alle **achttien** mods en wacht tot Steam alle downloads heeft voltooid. Importeer dit bestand ook in de officiele DayZ Launcher via **Mods → Preset → Importeren**. Je vrienden gebruiken hetzelfde bestand.
 4. Sluit een eventueel draaiende DayZ-server. Dubbelklik **`01-Instellen.cmd`**. De installer zoekt de Steam-bibliotheken en maakt `config/server.local.json` met jouw paden en een willekeurig adminwachtwoord.
 5. Open `config/server.local.json` in Kladblok. Vul voor een prive-server `ServerPassword` in, sla op en voer **`01-Instellen.cmd`** nogmaals uit. Gebruik een ander wachtwoord dan `AdminPassword`. Dit lokale bestand wordt door Git genegeerd.
 6. Dubbelklik **`02-Start-server.cmd`**. Laat het servervenster open en wacht enkele minuten. De eerste start maakt Expansion-profielen en de lootwereld aan. Voer **`03-Controleren.cmd`** uit voor configuratie- en querycontrole.
-7. Open de DayZ Launcher met alle vijftien mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
+7. Open de DayZ Launcher met alle achttien mods. Kies **Servers → Direct connect**: **`127.0.0.1`, poort `2302`**. Een andere pc in hetzelfde thuisnetwerk gebruikt het LAN-IP van de host, bijvoorbeeld `192.168.1.50`.
 
 Windows kan gedownloade scripts blokkeren. Gebruik zo nodig **Eigenschappen → Blokkering opheffen** op de ZIP en pak opnieuw uit. De `.cmd`-knoppen gebruiken alleen voor hun eigen PowerShell-proces `ExecutionPolicy Bypass`; ze veranderen geen permanente Windows-instelling. Instellen vereist normaal geen administratorrechten als de Steam-map beschrijfbaar is.
 
@@ -229,6 +246,7 @@ Bijwerken: server stoppen, wereldbackup maken, `scripts` vervangen, **`04-Testst
 | Bouwgemak | Geen verplicht territory, soepelere plaatsingschecks, eenvoudige vlag en snapping |
 | Bouwloot | Kits en codesloten in industrie/boerderijen, safes bij industrie/steden/militair |
 | Kaart / minimap | M voor kaart; N vasthouden voor GPS/minimap, N kort voor modus; zonder items |
+| Respawn | Keuze bij eigen Expansion-territory of normale spawn na overlijden; nieuwe configuratie zonder wachttijd |
 | Tijd | Dag 6× versneld, nacht extra 4× versneld |
 | Integriteit | BattlEye standaard actief, `verifySignatures=2`, gelijke gamebuild verplicht |
 
@@ -414,6 +432,7 @@ Pas bronbestanden hieronder aan en voer `01-Instellen.cmd` opnieuw uit:
 | `config/mission/expansion/settings/AIPatrolSettings.json` | Bots, routes, faction, accuratesse, afstanden en groepsbudget |
 | `config/mission/expansion/settings/BaseBuildingSettings.json` | Bouwregels, territories en codesloten |
 | `config/mission/expansion/settings/MapSettings.json` | Kaart, minimap, positie, markers en vereiste items |
+| `config/expansion/SpawnSettings.json` | Beginconfiguratie voor persoonlijke territoryrespawn; actieve versie in de missie blijft behouden behalve de twee inschakelopties |
 | `config/mission/servahz_ce/building_types.xml` | Bouwloot en levensduur gebouwde onderdelen |
 | `config/mission/servahz_ce/extra_types.xml` | Nieuwe wapens, magazijnen, munitie, rugzakken en barricadekits |
 | `config/mission/servahz_ce/extra_spawnabletypes.xml` | Passende magazijnen bij nieuwe wapenspawns |
@@ -449,7 +468,7 @@ Logs: `<DayZServer>\Servahz\Profiles`, vooral de nieuwste `.RPT`, `script*.log` 
 
 | Probleem | Controle |
 | --- | --- |
-| Ontbrekende PBO, verkeerde versie/signature | Alle vijftien mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
+| Ontbrekende PBO, verkeerde versie/signature | Alle achttien mods bijwerken; opnieuw instellen; geen Bundle erbij laden |
 | Launcher toont modnamen als een gecombineerde regel | Gebruik de nieuwste scripts; Windows PowerShell 5.1 gaf eerder een geneste modlijst door. In het RPT moeten modpaden met puntkomma's gescheiden zijn, met voor elke mod zijn eigen pad |
 | `Unknown type ViewController` | Dabs Framework ontbreekt, is oud of wordt niet geladen |
 | Installer vindt mods niet | Downloads afwachten; juiste Workshop-map onder app `221100` gebruiken |
@@ -465,7 +484,8 @@ Begin voor een kleine groep met een recente CPU, SSD en ongeveer **16 GB RAM in 
 ## Lokale acceptatiecontrole
 
 - `03-Controleren.cmd` slaagt: configuratie/modbestanden kloppen en de verwachte servernaam antwoordt op A2S_INFO. Dat bewijst nog geen speelbaarheid.
-- Je kunt met alle vijftien mods inloggen, bewegen en loot oprapen.
+- Je kunt met alle achttien mods inloggen, bewegen en loot oprapen.
+- Na overlijden/nieuw personage werkt de spawnkeuze: je eigen territory staat erbij, een andere speler ziet alleen territories waarvan die lid is; normale spawn blijft een optie met de nieuwe beginconfiguratie.
 - AI verschijnt bij Balota/Stary/NWAF; bewegen, vechten en looten werken. Controleer routes op obstakels.
 - **M** toont de kaart met je positie; **N vasthouden** toont GPS/minimap en kort N wisselt modus.
 - Een Expansion-kit plaatsen, bouwen en een codeslot gebruiken werkt.

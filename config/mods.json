@@ -83,5 +83,10 @@
     "Name": "CJ187-LootChest",
     "Id": "2345073965",
     "Folder": "@CJ187LootChest"
+  },
+  {
+    "Name": "DayZ-Expansion-Spawn-Selection",
+    "Id": "2804241648",
+    "Folder": "@ExpansionSpawnSelection"
   }
 ]

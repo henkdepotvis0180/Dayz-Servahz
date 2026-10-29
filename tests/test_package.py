@@ -164,6 +164,82 @@ class PackageTests(unittest.TestCase):
         self.assertTrue(list((self.server / 'Servahz/Backups').glob('config-*/mission/expansion/settings/MapSettings.json')))
         self.run_ps("Test-Server.ps1", "-StaticOnly")
 
+    def test_personal_respawn_seed_preserves_world_and_existing_mission_hooks(self):
+        recipient = self.prepare_delivery()
+        self.run_ps('Queue-CodeLock.ps1', '-SteamId', recipient)
+        init = (self.mission / 'init.c').read_bytes()
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'keep character, gear and base')
+        path = self.mission / 'expansion/settings/SpawnSettings.json'
+        # Simulate a pre-feature live installation with no respawn file.
+        path.unlink()
+        local = self.local.read_bytes()
+        self.install()
+        config = json.loads(path.read_text())
+        self.assertEqual(config['EnableSpawnSelection'], 1)
+        self.assertEqual(config['SpawnOnTerritory'], 1)
+        self.assertFalse(config['StartingClothing']['EnableCustomClothing'])
+        self.assertFalse(config['StartingGear']['EnableStartingGear'])
+        self.assertFalse(config['UseLoadouts'])
+        self.assertFalse(config['EnableRespawnCooldowns'])
+        self.assertEqual(config['SpawnLocations'][0]['Positions'], ['0 0 0'])
+        self.assertEqual((self.mission / 'init.c').read_bytes(), init)
+        self.assertEqual(world.read_bytes(), b'keep character, gear and base')
+        self.assertEqual(self.local.read_bytes(), local)
+        self.assertTrue((self.server / 'Servahz/Mods/@ExpansionSpawnSelection/Addons/test.pbo').is_file())
+        self.assertFalse((self.server / 'Servahz/Profiles/Servahz/LootRefresh-request.json').exists())
+        result = self.run_ps('Test-Server.ps1', '-StaticOnly')
+        self.assertIn('Persoonlijke respawn: selectie en eigen territory ingeschakeld', result.stdout)
+
+    def test_personal_respawn_changes_only_opt_in_flags_and_backs_up_previous_config(self):
+        self.install()
+        path = self.mission / 'expansion/settings/SpawnSettings.json'
+        config = json.loads(path.read_text())
+        config.update(EnableSpawnSelection=0, SpawnOnTerritory=0,
+                      EnableRespawnCooldowns=1, TerritoryRespawnCooldown=750,
+                      PrivateUnknownField='PRIVATE-spawn-data')
+        config['SpawnLocations'] = [dict(Name='PRIVATE-location', Positions=['1200 15 2500'], UseCooldown=1)]
+        config['StartingGear']['UpperGear'] = [dict(ClassName='Apple', Quantity=2)]
+        path.write_text(json.dumps(config))
+        before = path.read_bytes()
+        self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False)
+        self.assertEqual(path.read_bytes(), before)  # Read-only checker.
+        self.install()
+        expected = dict(config, EnableSpawnSelection=1, SpawnOnTerritory=1)
+        self.assertEqual(json.loads(path.read_text()), expected)
+        backups = list((self.server / 'Servahz/Backups').glob('config-*/mission/expansion/settings/SpawnSettings.json'))
+        self.assertTrue(any(p.read_bytes() == before for p in backups))
+        stable = path.read_bytes()
+        self.install()
+        self.assertEqual(path.read_bytes(), stable)
+        result = self.run_ps('Test-Server.ps1', '-StaticOnly')
+        self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
+
+    def test_personal_respawn_refuses_bad_or_legacy_settings_before_live_changes(self):
+        self.install()
+        path = self.mission / 'expansion/settings/SpawnSettings.json'
+        original = path.read_bytes()
+        init = (self.mission / 'init.c').read_bytes()
+        mod = self.server / 'Servahz/Mods/@ExpansionSpawnSelection/Addons/test.pbo'
+        mod.write_bytes(b'keep live mod until preflight passes')
+        for bad in [b'{invalid', b'{"m_Version":99}', b'{"m_Version":7,"SpawnLocations":[]}']:
+            path.write_bytes(bad)
+            result = self.install(ok=False)
+            self.assertIn('SpawnSettings.json', result.stderr)
+            self.assertEqual(path.read_bytes(), bad)
+            self.assertEqual(mod.read_bytes(), b'keep live mod until preflight passes')
+            self.assertEqual((self.mission / 'init.c').read_bytes(), init)
+        path.write_bytes(original)
+        legacy = self.server / 'Servahz/Profiles/ExpansionMod/Settings/SpawnSettings.json'
+        legacy.parent.mkdir(parents=True)
+        legacy.write_bytes(original)
+        result = self.install(ok=False)
+        self.assertIn('Oude respawninstellingen', result.stderr)
+        self.assertEqual(path.read_bytes(), original)
+        self.assertEqual(legacy.read_bytes(), original)
+        self.assertEqual(mod.read_bytes(), b'keep live mod until preflight passes')
+
     def test_military_settings_migration_and_retuning(self):
         self.install()
         settings = json.loads(self.local.read_text())
@@ -1061,7 +1137,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 17) { throw 'Expected seventeen individual mod objects' }
+if ($mods.Count -ne 18) { throw 'Expected eighteen individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
@@ -1552,6 +1628,8 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(mods[14], {'Name': 'SNAFU Weapons', 'Id': '2443122116', 'Folder': '@SNAFUWeapons'})
         self.assertEqual(mods[15], {'Name': 'MMG - Half Mega Inventory Size', 'Id': '2895332994', 'Folder': '@MMGHalfMegaInventory'})
         self.assertEqual(mods[16], {'Name': 'CJ187-LootChest', 'Id': '2345073965', 'Folder': '@CJ187LootChest'})
+        self.assertEqual(mods[17], {'Name': 'DayZ-Expansion-Spawn-Selection', 'Id': '2804241648', 'Folder': '@ExpansionSpawnSelection'})
+        self.assertEqual(len(mods), 18)
         navigation = [m for m in mods if m['Id'] == '2792984722']
         self.assertEqual(len(navigation), 1)
         self.assertEqual(navigation[0]['Name'], 'DayZ-Expansion-Navigation')
