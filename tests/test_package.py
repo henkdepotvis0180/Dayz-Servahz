@@ -608,6 +608,7 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         log.write_text('''19:22:20 [CE][Storage] Recovering corrupted save failed C:\\PRIVATE-root\\dynamic_000.bin PRIVATE-player PRIVATE-PIN
 19:22:21 [CE][Storage] Recovering backup valid:yes C:\\PRIVATE-root\\vehicles.002 PRIVATE-address
 19:22:23 [CE][Storage] Restoring file C:\\PRIVATE-root\\building.bin PRIVATE-password
+19:22:35 !!! Corrupted stream after "RaG_BB_Low_Wall:PRIVATE-ID" at PRIVATE-coordinates
 ''')
         original = log.read_bytes()
         result = self.run_storage_probe()
@@ -616,6 +617,7 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         self.assertIn('bestand:dynamic_000.bin', result.stdout)
         self.assertIn('valid:yes,bestand:vehicles.002', result.stdout)
         self.assertIn('restore,engine:CE,engine:Storage,bestand:building.bin', result.stdout)
+        self.assertIn('corrupt,stream,code:RaG_BB_Low_Wall', result.stdout)
         self.assertIn('recover/restore alleen bewijst geen beschadiging', result.stdout)
         self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
         report = max((self.package / '.local/StorageDiagnostics').glob('*.txt'))

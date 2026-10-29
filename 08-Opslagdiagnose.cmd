@@ -47,12 +47,16 @@ function Get-StorageSignalDetail {
         fail = '\bfail\w*'; invalid = '\binvalid\b'; denied = '\bdenied\b'
         empty = '\bempty\b'; delete = '\bdelet\w*'; save = '\bsav(?:e|ed|ing)\b'
         load = '\bload\w*'; warning = '\bwarn\w*'
+        inventory = '\binventory\b'; stream = '\bstream\b'; variables = '\bvariables\b'
     }
     foreach ($key in $words.Keys) {
         if ($Line -match ('(?i)' + $words[$key])) { $labels.Add($key) }
     }
     foreach ($tag in @('CE', 'Storage', 'Hive', 'StorageDirs')) {
         if ($Line -match ('(?i)\[' + $tag + '\]')) { $labels.Add('engine:' + $tag) }
+    }
+    foreach ($class in @('RaG_BB_Base', 'RaG_BB_Door', 'RaG_BB_Single_Door', 'RaG_BB_Low_Wall', 'RaG_BB_Wall', 'CombinationLock', 'CombinationLock4', 'OnStoreLoad', 'OnStoreSave')) {
+        if ($Line -match ('(?i)\b' + $class + '\b')) { $labels.Add('code:' + $class) }
     }
     $valid = [regex]::Match($Line, '(?i)\bvalid:\s*(yes|no)\b')
     if ($valid.Success) { $labels.Add('valid:' + $valid.Groups[1].Value.ToLowerInvariant()) }
@@ -272,7 +276,7 @@ try {
             foreach ($log in $logs) {
                 $logIndex++
                 foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 2000 -ErrorAction Stop)) {
-                    if ($line -notmatch '(?i)storage|persisten|hive|save|\.bin\b|\.db\b|\bCE\b|economy|types\.xml|cfgIgnoreList') { continue }
+                    if ($line -notmatch '(?i)storage|persisten|hive|save|\.bin\b|\.db\b|\bCE\b|economy|types\.xml|cfgIgnoreList|RaG_BB_|corrupted (inventory|stream)|scripted variables') { continue }
                     if ($line -notmatch '(?i)error|fail|corrupt|denied|cannot|can.t|read.only|repair|recover|restor|invalid') { continue }
                     $category = 'mogelijke opslagfout'
                     if ($line -match '(?i)denied|read.only|cannot.*writ|can.t.*writ') { $category = 'toegang/schrijven' }
