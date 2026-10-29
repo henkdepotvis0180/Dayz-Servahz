@@ -418,14 +418,14 @@ class PackageTests(unittest.TestCase):
         extra_path = self.mission / 'servahz_ce/extra_types.xml'
         first = extra_path.read_bytes()
         extra = ET.parse(extra_path)
-        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '60')
-        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '120')
+        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '180')
+        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '360')
         self.assertEqual(extra.findtext("type[@name='MMG_mmps_bag_black']/nominal"), '150')
         self.assertEqual(extra.findtext("type[@name='BF_DoorBarricadeKit']/nominal"), '80')
-        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '60')
-        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '120')
-        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '180')
-        self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '60')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '180')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '360')
+        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '360')
+        self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '180')
         for node in extra.findall('type'):
             if int(node.findtext('nominal')) == 0:
                 continue
@@ -1616,7 +1616,9 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         target = dict(base)
         name = 'config/mission/servahz_ce/extra_types.xml'
         tree = ET.fromstring(target[name])
-        tree.find("type[@name='Snafu_ScarH_Black_GUN']/nominal").text = '31'
+        # A common mod gun stays outside the rare floor, so the payload's
+        # 30->31 change remains observable as 60->62 in test mode.
+        tree.find("type[@name='Expansion_M9']/nominal").text = '31'
         target[name] = ET.tostring(tree)
         if missing_mod:
             mods = json.loads(target['config/mods.json'])
@@ -1671,7 +1673,7 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         self.apply_update(script)
         self.assertEqual(json.loads(self.local.read_text()), settings)
         self.assertEqual(save.read_bytes(), b'keep-player-world')
-        self.assertEqual(ET.parse(self.mission / 'servahz_ce/extra_types.xml').findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '62')
+        self.assertEqual(ET.parse(self.mission / 'servahz_ce/extra_types.xml').findtext("type[@name='Expansion_M9']/nominal"), '62')
         backups = list((self.package / '.local/Backups').glob('update-v0.14.0-*'))
         self.assertEqual(len(backups), 1)
         self.assertEqual((backups[0] / 'world/mission/storage_1/players.db').read_bytes(), b'keep-player-world')
