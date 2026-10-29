@@ -483,8 +483,9 @@ function Get-CimInstance {
 ''' + mock + '''
 }
 $root = Split-Path $PSScriptRoot -Parent
-$command = [IO.File]::ReadAllText((Join-Path $root '08-Opslagdiagnose.cmd'))
-$body = ($command -split "# SERVAHZ_STORAGE_POWERSHELL`n", 2)[1]
+$lines = [IO.File]::ReadAllLines((Join-Path $root '08-Opslagdiagnose.cmd'))
+$marker = [Array]::IndexOf($lines, '# SERVAHZ_STORAGE_POWERSHELL')
+$body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
 & ([scriptblock]::Create($body)) -PackageRoot $root
 ''')
         return self.run_ps('StorageProbe.ps1')
