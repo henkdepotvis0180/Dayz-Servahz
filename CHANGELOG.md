@@ -4,6 +4,22 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.3] — 2026-10-29
+
+### Correcte opslagcontrole en meer detail bij herstelmeldingen
+
+- Corrigeert een fout in de nieuwe diagnose: DayZ leest **`db/economy.xml`**, niet `economy.xml` in de missieroot. De oude melding "economy.xml ontbreekt of ongeldig" bewees daardoor geen ontbrekend serverbestand. De nieuwe controle toont `load`/`save` vanaf het officiële databasepad en valt niet terug op een gelijknamig bestand buiten `db`.
+- De testmissies gebruiken nu ook dat officiële pad; een regressietest met een misleidend rootbestand voorkomt herhaling. Geen wijziging aan het echte economiebestand of de opslagvlaggen.
+- Opslagmeldingen tonen nu lognummer en vaste trefwoorden zoals `recover`, `corrupt`, `restore`, `fail`, `backup`, bekende CE-tags, eventueel `valid:yes/no` en uitsluitend standaard CE-opslagbestandsnamen. Geen volledige regels, willekeurige bestandsnamen/paden, spelersnamen, codes of wachtwoorden. Ook `Restoring` wordt herkend. Trefwoorden alleen bewijzen geen corruptie: normaal laden of een onschuldige herstelvermelding kan ook matchen.
+- Dezelfde Windows-installatie met andere hoofdletters wordt niet meer tweemaal onderzocht. Inactieve standaardmissies krijgen geen meldingen over ontbrekende RaG-economiekoppelingen; de verwachte missie en expliciete `-mission`-override worden inhoudelijk gecontroleerd. Opslagmetadata van andere gevonden missies blijft beschikbaar.
+- De server uit het aangeleverde rapport gebruikt de verwachte executable/configuratie/profielen en heeft een recente schrijftijd. De RaG-kitkoppeling bestaat eenmaal, beide onderzochte XML-bestanden zijn leesbaar en er zijn geen onderzochte bouw-/`cheatCheck`-regels in de ignorelijst. Dit bewijst niet dat ieder bouwdeel goed wordt opgeslagen. De gemelde kit-levensduur van vier uur is geen bewezen levensduur van een geplaatste muur. Geen RaG-implementatieklassen, CE-koppelingen of levensduren toegevoegd op basis van algemene adviezen.
+
+**Direct gebruiken:** vervang alleen de losse [08-Opslagdiagnose.cmd](https://raw.githubusercontent.com/henkdepotvis0180/Dayz-Servahz/v0.18.3/08-Opslagdiagnose.cmd) naast 01. Laat een draaiende server voor deze leescontrole draaien; update, installatie en herstart zijn niet nodig. Deel het nieuwe tekstbestand uit `.local/StorageDiagnostics`. Als de server al gestopt is, kan deze controle ook gestopt worden uitgevoerd; bestaande logs en databasebestanden blijven leesbaar en procesinformatie is dan niet beschikbaar. Pas het voorgestelde Google-XML-fragment niet toe: de pakketkoppeling is al aanwezig en DayZ gebruikt `ce folder` met onderliggende `file`-elementen.
+
+**Gewoon bijwerken:** de cumulatieve `Servahz-Update-v0.18.3.cmd` blijft het enige releasebestand. Gebruik voor deze updater de normale stop-/backupstappen. Geen wereldherstel, writes naar saves/profielen/economie of automatische materiaalteruggave. Dit verbetert de diagnose en is geen bevestigde reparatie voor verdwenen bouwdelen.
+
+**Controle:** gerichte regressies voor het echte databasepad, ontbrekend databasebestand zonder rootfallback, hoofdlettervarianten van Windows-paden en privacyveilige details van herstelmeldingen. Bestaande read-only-/savebehoudtests, de echte Windows-CMD-knop en de volledige Windows PowerShell 5.1-suite. Geen DayZ-engine uitgevoerd; de echte herstelmeldingen moeten met het nieuwe lokale rapport worden beoordeeld.
+
 ## [0.18.2] — 2026-10-29
 
 ### Opslagdiagnose bij verdwijnende bouwdelen

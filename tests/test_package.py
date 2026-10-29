@@ -78,6 +78,14 @@ class PackageTests(unittest.TestCase):
                 "BaseBuildingData": {"HologramData": {"disableIsUnderwaterCheck": False},
                                      "ConstructionData": {"disableDistanceCheck": False}},
                 "PlayerData": {"sentinel": "preserve"}}))
+        economy_source = Path(vanilla) / 'db/economy.xml' if vanilla else None
+        if economy_source and economy_source.is_file():
+            shutil.copyfile(economy_source, self.baseline / 'db/economy.xml')
+        else:
+            (self.baseline / 'db/economy.xml').write_text(
+                '<economy><building init="1" load="1" respawn="0" save="1"/>'
+                '<dynamic init="1" load="1" respawn="1" save="1"/>'
+                '<vehicles init="1" load="1" respawn="1" save="1"/></economy>')
         if vanilla:
             shutil.copyfile(Path(vanilla) / 'mapgrouppos.xml', self.baseline / 'mapgrouppos.xml')
         else:
@@ -508,7 +516,9 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         command = (f'"{self.server / "DayZServer_x64.exe"}" '
                    f'"-config={self.server / "Servahz/serverDZ.cfg"}" '
                    f'-profiles="{profiles}" -port=2302 -password=PRIVATE-command-password')
-        result = self.run_storage_probe([self.storage_process(command)])
+        process = self.storage_process(command)
+        process['ExecutablePath'] = process['ExecutablePath'].swapcase()
+        result = self.run_storage_probe([process])
         for token in ['executable t.o.v. pakket=GELIJK', '-config t.o.v. pakket=GELIJK',
                       '-profiles t.o.v. pakket=GELIJK', 'poort t.o.v. pakket=GELIJK',
                       'Proces #1 config instanceId=1', 'config missie t.o.v. pakket=GELIJK',
@@ -520,6 +530,8 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
             for private in ['PRIVATE-', str(self.server), str(self.workshop), 'WORLD-MUST-NOT-CHANGE']:
                 self.assertNotIn(private, output)
         self.assertNotIn('PRIVATE-', result.stdout)
+        self.assertNotIn('Installatie #2', result.stdout)
+        self.assertEqual(result.stdout.count('koppelingen naar servahz_ce/building_types.xml='), 1)
         self.assertEqual(self.local.read_bytes(), local_before)
         self.assertEqual(before, {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()})
 
@@ -556,13 +568,13 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         self.install()
         ignore = self.mission / 'cfgIgnoreList.xml'
         ignore.write_text('<ignore><type name="Fence" cheatCheck="1"/><type name="RaG_BB_Low_Wall"/><type name="PRIVATE-class"/></ignore>')
-        economy = self.mission / 'economy.xml'
+        economy = self.mission / 'db/economy.xml'
         economy.write_text('<economy><building load="1" save="0"/><dynamic load="1" save="1"/><vehicles load="1" save="1"/></economy>')
         result = self.run_storage_probe()
         for token in ['koppelingen naar servahz_ce/building_types.xml=1',
                       'RaG_BB_DoorKit aantal=1 lifetime=14400', 'RaG_BB_Low_WallKit aantal=1 lifetime=14400',
                       'ignorelijst actieve cheatCheck-regels=1; bouwgerelateerde regels=2',
-                      'economy building save=0']:
+                      'db/economy.xml building save=0']:
             self.assertIn(token, result.stdout)
         self.assertNotIn('PRIVATE-class', result.stdout + result.stderr)
         self.assertIn('cheatCheck="1"', ignore.read_text())
@@ -570,6 +582,45 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         result = self.run_storage_probe()
         self.assertIn('cfgIgnoreList.xml ontbreekt of ongeldig', result.stdout)
         self.assertNotIn('PRIVATE-xml-path', result.stdout + result.stderr)
+
+    def test_storage_diagnostic_reads_db_economy_without_root_fallback(self):
+        self.install()
+        # Real DayZ layout: db/economy.xml. A valid root-level decoy must not
+        # determine the result or hide a missing/invalid database configuration.
+        decoy = self.mission / 'economy.xml'
+        decoy.write_text('<economy><building load="0" save="0"/></economy>')
+        database = self.mission / 'db/economy.xml'
+        original = database.read_bytes()
+        result = self.run_storage_probe()
+        self.assertIn('Verwachte pakketmissie: db/economy.xml building load=1', result.stdout)
+        self.assertIn('Verwachte pakketmissie: db/economy.xml building save=1', result.stdout)
+        self.assertEqual(database.read_bytes(), original)
+        database.unlink()
+        result = self.run_storage_probe()
+        self.assertIn('Verwachte pakketmissie: db/economy.xml ontbreekt of ongeldig', result.stdout)
+        self.assertNotIn('Verwachte pakketmissie: db/economy.xml building save=0', result.stdout)
+        self.assertFalse(database.exists())
+
+    def test_storage_diagnostic_safe_details_for_recovery_and_restore_logs(self):
+        self.install()
+        profiles = self.server / 'Servahz/Profiles'
+        log = profiles / 'PRIVATE-file-name.RPT'
+        log.write_text('''19:22:20 [CE][Storage] Recovering corrupted save failed C:\\PRIVATE-root\\dynamic_000.bin PRIVATE-player PRIVATE-PIN
+19:22:21 [CE][Storage] Recovering backup valid:yes C:\\PRIVATE-root\\vehicles.002 PRIVATE-address
+19:22:23 [CE][Storage] Restoring file C:\\PRIVATE-root\\building.bin PRIVATE-password
+''')
+        original = log.read_bytes()
+        result = self.run_storage_probe()
+        self.assertIn('corrupt,recover', result.stdout)
+        self.assertIn('engine:CE,engine:Storage', result.stdout)
+        self.assertIn('bestand:dynamic_000.bin', result.stdout)
+        self.assertIn('valid:yes,bestand:vehicles.002', result.stdout)
+        self.assertIn('restore,engine:CE,engine:Storage,bestand:building.bin', result.stdout)
+        self.assertIn('recover/restore alleen bewijst geen beschadiging', result.stdout)
+        self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
+        report = max((self.package / '.local/StorageDiagnostics').glob('*.txt'))
+        self.assertNotIn('PRIVATE-', report.read_text())
+        self.assertEqual(log.read_bytes(), original)
 
     @unittest.skipUnless(os.name == 'nt', 'Real one-file CMD launcher requires Windows')
     def test_storage_diagnostic_native_cmd_launcher(self):
@@ -580,7 +631,7 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         result = subprocess.run(['cmd.exe', '/d', '/c', command.name], cwd=self.package,
                                 input='', capture_output=True, text=True, timeout=45)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn('opslagdiagnose 0.18.2', result.stdout)
+        self.assertIn('opslagdiagnose 0.18.3', result.stdout)
         self.assertEqual(len(list((self.package / '.local/StorageDiagnostics').glob('*.txt'))), 1)
 
     def test_lootchests_unlocked_contents_placement_and_culture(self):

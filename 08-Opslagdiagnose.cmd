@@ -27,6 +27,41 @@ function Compare-DiagnosticPath {
     return 'ANDERS'
 }
 
+function Select-UniqueDiagnosticPath {
+    param([string[]]$Paths)
+    # Windows paths differing only in letter case still identify one installation.
+    $seen = @{}
+    foreach ($item in $Paths) {
+        $path = Get-LocalAbsolutePath $item
+        if ($path -and !$seen.ContainsKey($path)) { $seen[$path] = $true; Write-Output $path }
+    }
+}
+
+function Get-StorageSignalDetail {
+    param([string]$Line)
+    # Only emit fixed public labels, never fragments of the original message.
+    $labels = New-Object 'System.Collections.Generic.List[string]'
+    $words = [ordered]@{
+        corrupt = '\bcorrupt\w*'; recover = '\brecover\w*'; repair = '\brepair\w*'
+        restore = '\brestor\w*'; backup = '\bbackup\w*'; error = '\berror\w*'
+        fail = '\bfail\w*'; invalid = '\binvalid\b'; denied = '\bdenied\b'
+        empty = '\bempty\b'; delete = '\bdelet\w*'; save = '\bsav(?:e|ed|ing)\b'
+        load = '\bload\w*'; warning = '\bwarn\w*'
+    }
+    foreach ($key in $words.Keys) {
+        if ($Line -match ('(?i)' + $words[$key])) { $labels.Add($key) }
+    }
+    foreach ($tag in @('CE', 'Storage', 'Hive', 'StorageDirs')) {
+        if ($Line -match ('(?i)\[' + $tag + '\]')) { $labels.Add('engine:' + $tag) }
+    }
+    $valid = [regex]::Match($Line, '(?i)\bvalid:\s*(yes|no)\b')
+    if ($valid.Success) { $labels.Add('valid:' + $valid.Groups[1].Value.ToLowerInvariant()) }
+    # Canonical CE filenames only; no arbitrary filenames, paths or class names.
+    $files = [regex]::Matches($Line, '(?i)(?<![\w])(?:dynamic(?:_\d{1,3})?|building|vehicles|types|events|players)\.(?:bin|db|\d{3})(?![\w.])')
+    foreach ($file in @($files | ForEach-Object { $_.Value.ToLowerInvariant() } | Sort-Object -Unique | Select-Object -First 4)) { $labels.Add('bestand:' + $file) }
+    return $labels -join ','
+}
+
 function Read-LaunchSelection {
     param([string]$CommandLine)
     if ([string]::IsNullOrWhiteSpace($CommandLine) -or ([regex]::Matches($CommandLine, '"').Count % 2) -ne 0) { return $null }
@@ -126,16 +161,16 @@ function Add-MissionSummary {
         $Report.Add($Label + ': ignorelijst actieve cheatCheck-regels=' + $cheatChecks.Count + '; bouwgerelateerde regels=' + $buildingEntries.Count)
     } catch { $Report.Add($Label + ': cfgIgnoreList.xml ontbreekt of ongeldig') }
     try {
-        $economy = Read-DiagnosticXml (Join-Path $Path 'economy.xml')
+        $economy = Read-DiagnosticXml (Join-Path $Path 'db/economy.xml')
         foreach ($kind in @('building', 'dynamic', 'vehicles')) {
             $entries = $economy.SelectNodes('/economy/' + $kind)
             foreach ($field in @('load', 'save')) {
                 $value = 'ontbreekt of ongeldig'
                 if ($entries.Count -eq 1 -and $entries[0].GetAttribute($field) -match '^[01]$') { $value = $entries[0].GetAttribute($field) }
-                $Report.Add($Label + ': economy ' + $kind + ' ' + $field + '=' + $value)
+                $Report.Add($Label + ': db/economy.xml ' + $kind + ' ' + $field + '=' + $value)
             }
         }
-    } catch { $Report.Add($Label + ': economy.xml ontbreekt of ongeldig') }
+    } catch { $Report.Add($Label + ': db/economy.xml ontbreekt of ongeldig') }
 }
 
 try {
@@ -146,7 +181,7 @@ try {
     $expectedConfig = Join-Path $serverRoot 'Servahz/serverDZ.cfg'
     $expectedProfiles = Join-Path $serverRoot 'Servahz/Profiles'
     $report = New-Object 'System.Collections.Generic.List[string]'
-    $report.Add('Servahz opslagdiagnose 0.18.2')
+    $report.Add('Servahz opslagdiagnose 0.18.3')
     $report.Add('Alleen lezen: geen serverstop/start, schrijftest, instelling, herstel of wijziging van saves.')
     $report.Add('Tijd UTC: ' + [DateTime]::UtcNow.ToString('s'))
     $report.Add('Paden, startopdrachten, wachtwoorden en volledige logregels worden niet opgenomen.')
@@ -192,8 +227,8 @@ try {
                 } else {
                     $report.Add($label + " -${name}=AANWEZIG; kan de verwachte wereldopslag wijzigen")
                     if (!$path) { $report.Add($label + " -${name}: relatief of niet lokaal; geen opslagpad gegokt") }
-                    elseif ($name -eq 'mission') { $storageRoots += [pscustomobject]@{ Path = $path; Label = $label + ' missie-override' } }
-                    else { $storageRoots += [pscustomobject]@{ Path = $path; Label = $label + ' opslag-override' } }
+                    elseif ($name -eq 'mission') { $storageRoots += [pscustomobject]@{ Path = $path; Label = $label + ' missie-override'; InspectMission = $true } }
+                    else { $storageRoots += [pscustomobject]@{ Path = $path; Label = $label + ' opslag-override'; InspectMission = $false } }
                 }
             }
         }
@@ -203,20 +238,20 @@ try {
     Add-StorageSummary (Join-Path $expectedMission 'storage_1') 'Verwachte pakketopslag storage_1' $report
     Add-MissionSummary $expectedMission 'Verwachte pakketmissie' $report
     $rootIndex = 0
-    foreach ($installation in @($serverRoots | Select-Object -Unique)) {
+    foreach ($installation in @(Select-UniqueDiagnosticPath $serverRoots)) {
         $rootIndex++
         try {
             $missions = @(Get-ChildItem -LiteralPath (Join-Path $installation 'mpmissions') -Directory -ErrorAction Stop | Sort-Object Name | Select-Object -First 32)
             $missionIndex = 0
             foreach ($mission in $missions) {
                 $missionIndex++
-                $storageRoots += [pscustomobject]@{ Path = $mission.FullName; Label = "Installatie #$rootIndex missie #$missionIndex" }
+                $storageRoots += [pscustomobject]@{ Path = $mission.FullName; Label = "Installatie #$rootIndex missie #$missionIndex"; InspectMission = $false }
             }
         } catch { $report.Add("Installatie #${rootIndex}: missiemappen niet volledig leesbaar") }
     }
     foreach ($candidate in $storageRoots) {
         try {
-            if ((Compare-DiagnosticPath $candidate.Path $expectedMission) -ne 'GELIJK' -and (Test-Path -LiteralPath (Join-Path $candidate.Path 'cfgeconomycore.xml') -PathType Leaf)) {
+            if ($candidate.InspectMission -and (Compare-DiagnosticPath $candidate.Path $expectedMission) -ne 'GELIJK') {
                 Add-MissionSummary $candidate.Path $candidate.Label $report
             }
             $slots = @(Get-ChildItem -LiteralPath $candidate.Path -Directory -Filter 'storage_*' -ErrorAction Stop | Where-Object { $_.Name -match '^storage_\d{1,9}$' } | Sort-Object Name | Select-Object -First 16)
@@ -226,22 +261,24 @@ try {
     }
 
     $profileIndex = 0
-    foreach ($profileRoot in @($profileRoots | Select-Object -Unique)) {
+    foreach ($profileRoot in @(Select-UniqueDiagnosticPath $profileRoots)) {
         $profileIndex++
         try {
             $logs = @(Get-ChildItem -LiteralPath $profileRoot -Recurse -File -ErrorAction Stop | Where-Object { $_.Extension -in @('.RPT', '.log', '.ADM') } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 8)
             $report.Add("Profiel #${profileIndex}: onderzochte logstaarten=" + $logs.Count)
             if ($logs.Count -gt 0) { $report.Add("Profiel #${profileIndex}: nieuwste log UTC=" + $logs[0].LastWriteTimeUtc.ToString('s')) }
             $signals = 0
+            $logIndex = 0
             foreach ($log in $logs) {
+                $logIndex++
                 foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 2000 -ErrorAction Stop)) {
                     if ($line -notmatch '(?i)storage|persisten|hive|save|\.bin\b|\.db\b|\bCE\b|economy|types\.xml|cfgIgnoreList') { continue }
-                    if ($line -notmatch '(?i)error|fail|corrupt|denied|cannot|can.t|read.only|repair|recover|invalid') { continue }
+                    if ($line -notmatch '(?i)error|fail|corrupt|denied|cannot|can.t|read.only|repair|recover|restor|invalid') { continue }
                     $category = 'mogelijke opslagfout'
                     if ($line -match '(?i)denied|read.only|cannot.*writ|can.t.*writ') { $category = 'toegang/schrijven' }
-                    elseif ($line -match '(?i)corrupt|repair|recover') { $category = 'beschadiging/herstel' }
+                    elseif ($line -match '(?i)corrupt|repair|recover|restor') { $category = 'beschadiging/herstel' }
                     $time = [regex]::Match($line, '\b\d{1,2}:\d{2}:\d{2}\b').Value
-                    $report.Add("Profiel #$profileIndex $time | $category")
+                    $report.Add("Profiel #$profileIndex log #$logIndex $time | $category | " + (Get-StorageSignalDetail $line))
                     $signals++
                     if ($signals -ge 20) { break }
                 }
@@ -252,6 +289,7 @@ try {
     }
     $report.Add('Mappen en schrijftijden zijn aanwijzingen; geen bewijs dat een map de actieve wereld of een verdwenen bouwdeel bevat.')
     $report.Add('Configuratie is tekstinspectie van de huidige bestanden; die kunnen sinds de serverstart zijn veranderd.')
+    $report.Add('Logdetails zijn vaste trefwoorden, geen volledige meldingen; recover/restore alleen bewijst geen beschadiging of verwijdering.')
     $report.Add('Geen schrijftest of controle van rechten onder het serveraccount. Geen automatische herstelactie.')
     $destination = Join-Path $PackageRoot ('.local/StorageDiagnostics/' + (Get-Date -Format 'yyyyMMdd-HHmmss-fff') + '.txt')
     $null = New-Item -ItemType Directory -Path (Split-Path $destination -Parent) -Force
