@@ -12,6 +12,30 @@ ROOT = Path(__file__).resolve().parents[1]
 
 @unittest.skipUnless(shutil.which('g++'), 'C++ compiler required for the shared numeric predicate')
 class RefreshPolicyTests(unittest.TestCase):
+    def test_delivery_gate_requires_valid_recipient_single_alive_match_and_no_claim(self):
+        import itertools
+        source = (ROOT / 'config/mission/servahz_delivery/Policy.c').read_text()
+        body = source[source.index('static bool MayDeliver('):source.rindex('}')]
+        with tempfile.TemporaryDirectory(prefix='servahz-delivery-policy-') as temp:
+            folder = Path(temp)
+            cpp = folder / 'delivery.cpp'
+            binary = folder / ('delivery.exe' if __import__('os').name == 'nt' else 'delivery')
+            cpp.write_text('#include <iostream>\n' + body + '''
+int main() {
+    int schema,request,recipient,exists,claimed,count,alive;
+    while (std::cin >> schema >> request >> recipient >> exists >> claimed >> count >> alive)
+        std::cout << MayDeliver(schema,request,recipient,exists,claimed,count,alive) << '\\n';
+}
+''')
+            built = subprocess.run(['g++', '-std=c++11', str(cpp), '-o', str(binary)], capture_output=True, text=True)
+            self.assertEqual(built.returncode, 0, built.stderr)
+            cases = list(itertools.product([0, 1, 2], [0, 1], [0, 1], [0, 1], [0, 1], [0, 1, 2], [0, 1]))
+            result = subprocess.run([str(binary)], input='\n'.join(' '.join(map(str, row)) for row in cases),
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            passed = [case for case, value in zip(cases, result.stdout.splitlines()) if value == '1']
+            self.assertEqual(passed, [(1, 1, 1, 1, 0, 1, 1)])
+
     def test_actual_predicate_preserves_circle_inventories_and_storage(self):
         source = (ROOT / 'config/mission/servahz_refresh/Policy.c').read_text()
         start = source.index('static bool MayDelete(')

@@ -636,6 +636,111 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         self.assertIn('opslagdiagnose 0.18.3', result.stdout)
         self.assertEqual(len(list((self.package / '.local/StorageDiagnostics').glob('*.txt'))), 1)
 
+    def prepare_delivery(self):
+        self.install()
+        (self.mission / 'init.c').write_text('class CustomMission: MissionServer {};\nMission CreateCustomMission(string path) { return new CustomMission(); }\n')
+        return '76561198000000123'  # Synthetic recipient, never a user's ID.
+
+    def test_codelock_delivery_queue_backup_repeat_and_private_receipt(self):
+        recipient = self.prepare_delivery()
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'preserve existing character and base')
+        initial = (self.mission / 'init.c').read_bytes()
+        settings = self.local.read_bytes()
+        rag = self.server / 'Servahz/Profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+        profile = rag.read_bytes()
+        result = self.run_ps('Queue-CodeLock.ps1', '-SteamId', recipient)
+        request_path = self.server / 'Servahz/Profiles/Servahz/CodeLockDelivery-request.json'
+        request = json.loads(request_path.read_text())
+        self.assertEqual(set(request), {'Schema', 'RequestId', 'SteamId'})
+        self.assertEqual(request['SteamId'], recipient)
+        self.assertRegex(request['RequestId'], r'^[0-9a-f]{32}$')
+        self.assertNotIn(recipient, result.stdout + result.stderr)
+        patched = (self.mission / 'init.c').read_text()
+        self.assertIn('return new ServahzDeliveryMission();', patched)
+        self.assertEqual(patched.count('#include'), 1)
+        self.assertEqual(world.read_bytes(), b'preserve existing character and base')
+        self.assertEqual(self.local.read_bytes(), settings)
+        self.assertEqual(rag.read_bytes(), profile)
+        backups = list((self.package / '.local/Backups').glob('codelock-*'))
+        self.assertEqual(len(backups), 1)
+        self.assertEqual((backups[0] / 'mission/init.c').read_bytes(), initial)
+        self.assertEqual((backups[0] / 'mission/storage_1/players.db').read_bytes(), world.read_bytes())
+        self.run_ps('Queue-CodeLock.ps1')
+        self.assertEqual(json.loads(request_path.read_text()), request)
+        self.assertEqual(len(list((self.package / '.local/Backups').glob('codelock-*'))), 1)
+        receipt = request_path.with_name('CodeLockDelivery-report.json')
+        receipt.write_text(json.dumps(dict(RequestId=request['RequestId'], Status='Delivered', BatteryAttached=True)))
+        before = request_path.read_bytes()
+        self.run_ps('Queue-CodeLock.ps1')
+        self.assertEqual(request_path.read_bytes(), before)
+        result = self.run_ps('Test-Server.ps1', '-StaticOnly')
+        self.assertIn('Geleverd: 1 DigitalCodeLock', result.stdout)
+        self.assertNotIn(recipient, result.stdout + result.stderr)
+        self.run_ps('Queue-CodeLock.ps1', '-Disable')
+        self.assertFalse(request_path.exists())
+        self.assertEqual(world.read_bytes(), b'preserve existing character and base')
+
+    def test_codelock_delivery_refuses_bad_recipient_custom_init_and_pending_cleanup(self):
+        recipient = self.prepare_delivery()
+        init = self.mission / 'init.c'
+        original = init.read_bytes()
+        for value in ['bad-id', '0' * 16, '0' * 18, '\u0661' * 17]:
+            self.run_ps('Queue-CodeLock.ps1', '-SteamId', value, ok=False)
+            self.assertEqual(init.read_bytes(), original)
+        init.write_text('Mission CreateCustomMission(string path) { return new OwnMission(); }')
+        self.run_ps('Queue-CodeLock.ps1', '-SteamId', recipient, ok=False)
+        self.assertIn('OwnMission', init.read_text())
+        init.write_bytes(original)
+        state = self.server / 'Servahz/Profiles/Servahz'
+        state.mkdir()
+        (state / 'LootRefresh-request.json').write_text(json.dumps(dict(RequestId='a' * 32)))
+        self.run_ps('Queue-CodeLock.ps1', '-SteamId', recipient, ok=False)
+        self.assertFalse((state / 'CodeLockDelivery-request.json').exists())
+        self.assertFalse((self.package / '.local/Backups').exists())
+        self.assertEqual(init.read_bytes(), original)
+
+    def test_codelock_delivery_supports_completed_refresh_and_no_space_retry(self):
+        recipient = self.prepare_delivery()
+        init = self.mission / 'init.c'
+        init.write_text(init.read_text().replace('return new CustomMission();', 'return new ServahzRefreshMission();') +
+                        '#include "$CurrentDir:mpmissions/servahz.chernarusplus/servahz_refresh/LootRefresh.c"\n')
+        state = self.server / 'Servahz/Profiles/Servahz'
+        state.mkdir()
+        (state / 'LootRefresh-request.json').write_text(json.dumps(dict(RequestId='a' * 32)))
+        (state / ('LootRefresh-' + 'a' * 32 + '.started')).write_text('completed earlier')
+        self.run_ps('Queue-CodeLock.ps1', '-SteamId', recipient)
+        request_path = state / 'CodeLockDelivery-request.json'
+        request = json.loads(request_path.read_text())
+        (state / ('CodeLockDelivery-' + request['RequestId'] + '.started')).write_text('claimed')
+        # A claimed execution with no receipt must never automatically repeat.
+        self.run_ps('Queue-CodeLock.ps1')
+        self.assertEqual(json.loads(request_path.read_text()), request)
+        (state / 'CodeLockDelivery-report.json').write_text(json.dumps(dict(RequestId=request['RequestId'], Status='NoInventorySpace', BatteryAttached=False)))
+        self.run_ps('Queue-CodeLock.ps1')
+        retried = json.loads(request_path.read_text())
+        self.assertNotEqual(retried['RequestId'], request['RequestId'])
+        self.assertEqual(retried['SteamId'], recipient)
+        self.assertIn('return new ServahzDeliveryMission();', init.read_text())
+        self.assertEqual(init.read_text().count('#include'), 1)
+        self.run_ps('Queue-LootRefresh.ps1', '-CenterX', 8000, '-CenterZ', 7000)
+        self.assertIn('return new ServahzDeliveryMission();', init.read_text())
+        self.assertEqual(init.read_text().count('#include'), 1)
+        self.run_ps('Queue-LootRefresh.ps1', '-Disable')
+        self.assertIn('return new ServahzDeliveryMission();', init.read_text())
+
+    @unittest.skipUnless(os.name == 'nt', 'Real delivery CMD launcher requires Windows')
+    def test_codelock_delivery_native_cmd_launcher(self):
+        recipient = self.prepare_delivery()
+        command = self.package / '09-Codeslot-geven.cmd'
+        command.write_bytes((ROOT / command.name).read_bytes())
+        result = subprocess.run(['cmd.exe', '/d', '/c', command.name, '-SteamId', recipient], cwd=self.package,
+                                input='', capture_output=True, text=True, timeout=45)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertTrue((self.server / 'Servahz/Profiles/Servahz/CodeLockDelivery-request.json').exists())
+        self.assertNotIn(recipient, result.stdout + result.stderr)
+
     def test_lootchests_unlocked_contents_placement_and_culture(self):
         # Deliberately use a non-symmetric local point and a 90-degree building.
         (self.baseline / 'mapgroupproto.xml').write_text('''<prototype>

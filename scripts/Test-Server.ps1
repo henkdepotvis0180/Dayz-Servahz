@@ -7,6 +7,29 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
 try {
     $settings = Read-ServerSettings
     $layout = Get-ServerLayout $settings
+    $deliveryPath = Join-Path $layout.Profiles 'Servahz/CodeLockDelivery-request.json'
+    if (Test-Path -LiteralPath $deliveryPath) {
+        try {
+            $delivery = Get-Content -LiteralPath $deliveryPath -Raw | ConvertFrom-Json
+            if ($delivery.Schema -ne 1 -or $delivery.RequestId -notmatch '^[0-9a-f]{32}$' -or $delivery.SteamId -notmatch '^[0-9]{17}$') { throw 'Ongeldige levering' }
+            $receiptPath = Join-Path $layout.Profiles 'Servahz/CodeLockDelivery-report.json'
+            $status = 'Ingepland; wacht op inloggen van het opgegeven account'
+            $claimed = Test-Path -LiteralPath (Join-Path $layout.Profiles ('Servahz/CodeLockDelivery-' + $delivery.RequestId + '.started'))
+            if ($claimed) { $status = 'Uitvoering geclaimd; geen automatische extra levering bij een onderbreking' }
+            if (Test-Path -LiteralPath $receiptPath) {
+                $receipt = Get-Content -LiteralPath $receiptPath -Raw | ConvertFrom-Json
+                if ($receipt.RequestId -eq $delivery.RequestId) {
+                    switch ($receipt.Status) {
+                        'Delivered' { $status = 'Geleverd: 1 DigitalCodeLock; batterij bevestigd=' + [bool]$receipt.BatteryAttached }
+                        'NoInventorySpace' { $status = 'Geen ruimte; maak inventarisruimte en voer 09 opnieuw uit met gestopte server' }
+                        'MissingClass' { $status = 'DigitalCodeLock ontbreekt in de geladen gamebestanden; nog niets geleverd' }
+                        default { $status = 'Onbekend ontvangstbewijs; geen automatische extra levering' }
+                    }
+                }
+            }
+            Write-Host ('Codeslotlevering 0.18.4: ' + $status)
+        } catch { Write-Warning 'Codeslotlevering kon niet veilig worden gecontroleerd; geen ID of inhoud afgedrukt.' }
+    }
     $ragPath = Join-Path $layout.Profiles 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
     $rag = Get-Content -LiteralPath $ragPath -Raw | ConvertFrom-Json
     if (@($rag.PartCosts).Count -eq 0) { throw 'RaG-bouwkosten ontbreken in het profiel.' }

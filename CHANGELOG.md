@@ -4,6 +4,23 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.4] — 2026-10-29
+
+### Eenmalig een digitaal codeslot aan je eigen personage geven
+
+- Nieuwe **`09-Codeslot-geven.cmd`**: plant met de server gestopt een levering van precies **1 vanilla `DigitalCodeLock` met toetsenpaneel** aan een opgegeven Steam64-ID in. RaG Core ondersteunt dit slot al via `Att_CodeLock_RaG`; geen nieuwe Workshop-mod of extra algemene loot toegevoegd. Geen combinatieslot met cijferwieltjes of Expansion Code Lock.
+- Installeert alleen bij de expliciete 09-actie een bekende missiehook. De gewone update/01 start geen levering en stelt geen pincode in. Bij inloggen maakt de missie het slot in de inventaris van het exact overeenkomende, levende personage; andere spelers krijgen niets. Probeert een `Battery9V` aan het nieuwe slot te bevestigen. Geen bestaande items, deuren, slotcodes of profielinstellingen aangepast.
+- Maakt vóór inplannen een volledige wereld-/profiel-/configuratiebackup onder `.local/Backups/codelock-<verzoeknummer>`. Steam64-ID staat alleen in het lokale `Profiles/Servahz/CodeLockDelivery-request.json`, niet in publieke missiecode, commits, release of controle-uitvoer.
+- Een `.started`-claim wordt vóór itemcreatie geschreven. Na ontvangst of een onderbreking wordt niet automatisch een extra slot aangemaakt. Bij een expliciet ontvangstbewijs `NoInventorySpace` kan 09 met gestopte server een nieuw verzoek maken nadat inventarisruimte is vrijgemaakt. Een crash tussen claim, creatie en volgende wereldsave kan een onzekere levering achterlaten; die wordt bewust niet blind herhaald. `09-Codeslot-geven.cmd -Disable` annuleert een nog niet uitgevoerde levering en verwijdert geen geleverd item.
+- Weigert ongeldige ID's, afwijkende/onvolledige missiehooks, afwijkende leveringscode en een nog niet uitgevoerde loot-proefscan/verversing. De leveringsmissie erft de bestaande refresher; een eerder voltooide proefscan/verversing wordt niet opnieuw gestart. 05/06 blijven met de bekende leveringshook werken zonder dubbele includes. De oorspronkelijke lootverversingscode/-policy blijven ongewijzigd.
+- `03-Controleren.cmd` toont een vaste, privacyveilige leveringsstatus: ingepland, geleverd, geen inventarisruimte, ontbrekende itemklasse of geclaimd/onzeker. Geen Steam64-ID, PIN of willekeurige receipt-inhoud in de statusuitvoer.
+
+**Bijwerken/gebruiken:** sluit normaal af met `#shutdown` en wacht tot het serverproces uit is. Voer `Servahz-Update-v0.18.4.cmd` uit naast 01; de bestaande updater behoudt saves, wachtwoorden, lokale instellingen en RaG-/CJ187-profielen. Dubbelklik daarna op 09 en vul je Steam64-ID van 17 cijfers in, of gebruik `09-Codeslot-geven.cmd -SteamId <je-id>`. Start met 02, log met dat account in en houd een paar inventarisvakjes vrij. Bekijk bij geen ontvangst 03. Na ontvangst normaal afsluiten zodat de huidige wereld kan worden opgeslagen. De update alleen levert niets; 04/05/06 zijn voor deze levering niet nodig.
+
+**Gebruik van het slot:** verwijder eerst het losse oude combinatieslot uit een eventuele deur-slotpositie. Bevestig de nieuwe `DigitalCodeLock` aan een volledig gebouwde, gesloten RaG-deur en stel via het toetsenpaneel zelf tweemaal een PIN in. Bij RaG-standaardinstellingen wordt de eerste insteller eigenaar en wordt toegang onthouden. Bestaande afwijkende Core-instellingen worden behouden; de levering wijzigt die niet. Test openen/sluiten zolang je nog toegang tot binnen hebt.
+
+**Controle:** integratietests voor backup-/save-/profiel-/initbehoud, exacte ID-validatie, herhaald inplannen zonder extra levering, ontbrekende ruimte, weigeren van eigen missiecode en nog openstaande cleanup, compatibiliteit met een voltooide lootverversing, privacyveilige status en de echte CMD-knop op Windows PowerShell 5.1. De werkelijke leveringspredicate wordt objectvrij als C++ uitgevoerd met alle combinaties van ontvanger-/schema-/claim-/levendestatus; dit is geen DayZ-enginecompile. Volledige regressiesuite. De daadwerkelijke inventory-creatie, batterij en RaG-PIN-interface moeten bij de eerste lokale levering in-game worden bevestigd; hier is geen DayZ-engine uitgevoerd. Geen bewezen reparatie voor het oude cijferwieltjesprobleem.
+
 ## [0.18.3] — 2026-10-29
 
 ### Correcte opslagcontrole en meer detail bij herstelmeldingen

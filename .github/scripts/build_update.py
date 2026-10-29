@@ -12,7 +12,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[2]
 BASE = 'v0.13.0'
 PUBLIC = ('01-Instellen.cmd', '02-Start-server.cmd', '03-Controleren.cmd',
-          '04-Teststand.cmd', '05-Loot-proefscan.cmd', '06-Loot-verversen.cmd', '07-Bouwdiagnose.cmd', '08-Opslagdiagnose.cmd', 'AGENTS.md', 'CHANGELOG.md', 'README.md', 'Mods.html')
+          '04-Teststand.cmd', '05-Loot-proefscan.cmd', '06-Loot-verversen.cmd', '07-Bouwdiagnose.cmd', '08-Opslagdiagnose.cmd', '09-Codeslot-geven.cmd', 'AGENTS.md', 'CHANGELOG.md', 'README.md', 'Mods.html')
 
 
 def git(*args):

@@ -25,6 +25,19 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Eenmalig een digitaal codeslot krijgen (v0.18.4)
+
+Als het gewone combinatieslot niet bruikbaar is, kan de server eenmalig **1 `DigitalCodeLock` met toetsenpaneel** in je inventaris geven. RaG Core ondersteunt dat vanilla item al; geen extra Workshop-abonnement nodig. De nieuwe knop levert geen slot met cijferwieltjes en stelt geen PIN in.
+
+1. Stop de server normaal en voer [update 0.18.4](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.4) uit naast 01. Deze bewaart je bestaande wereld, instellingen, wachtwoorden en profielen. De update alleen plant nog geen levering in.
+2. Met de server nog gestopt: dubbelklik **`09-Codeslot-geven.cmd`** en vul je eigen Steam64-ID van 17 cijfers in. De knop maakt eerst nog een wereld-/profielbackup en koppelt de levering aan dat account. Alternatief: `09-Codeslot-geven.cmd -SteamId <je-id>` vanuit de pakketmap.
+3. Start met 02 en log met dat account in. Houd enkele vakjes in je inventaris vrij. Binnen ongeveer 10 seconden na missie-initialisatie, of de eerstvolgende controle om de 5 seconden na inloggen, probeert de server het slot te geven en een `Battery9V` eraan te bevestigen. Een dode speler of een ander account krijgt niets. 03 toont de status zonder je ID of PIN.
+4. Na ontvangst normaal afsluiten om de huidige wereld te bewaren. Haal een oud combinatieslot uit de betreffende slotpositie, sluit de volledig gebouwde RaG-deur en bevestig de nieuwe **DigitalCodeLock**. Stel zelf tweemaal een PIN in via de RaG-interface. Test de bediening met een vrije toegangsroute. De [RaG Core-documentatie](https://tyson89.github.io/RaG-Mod-Wikis/mods/core/vanilla-digital-codelock/) beschrijft eigenaarschap en onthouden toegang; je bestaande Core-instellingen worden niet veranderd.
+
+De opdracht staat alleen privé onder `Servahz/Profiles/Servahz/CodeLockDelivery-request.json`. Deel dit bestand en de backup niet als diagnoserapport. Iedere opdracht wordt vóór itemcreatie geclaimd; bij herstart of nogmaals 09 wordt niet automatisch een tweede slot gegeven. Geeft 03 **Geen ruimte** aan, maak dan ruimte, stop normaal en voer 09 opnieuw uit. Bij een **geclaimde/onzekere** uitvoering eerst kijken of het slot al aanwezig is; de marker wordt niet automatisch gewist. Er is geen garantie dat een levering vóór een crash al in de wereldsave is terechtgekomen. De knop schrijft geen directe binaire savewijzigingen en herstelt geen oude wereld.
+
+`09-Codeslot-geven.cmd -Disable` schakelt een nog niet uitgevoerde levering uit met gestopte server; het verwijdert geen bestaand slot. Een openstaande proefscan/verversing blokkeert het inplannen; rond die af of schakel die met het bestaande script uit. Gebruik 04/05/06 niet voor de codeslotlevering. De code/API's en savebehoud worden getest, maar de echte DayZ-engine en RaG-interface moeten bij de lokale levering worden gecontroleerd.
+
 ## Een RaG-deur verdwijnt of het combinatieslot reageert verkeerd (v0.18.1)
 
 Gebruik [update 0.18.1](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.1) om **`07-Bouwdiagnose.cmd`** toe te voegen. Dit is een diagnosehulpmiddel, geen bevestigde slotreparatie of herstel van een verdwenen deur. Stop de server en voer het ene updatescript uit naast `01-Instellen.cmd`; de bestaande updater maakt eerst een wereld-/profielbackup. Daarna kun je 07 uitvoeren met de server nog gestopt. Het verzamelen van de diagnose vereist geen serverstart, teststand of lootverversing.

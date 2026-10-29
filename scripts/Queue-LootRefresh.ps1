@@ -42,7 +42,11 @@ try {
     if ($Radius -lt 500 -or $Radius -gt 5000) { throw 'Beschermingsradius moet tussen 500 en 5000 meter liggen.' }
     $originalReturn = 'return new CustomMission();'
     $patchedReturn = 'return new ServahzRefreshMission();'
-    if (!$init.Contains($hook)) {
+    $deliveryHook = '#include "$CurrentDir:mpmissions/servahz.chernarusplus/servahz_delivery/CodeLockDelivery.c"'
+    if ($init.Contains($deliveryHook) -and $init.Contains('return new ServahzDeliveryMission();')) {
+        # Delivery mission inherits the original refresher, including its safeguards.
+        # It already includes LootRefresh.c; adding that include again duplicates classes.
+    } elseif (!$init.Contains($hook)) {
         if ([regex]::Matches($init, [regex]::Escape($originalReturn)).Count -ne 1) { throw 'Onbekend init.c. De lootverversing overschrijft geen eigen missiecode.' }
         $init = $init.Replace($originalReturn, $patchedReturn) + "`r`n" + $hook + "`r`n"
     } elseif (!$init.Contains($patchedReturn)) { throw 'Onvolledige missiehook. Gebruik -Disable en probeer opnieuw.' }
