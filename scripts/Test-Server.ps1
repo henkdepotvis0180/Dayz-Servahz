@@ -101,6 +101,22 @@ try {
     }
     Write-Host "Lootbalans 0.17: $($foodShelves.Count) food-only schappen; doelen eten/drinken=$foodGoal, munitie/magazijnen=$supplyGoal. Dit zijn configuratiedoelen, geen actuele wereldtelling."
     Write-Host "Wapendoelen: modwapens=$modWeaponGoal, vanilla-vuurwapens=$vanillaWeaponGoal. Bestaande items worden niet verwijderd."
+    $rare = $balance.RareWeaponBoost
+    $rareFactor = 1
+    if ($settings.TestSuppliesEverywhere) { $rareFactor = 2 }
+    $rareGoal = 0
+    foreach ($name in $rare.Weapons) {
+        $weapon = $extra.SelectSingleNode('/types/type[@name="' + $name + '"]')
+        if ($null -eq $weapon -or [int]$weapon.nominal -lt ([int]$rare.Nominal * $rareFactor) -or [int]$weapon.min -lt ([int]$rare.Minimum * $rareFactor) -or [int]$weapon.restock -ne [int]$rare.RestockSeconds) {
+            throw 'Zeldzame wapenvoorraad is nog niet toegepast. Voer 01-Instellen.cmd uit met gestopte server.'
+        }
+        if ($null -eq $weapon.SelectSingleNode('usage[@name="Military"]')) { throw 'Militaire koppeling voor zeldzame wapens ontbreekt.' }
+        foreach ($tier in $rare.Tiers) {
+            if ($null -eq $weapon.SelectSingleNode('value[@name="' + $tier + '"]')) { throw 'Tierkoppeling voor zeldzame wapens ontbreekt.' }
+        }
+        $rareGoal += [int]$weapon.nominal
+    }
+    Write-Host "Zeldzame wapens 0.18.7: $(@($rare.Weapons).Count) typen, wereld-doel=$rareGoal, bijvulgrens $([int]$rare.Minimum * $rareFactor) per type, restock=0, militaire tiers 1-4. Configuratiedoelen; geen actuele telling of spawn-garantie per vliegveld."
     # Only emit class names, never full RPT lines (which can contain player data).
     try {
         $rpt = Get-ChildItem -LiteralPath $layout.Profiles -Filter '*.RPT' -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1

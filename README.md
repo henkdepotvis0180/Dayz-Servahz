@@ -25,6 +25,16 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Betere wapens vaker en in alle militaire tiers (v0.18.7)
+
+Twaalf geselecteerde modwapens krijgen **3× hun oude voorraad**: G36, M16, MP7, AWM, HK416, Vector, SCAR-H, SR-25, M110, M24, T-5000 en Honey Badger. De gewone stand gaat van doel/minimum 30/24 naar **90/81 per type**; met `TestSuppliesEverywhere` van 60/48 naar **180/162**. Samen zijn dat wereldwijde doelen van 1080 of 2160 voor deze twaalf typen, niet per vliegveld. De gewone modpistolen/-wapens houden hun eerdere doelen; de vanilla-wapencap verandert niet.
+
+Alle twaalf krijgen toegang tot **Tier1 t/m Tier4**, met behoud van hun bestaande usages, waaronder `Military`. Daardoor kunnen ook militaire locaties in lagere tiers de geselecteerde Expansion-geweren leveren. Je bestaande teststand blijft de bredere usages toestaan. Bijbehorende magazijnen en munitie krijgen een doel van minimaal tweemaal het bijbehorende wapendoel, 80–100% inhoud en `restock=0`. Deze gerichte voorraad mag boven de algemene munitiecap uitkomen. De wapens zelf stonden al op `restock=0`; de verbetering zit in de hogere doelen, de bijvulgrens van 90% en de ruimere tierkeuze, niet in een negatieve of fictief kortere timer. De CE blijft bepalen wanneer vrije lootposities worden gevuld.
+
+Stop de server normaal met `#shutdown`, wacht tot het proces uit is, voer [update 0.18.7](https://github.com/henkdepotvis0180/Dayz-Servahz/releases/tag/v0.18.7) uit naast 01 en start met 02. De cumulatieve update bevat ook de CJ187-kistreparatie en persoonlijke respawn; de vereiste mods staan in `Mods.html`. Controleer in 03 de regel **Zeldzame wapens 0.18.7**. Geen 04 of 05/06 nodig; bestaande loot wordt niet verwijderd of vervangen. Laat de economie na de herstart bijvullen en controleer verse/vrije plekken op militaire locaties. Een hogere instelling garandeert niet direct een goed wapen in ieder bestaand gebouw of op één specifiek vliegveld.
+
+Saves, baseopslag, losse spullen, wachtwoorden, lokale testkeuzes, CJ187-/RaG-profielen, territoryrespawn en missiehooks blijven behouden. Lifetimes en telvlaggen veranderen niet; uitgeschakelde, crafted- en event-only modwapens worden niet door deze boost aangezet. Bijwerken vanaf 0.18.6 laat het reeds aangepaste CJ187-profiel bytegelijk. De updater maakt de gebruikelijke wereld-/profielbackup. Regressies controleren de doelen, tier- en voorraadkoppelingen, herhalen en save-/instellingenbehoud; de daadwerkelijke DayZ-spawns en vulsnelheid moeten lokaal in-game worden bevestigd.
+
 ## Groene militaire lootkisten: wapens eerst (v0.18.6)
 
 De groene CJ187-kisten krijgen een expliciete `LC_Table_Weapons_`-tabel met één vooraf ingestelde wapenset. In de vullijst staat die tabel eerst, gevolgd door een passend extra magazijn en tweemaal de bijbehorende munitie. Daarna volgen nog één voedsel-, drank- en medische keuze. De oude zeven algemene keuzes vóór het wapen vervallen bij herkenbare pakketkisten; bruine voorraadkisten houden hun bestaande inhoud. De 18 bestaande wapen/magazijn/munitie-combinaties blijven gebruikt; er komen geen nieuwe mods bij ten opzichte van 0.18.5.

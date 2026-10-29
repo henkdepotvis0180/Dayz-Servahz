@@ -197,6 +197,7 @@ try {
     if ($settings.TestSuppliesEverywhere) { Write-Host 'Testvoorraad: dubbele doelen voor wapens, munitie en bouwvoorraad op alle 17 locatiecategorieen; planken en lumber als loot.' }
     if ($settings.TestFastRestock) { Write-Host 'Testaanvulling: 2x gebouwcapaciteit, RestartSpawn=50%, sneller bijvullen en 50 m afstand. Geen wereldwipe; geen garantie per gebouw.' }
     Write-Host 'Lootbalans: lagere vanilla-/munitiedoelen, 8x houdbare voeding, food-only schappen en extra voedselruimte in winkels/huizen.'
+    Write-Host 'Zeldzame modwapens 0.18.7: 12 geselecteerde typen op 3x hun oude doel, bijvulgrens 90%, restock 0 en militaire tiers 1-4; passende voorraad schaalt mee. Geen verwijdering van bestaande loot.'
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

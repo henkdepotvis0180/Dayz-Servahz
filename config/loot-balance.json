@@ -3,6 +3,26 @@
   "VanillaFirearmCap": 12,
   "SupplyCap": 90,
   "AccessoryCap": 60,
+  "RareWeaponBoost": {
+    "Nominal": 90,
+    "Minimum": 81,
+    "RestockSeconds": 0,
+    "Tiers": ["Tier1", "Tier2", "Tier3", "Tier4"],
+    "Weapons": [
+      "Expansion_G36",
+      "Expansion_M16",
+      "Expansion_MP7",
+      "Expansion_AWM",
+      "GCGN_HK416",
+      "SNAFUVECTOR_45acp_GUN",
+      "Snafu_ScarH_Black_GUN",
+      "SNAFU_SR25_Gun",
+      "GCGN_M110_Black",
+      "SNAFUM24_GUN",
+      "SNAFUT5000_Dkmcc_GUN",
+      "SNAFUHoneyBadger_Black"
+    ]
+  },
   "VanillaFirearms": [
     "AK101",
     "AK74",

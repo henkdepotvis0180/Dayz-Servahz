@@ -337,6 +337,27 @@ function Set-SurvivalLoot {
             }
         }
     }
+    # Raise selected rare mod guns before matching their ammo/magazine floors.
+    # Ordinary vanilla caps, special-event loot and persistence lifetimes stay intact.
+    $rare = $balance.RareWeaponBoost
+    $rareFactor = 1
+    if ($TestSupplies) { $rareFactor = 2 }
+    foreach ($name in $rare.Weapons) {
+        $weapon = $extra.SelectSingleNode('/types/type[@name="' + $name + '"]')
+        if ($null -eq $weapon) { throw "Zeldzaam modwapen ontbreekt in pakket: $name." }
+        $flags = $weapon.SelectSingleNode('flags')
+        if ([int]$weapon.nominal -le 0 -or $null -eq $flags -or $flags.GetAttribute('deloot') -eq '1' -or $flags.GetAttribute('crafted') -eq '1') { continue }
+        if ($null -eq $weapon.SelectSingleNode('usage[@name="Military"]')) { continue }
+        $weapon.nominal = [string][Math]::Max([int]$weapon.nominal, [int]$rare.Nominal * $rareFactor)
+        $weapon.min = [string][Math]::Max([int]$weapon.min, [int]$rare.Minimum * $rareFactor)
+        $weapon.restock = [string][int]$rare.RestockSeconds
+        foreach ($tier in $rare.Tiers) {
+            if ($null -eq $weapon.SelectSingleNode('value[@name="' + $tier + '"]')) {
+                $node = $extra.CreateElement('value'); $node.SetAttribute('name', $tier)
+                $weapon.AppendChild($node) | Out-Null
+            }
+        }
+    }
     # Match the locations and tiers of each selected mod gun to its actual ammo
     # and magazine; quantities turn loose rounds and spare magazines into useful finds.
     foreach ($set in $balance.WeaponSets) {
@@ -352,6 +373,11 @@ function Set-SurvivalLoot {
             if ($null -eq $nominal -or [int]$nominal.InnerText -le 0) { continue }
             $floor = [int]$weapon.SelectSingleNode('nominal').InnerText * 2
             $nominal.InnerText = [string][Math]::Max([int]$nominal.InnerText, $floor)
+            if ($set.Weapon -in $rare.Weapons) {
+                $restock = $type.SelectSingleNode('restock')
+                if ($null -eq $restock) { $restock = $type.OwnerDocument.CreateElement('restock'); $type.AppendChild($restock) | Out-Null }
+                $restock.InnerText = [string][int]$rare.RestockSeconds
+            }
             $minimum = $type.SelectSingleNode('min')
             if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Max([int]$minimum.InnerText, [int]($floor * 0.8)) }
             foreach ($key in @('quantmin', 'quantmax')) {

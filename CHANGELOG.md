@@ -4,6 +4,20 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.7] — 2026-10-30
+
+### Zeldzamere modwapens vaker en op militaire locaties in alle tiers
+
+- Geeft twaalf geselecteerde wapenklassen driemaal het oude doel: Expansion G36, M16, MP7 en AWM; HK416, Vector, SCAR-H, SR-25, M110, M24, T-5000 en Honey Badger. Gewoon **90/81 doel/minimum per type**, met testvoorraad **180/162**. Wereldwijd doel voor deze selectie: 1080 of 2160. De eerdere gewone modwapens en vanilla-cap blijven behouden.
+- Breidt de geselecteerde wapens uit naar Tier1–4 met behoud van hun bestaande usages, waaronder Military. Sommige Expansion-geweren waren buiten de teststand alleen in hogere tiers beschikbaar. De bestaande teststand blijft zijn bredere locatiecategorieën gebruiken; lokale testvlaggen worden niet gewijzigd.
+- Past de boost vóór het koppelen van munitie/magazijnen toe. Passende voorraad blijft op minimaal tweemaal het wapendoel, met 80–100% inhoud; ook die voorraad krijgt `restock=0`. Deze doelvloer kan de algemene voorraadcap overschrijden. De wapentimer stond al op nul: de verbetering komt van hogere doelen, de eerdere bijvulgrens van 90% en ruimere tiers. CE-budget, vrije posities en spelerafstand blijven de feitelijke spawns bepalen.
+- Verandert geen levensduren, telvlaggen, vanilla-specialevents, bestaande items of saves. Uitgeschakelde, crafted- en event-only modwapens worden door de gerichte boost overgeslagen. Vanaf 0.18.6 blijven bestaande CJ187-profielen en locaties bytegelijk; de kistreparatie uit die versie komt cumulatief mee voor oudere installaties.
+- 03 valideert de nieuwe doelen/tiers en toont **Zeldzame wapens 0.18.7** met configuratiedoelen. Dit is geen actuele wereldtelling of garantie op loot op één vliegveld.
+
+**Bijwerken:** sluit normaal af met `#shutdown`, wacht tot het serverproces uit is en voer **`Servahz-Update-v0.18.7.cmd`** uit naast 01. De update bevat ook 0.18.6, persoonlijke respawn en eerdere wijzigingen vanaf de vaste basis; vereiste mods staan in `Mods.html`. Start met 02 en controleer 03 plus verse/vrije militaire lootplekken. Geen wipe, 04, 05/06 of codeslotlevering nodig. Bestaande spullen blijven liggen; CE vult beschikbare plekken geleidelijk aan. Saves, wachtwoorden, lokale testinstellingen, privé-basecirkel, RaG-/CJ187-profielen en de missiehooks blijven behouden; de updater maakt eerst een wereld-/profielbackup.
+
+**Controle:** gerichte tests voor gewone/testdoelen, 90%-grens, alle tiers, passende magazijnen/munitie en hun timer, behoud van lifetimes/telvlaggen, eigen personage/gear/profielen/wachtwoorden en herhaalbaarheid. Weigeren van een ontbrekende tier in de alleen-lezen controle; disabled/crafted/event-only modtypes blijven onaangeroerd. Volledige regressiesuite, officiële CE-data, cumulatieve 0.18.6→0.18.7-updater en ontbrekende-mod-foutpad; Windows PowerShell 5.1 vóór publicatie. Geen DayZ-engine uitgevoerd: aanwezigheid en compatibiliteit van de modklassen, daadwerkelijke spawns en de vulsnelheid op het vliegveld moeten in-game worden bevestigd.
+
 ## [0.18.6] — 2026-10-29
 
 ### Expliciete wapenroutes en minder algemene spullen in groene kisten
