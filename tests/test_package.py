@@ -235,7 +235,7 @@ class PackageTests(unittest.TestCase):
         legacy.parent.mkdir(parents=True)
         legacy.write_bytes(original)
         result = self.install(ok=False)
-        self.assertIn('Oude respawninstellingen', result.stderr)
+        self.assertIn('Oude respawninstellingen', ' '.join(result.stderr.split()))
         self.assertEqual(path.read_bytes(), original)
         self.assertEqual(legacy.read_bytes(), original)
         self.assertEqual(mod.read_bytes(), b'keep live mod until preflight passes')
