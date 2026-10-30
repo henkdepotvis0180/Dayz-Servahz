@@ -61,6 +61,15 @@ $body = $lines[($i+1)..($lines.Length-1)] -join [Environment]::NewLine
         self.assertEqual(len(archives), 1)
         return archives[0]
 
+    def test_portable_windows_native_path_normalizes_mixed_separators(self):
+        self.run_portable(inject=r'''
+$env:OS = 'Windows_NT'
+$expected = '\\?\C:\steam installatie\DayZServer\scripts\example.ps1'
+if ((Get-PortableNativePath 'C:/steam installatie/DayZServer/scripts/example.ps1') -cne $expected) { throw 'Wrong mixed path' }
+if ((Get-PortableNativePath '\\?\C:\steam installatie\DayZServer/scripts/example.ps1') -cne $expected) { throw 'Wrong extended path' }
+exit 0
+''')
+
     def test_portable_exact_copy_all_roots_hidden_files_long_paths_and_repeat(self):
         long_file = self.case.package / '.local' / ('nested-long-directory-' * 2)
         for _ in range(6):

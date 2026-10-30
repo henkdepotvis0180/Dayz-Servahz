@@ -25,7 +25,12 @@ function Stop-Portable {
 
 function Get-PortableNativePath {
     param([string]$Path)
-    if ($env:OS -eq 'Windows_NT' -and !$Path.StartsWith('\\?\')) { return '\\?\' + $Path }
+    if ($env:OS -eq 'Windows_NT') {
+        # Extended Win32 paths do not normalize forward slashes for us.
+        $native = $Path.Replace('/', '\')
+        if (!$native.StartsWith('\\?\')) { return '\\?\' + $native }
+        return $native
+    }
     return $Path
 }
 
