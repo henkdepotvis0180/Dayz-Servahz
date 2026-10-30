@@ -25,6 +25,31 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Complete kopie op een portable SSD en later terugzetten (v0.18.8)
+
+Download de zelfstandige [10-Portable-kopie.cmd](https://raw.githubusercontent.com/henkdepotvis0180/Dayz-Servahz/v0.18.8/10-Portable-kopie.cmd) en zet hem **naast 01** in je bestaande pakketmap. Alleen dit bestand is voldoende; je hoeft voor de kopie geen update/installatie uit te voeren. Het zit ook in de gewone cumulatieve update 0.18.8, die de kopieeractie niet automatisch start.
+
+1. Sluit de server normaal af met `#shutdown` en wacht tot het serverproces uit is. Sluit daarna DayZ, de launcher en Steam volledig. Laat tijdens de kopie geen andere instel-/updatescripts draaien.
+2. Sluit de SSD als **G:** aan en dubbelklik op 10. Het script leest de server- en Workshop-paden uit je eigen `config/server.local.json`; de pakketmap is de map naast 01. Er worden geen paden geraden en je actieve configuratie blijft bytegelijk.
+3. Wacht op **KLAAR**. Je complete kopie staat onder **`G:\Dayzserver\Kopie-<datum>-<nummer>`**. Verwijder de SSD daarna veilig via Windows. Elke keer uitvoeren maakt een nieuwe kopie; bestaande kopieën worden niet gewist.
+
+```text
+G:\Dayzserver\Kopie-<datum>-<nummer>\
+  Server\          volledige DayZServer-map, met wereldsave, profielen, mods en keys
+  Pakket\          volledige pakketmap, met server.local.json en verborgen .local/backups
+  Workshop\        volledige ingestelde DayZ-Workshop-map 221100
+  Backup-info.json bestandslijsten, SHA256-hashes en oorspronkelijke paden
+  Terugzetten.cmd  zelfstandige terugzetknop
+```
+
+De kopie omvat alle bestanden en lege/verborgen mappen in deze drie bronmappen. Het is een gecontroleerde kopie van bestandsinhoud, geen schijfimage of Windows-/Steam-clientinstallatie. Het script controleert beschikbare ruimte, hashes en mappenlijsten en controleert de bronnen na het kopiëren nogmaals. Een tijdens de kopie gewijzigde bron, lees-/schrijffout, junction/symlink, overlappend doel of ontbrekende wereldsave wordt geweigerd. Alleen na de controles krijgt de map de definitieve naam `Kopie-...`; een mislukte kopie kan als `.kopie-bezig-...` blijven staan. Het script wijzigt geen actieve paden en start, stopt of wist geen server/loot.
+
+**Later terugzetten:** sluit server, DayZ, launchers en Steam. Open de gewenste `Kopie-...`-map op de SSD en dubbelklik daar op **`Terugzetten.cmd`**. Een andere SSD-letter is geen probleem voor het lezen van de kopie; de oorspronkelijke doel-schijven/paden moeten wel bereikbaar zijn. De knop controleert de kopie, bereidt alle drie mappen naast hun oorspronkelijke locaties voor en controleert die voorbereide bestanden vóór het omschakelen. Het volledige pakket inclusief oorspronkelijke configuratie en wachtwoorden komt terug; er wordt niet met een latere wereld/modversie samengevoegd. Start daarna met 02 in de oorspronkelijke pakketmap en controleer met 03/08 en in-game.
+
+Terugzetten vervangt de actuele toestand door de gekozen kopie. De dan aanwezige server-, pakket- en Workshop-mappen blijven per map volledig bewaard als **`.voor-terugzetten-<datum>-<nummer>`** naast hun oorspronkelijke locatie. Er moet dus ook op de oorspronkelijke schijven genoeg vrije ruimte zijn voor de terugzetkopieën. Bij een gewone fout tijdens omschakelen probeert het script de al omgeschakelde mappen terug te draaien; er worden geen oude versies verwijderd. Onderbreek het terugzetten niet. Bij stroomuitval of een niet afgeronde rollback alle `.voor-terugzetten-...`-/`.terugzetten-bezig-...`-mappen bewaren en de server nog niet starten. Een terugzetrapport wordt zo mogelijk bij de kopie opgeslagen.
+
+Deze kopie is bedoeld om te bewaren/vervoeren en terug te zetten. Hij wordt niet automatisch een server die direct vanaf de SSD draait en verplaatst geen Steam-bibliotheekregistratie of firewallregels. Hij bevat wachtwoorden en privé-spelers-/basegegevens: houd de SSD en de kopieën privé. Voor een andere kopieschijf kun je vanuit een opdrachtvenster naast 01 bijvoorbeeld `10-Portable-kopie.cmd "H:\Dayzserver"` gebruiken. Verander bestanden in de kopie niet handmatig; de hashcontrole zal die veranderingen weigeren bij terugzetten.
+
 ## Betere wapens vaker en in alle militaire tiers (v0.18.7)
 
 Twaalf geselecteerde modwapens krijgen **3× hun oude voorraad**: G36, M16, MP7, AWM, HK416, Vector, SCAR-H, SR-25, M110, M24, T-5000 en Honey Badger. De gewone stand gaat van doel/minimum 30/24 naar **90/81 per type**; met `TestSuppliesEverywhere` van 60/48 naar **180/162**. Samen zijn dat wereldwijde doelen van 1080 of 2160 voor deze twaalf typen, niet per vliegveld. De gewone modpistolen/-wapens houden hun eerdere doelen; de vanilla-wapencap verandert niet.
