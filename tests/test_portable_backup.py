@@ -205,12 +205,18 @@ if (!$script:moveFailed -and $Source -like '*.terugzetten-bezig-*' -and $Destina
     @unittest.skipUnless(os.name == 'nt', 'Native CMD requires Windows')
     def test_portable_native_cmd_backup_and_restore(self):
         command = self.case.package / '10-Portable-kopie.cmd'
-        result = subprocess.run(['cmd.exe', '/d', '/c', command.name, str(self.ssd)], cwd=self.case.package,
-                                input='', capture_output=True, text=True, timeout=90)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        archive = next(self.ssd.glob('Kopie-*'))
-        self.world.write_bytes(b'PRIVATE-newer-native-world')
-        result = subprocess.run(['cmd.exe', '/d', '/c', 'Terugzetten.cmd'], cwd=archive,
-                                input='', capture_output=True, text=True, timeout=90)
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual(self.world.read_bytes(), b'PRIVATE-original-world-and-base')
+        source = command.read_bytes().replace(b'\r\n', b'\n')
+        # Raw downloads use LF even when a Git checkout on Windows uses CRLF.
+        for name, newline in [('raw LF', b'\n'), ('Windows CRLF', b'\r\n')]:
+            with self.subTest(newlines=name):
+                command.write_bytes(source.replace(b'\n', newline))
+                previous_archives = set(self.ssd.glob('Kopie-*'))
+                result = subprocess.run(['cmd.exe', '/d', '/c', command.name, str(self.ssd)], cwd=self.case.package,
+                                        input='', capture_output=True, text=True, timeout=90)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                archive, = set(self.ssd.glob('Kopie-*')) - previous_archives
+                self.world.write_bytes(b'PRIVATE-newer-native-world')
+                result = subprocess.run(['cmd.exe', '/d', '/c', 'Terugzetten.cmd'], cwd=archive,
+                                        input='', capture_output=True, text=True, timeout=90)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertEqual(self.world.read_bytes(), b'PRIVATE-original-world-and-base')
