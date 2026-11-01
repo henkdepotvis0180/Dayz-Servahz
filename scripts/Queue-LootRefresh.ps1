@@ -42,7 +42,11 @@ try {
     if ($Radius -lt 500 -or $Radius -gt 5000) { throw 'Beschermingsradius moet tussen 500 en 5000 meter liggen.' }
     $extraPath = Join-Path $root '.local/loot-refresh-extra-areas.json'
     $extraAreas = @()
-    if (Test-Path -LiteralPath $extraPath) { $extraAreas = @(Get-Content -LiteralPath $extraPath -Raw | ConvertFrom-Json) }
+    if (Test-Path -LiteralPath $extraPath) {
+        # PS 5.1 emits a JSON array as one pipeline item; unwrap via assignment.
+        $loadedAreas = Get-Content -LiteralPath $extraPath -Raw | ConvertFrom-Json
+        $extraAreas = @($loadedAreas)
+    }
     if ($ProtectTown) {
         # Derive the public town centre from the existing public patrol route;
         # never embed a player's exact base position in public source.
