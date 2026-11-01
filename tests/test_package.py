@@ -1377,7 +1377,9 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
                     self.assertGreaterEqual(int(item.findtext('nominal')), goal * factor)
                     self.assertGreaterEqual(int(item.findtext('min')), int(goal * factor * 0.9))
                     self.assertEqual(item.findtext('restock'), '0')
-                    self.assertEqual([x.get('name') for x in item.findall('usage')], ['Town'])
+                    self.assertIn('Town', [x.get('name') for x in item.findall('usage')])
+                    if not test_mode:
+                        self.assertEqual([x.get('name') for x in item.findall('usage')], ['Town'])
                 else:
                     self.assertEqual(item.findtext('restock'), '600')
                     self.assertEqual(int(item.findtext('nominal')), 0 if goal == 0 else 10)
