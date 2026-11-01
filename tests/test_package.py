@@ -1083,9 +1083,9 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
                   'Police', 'Prison', 'School', 'SeasonalEvent', 'Town', 'Village'}
         self.run_ps('Install-Server.ps1', '-ServerPath', self.server, '-WorkshopPath', self.workshop, '-TestMode')
         generated = ET.parse(self.mission / 'db/types.xml')
-        for name, amount in [('CivilRifle', 64), ('Ammo_Example', 160),
+        for name, amount in [('CivilRifle', 64), ('Ammo_Example', 480),
                              ('TestMilitaryRifle', 96),
-                             ('AmmoBox_Example', 80), ('Mag_Example', 96),
+                             ('AmmoBox_Example', 240), ('Mag_Example', 240),
                              ('WoodenPlank', 160), ('NailBox', int(tree.findtext("type[@name='NailBox']/nominal")) * 16)]:
             item = generated.find(f"type[@name='{name}']")
             self.assertEqual(int(item.findtext('nominal')), amount, name)
