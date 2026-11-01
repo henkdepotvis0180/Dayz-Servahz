@@ -68,6 +68,7 @@ try {
     Write-Host ('Locatielijst: ' + (Join-Path $layout.Profiles 'CJ_LootChests/Servahz-Lootkisten.csv'))
     $balance = Get-Content -LiteralPath (Join-Path (Split-Path $PSScriptRoot -Parent) 'config/loot-balance.json') -Raw | ConvertFrom-Json
     foreach ($set in $balance.WeaponSets) {
+        if ($settings.RareWeaponsOnly -and $set.Weapon -notin $balance.RareWeaponBoost.Weapons) { continue }
         $weapon = $extra.SelectSingleNode('/types/type[@name="' + $set.Weapon + '"]')
         if ($null -eq $weapon -or [int]$weapon.nominal -le 0) { throw "Wapenvoorraad ontbreekt: $($set.Weapon). Voer 01-Instellen.cmd uit." }
         if ($set.Magazine) {
@@ -83,6 +84,15 @@ try {
                 throw "Bijpassende voorraad is niet toegepast: $name. Voer 01-Instellen.cmd uit."
             }
         }
+    }
+    if ($settings.RareWeaponsOnly) {
+        foreach ($name in (Get-ObsoleteFirearms $balance)) {
+            foreach ($document in @($types, $extra)) {
+                $node = $document.SelectSingleNode('/types/type[@name="' + $name + '"]')
+                if ($null -ne $node -and ([int]$node.nominal -ne 0 -or [int]$node.min -ne 0)) { throw 'Niet-geselecteerde wapenloot is nog actief. Voer 01 uit.' }
+            }
+        }
+        Write-Host 'Wapenselectie 0.18.11: alleen 12 geselecteerde modwapens als CE-loot; inventaris/opslag worden niet gewist. Eigen kistinhoud en AI-uitrusting vallen buiten deze selectie.'
     }
     $obsolete = $extra.SelectSingleNode('/types/type[@name="GCGN_Ammo_762x51"]')
     if ($null -ne $obsolete -and [int]$obsolete.nominal -ne 0) { throw 'Oude 7.62x51-loot is nog actief; de geselecteerde SNAFU-geweren gebruiken .308 Winchester.' }
@@ -183,6 +193,9 @@ try {
     $refreshReport = Join-Path $layout.Profiles 'Servahz/LootRefresh-report.json'
     if (Test-Path -LiteralPath $refreshRequest) {
         $pending = Get-Content -LiteralPath $refreshRequest -Raw | ConvertFrom-Json
+        if ($pending.PSObject.Properties.Name -contains 'ExtraProtectedAreas' -and @($pending.ExtraProtectedAreas).Count -gt 0) {
+            Write-Host ('Extra beschermde gebieden bij opruiming: ' + @($pending.ExtraProtectedAreas).Count + '; op alle hoogtes.')
+        }
         Write-Host "Beschermde cirkel: X=$($pending.CenterX) Z=$($pending.CenterZ), straal $($pending.Radius) meter, ongeacht hoogte."
         $report = $null
         if (Test-Path -LiteralPath $refreshReport) {

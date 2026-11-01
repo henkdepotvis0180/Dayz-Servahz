@@ -74,6 +74,14 @@ try {
     Write-Utf8File $localConfig ($settings | ConvertTo-Json -Depth 5)
     $settings = Read-ServerSettings
     $layout = Get-ServerLayout $settings
+    $pendingRefreshPath = Join-Path $layout.Profiles 'Servahz/LootRefresh-request.json'
+    if ($settings.RareWeaponsOnly -and (Test-Path -LiteralPath $pendingRefreshPath)) {
+        $pendingRefresh = Get-Content -LiteralPath $pendingRefreshPath -Raw | ConvertFrom-Json
+        if ($pendingRefresh.RequestId -notmatch '^[a-f0-9]{32}$') { throw 'Onbekende lootverversing; eerst controleren voordat selectie wordt gewijzigd.' }
+        if (!(Test-Path -LiteralPath (Join-Path $layout.Profiles ('Servahz/LootRefresh-' + $pendingRefresh.RequestId + '.started')))) {
+            throw 'Een oude lootverversing staat nog klaar. Annuleer die eerst met scripts/Queue-LootRefresh.ps1 -Disable, en voer de update daarna opnieuw uit.'
+        }
+    }
     $baseline = Join-Path $layout.Server 'mpmissions/dayzOffline.chernarusplus'
     foreach ($file in @('DayZServer_x64.exe', 'mpmissions/dayzOffline.chernarusplus/init.c',
             'mpmissions/dayzOffline.chernarusplus/db/types.xml',
@@ -102,11 +110,12 @@ try {
     if (Test-Path -LiteralPath $chestPath) {
         $chestConfig = Get-Content -LiteralPath $chestPath -Raw | ConvertFrom-Json
     } else {
-        $newChestConfig = New-LootChestConfig -PositionsPath (Join-Path $baseline 'mapgrouppos.xml') -GroupsPath (Join-Path $baseline 'mapgroupproto.xml')
+        $newChestConfig = New-LootChestConfig -PositionsPath (Join-Path $baseline 'mapgrouppos.xml') -GroupsPath (Join-Path $baseline 'mapgroupproto.xml') -RareOnly:$settings.RareWeaponsOnly
         $chestConfig = $newChestConfig
     }
     $chestCount = Assert-LootChestConfig $chestConfig
     $chestUpdates = Update-MilitaryLootChestConfig $chestConfig
+    if ($settings.RareWeaponsOnly) { $chestUpdates += Update-RareLootChestConfig $chestConfig }
     if ($chestUpdates -gt 0) {
         $newChestConfig = $chestConfig
         $null = Assert-LootChestConfig $chestConfig
@@ -171,6 +180,7 @@ try {
         Set-TestSupplies (Join-Path $layout.Mission 'servahz_ce/extra_types.xml')
     }
     Set-SurvivalLoot -Path (Join-Path $layout.Mission 'db/types.xml') -ExtraPath (Join-Path $layout.Mission 'servahz_ce/extra_types.xml') -TestSupplies $settings.TestSuppliesEverywhere
+    if ($settings.RareWeaponsOnly) { Set-RareWorldLoot -Path (Join-Path $layout.Mission 'db/types.xml') -ExtraPath (Join-Path $layout.Mission 'servahz_ce/extra_types.xml') }
     Set-FoodShelves -Path (Join-Path $layout.Mission 'mapgroupproto.xml')
     New-Item -ItemType Directory -Path $layout.Profiles -Force | Out-Null
     # Seed RaG defaults once. Existing server preferences and unknown fields stay intact.

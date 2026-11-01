@@ -25,6 +25,23 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Alleen de geselecteerde wapens als loot (v0.18.11)
+
+Standaard worden alleen de twaalf geselecteerde modwapens als wereldloot aangeboden: **G36, M16, HK416, Vector, SCAR-H, SR-25, M110, MP7, AWM, M24, T-5000 en Honey Badger**, met hun passende magazijnen en munitie. Ruime doelen, alle tiers en ook dorps-/stads-/politie-/jacht-/farm-/industriële locaties maken ze gewone vondsten binnen deze pool. Andere bekende vuurwapens en niet-passende voorraad krijgen nuldoelen; hun persistentiedeclaraties blijven bestaan en opgeslagen spullen worden niet gewist. Wereldtelling en vrije lootpunten blijven bepalen wat je daadwerkelijk vindt. Geselecteerde wapens en hun ammo delen locatiecategorieën; een exact passend stapeltje op elke vloer is niet gegarandeerd.
+
+Verse militaire pakketkisten gebruiken de selectie. Bestaande herkenbare pakketkisten worden met profielbackup omgezet, met behoud van locaties. Eigen aangepaste inhoud blijft behouden; AI draagt zijn eigen loadouts en kan nog andere wapens hebben. Bestaande losse wapens veranderen niet onmiddellijk door de update. `RareWeaponsOnly` is standaard `true` wanneer de optie ontbreekt; expliciet `false` in je eigen server.local.json behoudt de eerdere volledige pool voor toekomstige spawns. Dat herstelt geen verwijderde loot.
+
+**Update:** normaal afsluiten, **Servahz-Update-v0.18.11.cmd** naast 01 uitvoeren, starten met 02. Geen nieuwe mods, automatische wipe of scan. Je bestaande personage, base en opgeslagen wapens blijven behouden; de updater maakt eerst een wereld-/profielbackup.
+
+**Gericht oude wapens opruimen met behoud van Gorka:**
+
+1. Stop normaal. Voer vanuit een opdrachtvenster naast 01 uit: `05-Loot-proefscan.cmd -ObsoleteWeaponsOnly -ProtectTown Gorka`.
+2. Start met 02 en laat iedereen uitgelogd. Wacht tot 03 **PreviewCompleted** meldt. Controleer de voorbeelden en de melding van een extra beschermd gebied.
+3. Stop normaal en voer uit: `06-Loot-verversen.cmd -ObsoleteWeaponsOnly -ProtectTown Gorka`.
+4. Start met 02; blijf uitgelogd tot 03 **ApplyCompleted** meldt. Laat CE daarna aanvullen.
+
+De gerichte scan raakt alleen bekende niet-geselecteerde vuurwapens. Gorka krijgt een extra ruime cirkel van 1500 meter rond de publieke dorpsroute, naast je bestaande privé-basecirkel; alle hoogtes en attachments worden gecontroleerd. Wapens in inventaris/cargo/opslag blijven overal behouden. Ongewenste losse wapens buiten deze gebieden kunnen verdwijnen, ook als je ze zelf gedropt hebt; hun attachments verdwijnen dan mee. Geselecteerde wapens, losse ammo, eten en bouwspullen worden door deze gerichte scan niet verwijderd. Elke stap maakt een wereldbackup. Bescherming geldt voor de opruiming; normale levensduren blijven gelden en toekomstige spawns gebruiken de globale nieuwe selectie, ook in Gorka. De brede oude 05/06-actie zonder `-ObsoleteWeaponsOnly` heeft een ruimere doel-lijst en is hier niet bedoeld. Een oude nog niet gestarte scan moet eerst met `scripts/Queue-LootRefresh.ps1 -Disable` worden geannuleerd voordat je deze update uitvoert.
+
 ## Ruimere munitie en een staminabalk zonder gewichtstraf (v0.18.10)
 
 Actieve losse munitie krijgt wereldwijd een doelvloer van **240 per type**, munitiedozen en magazijnen **120**. Met de bestaande testvoorraad worden die aantallen verdubbeld. Bijvullen begint vanaf 90% van deze vloer en de restock-wachttijd is nul. Bestaande locatie-/tierregels blijven behouden: ook burgerlocaties krijgen meer passende voorraad. Disabled, crafted en event-only voorraad wordt niet aangezet. Voor de twaalf geselecteerde zeldzame wapens stijgt het doel van 90 naar **120** (test: 240), met minimaal viermaal het wapendoel aan passende losse munitie en tweemaal aan magazijnen. Dit zijn wereldwijde doelen: beschikbare lootplekken en de economie bepalen de werkelijke spawns. Er wordt niets gewist en kisten krijgen geen andere inhoud.

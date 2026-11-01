@@ -1,5 +1,13 @@
 #include "$CurrentDir:mpmissions/servahz.chernarusplus/servahz_refresh/Policy.c"
 
+class ServahzProtectedArea
+{
+    string Name;
+    float CenterX;
+    float CenterZ;
+    float Radius;
+}
+
 class ServahzLootRefreshRequest
 {
     int Schema;
@@ -12,6 +20,7 @@ class ServahzLootRefreshRequest
     string PolicyHash;
     string BackupPath;
     ref array<string> AllowedTypes;
+    ref array<ref ServahzProtectedArea> ExtraProtectedAreas;
 }
 
 class ServahzLootRefreshReport
@@ -28,6 +37,7 @@ class ServahzLootRefreshReport
     int Deleted;
     int Protected;
     string Message;
+    ref array<ref ServahzProtectedArea> ExtraProtectedAreas;
     ref array<string> Samples = new array<string>;
 }
 
@@ -66,6 +76,21 @@ class ServahzLootRefresh
         return false;
     }
 
+    bool PositionProtected(vector position)
+    {
+        if (!ServahzLootRefreshPolicy.MayDelete(position, m_Request.CenterX, m_Request.CenterZ, m_Request.Radius, true, false, false))
+            return true;
+        if (m_Request.ExtraProtectedAreas)
+        {
+            foreach (ServahzProtectedArea area : m_Request.ExtraProtectedAreas)
+            {
+                if (!ServahzLootRefreshPolicy.MayDelete(position, area.CenterX, area.CenterZ, area.Radius, true, false, false))
+                    return true;
+            }
+        }
+        return false;
+    }
+
     void Begin()
     {
         if (!GetCEApi())
@@ -88,6 +113,16 @@ class ServahzLootRefresh
             return;
         if (m_Request.RequestId.Length() != 32 || m_Request.PolicyHash.Length() != 64 || !m_Request.AllowedTypes || m_Request.AllowedTypes.Count() == 0 || m_Request.BackupPath == "")
             return;
+        if (m_Request.ExtraProtectedAreas)
+        {
+            if (m_Request.ExtraProtectedAreas.Count() > 8)
+                return;
+            foreach (ServahzProtectedArea protectedArea : m_Request.ExtraProtectedAreas)
+            {
+                if (!protectedArea || protectedArea.CenterX <= 0 || protectedArea.CenterX >= 15360 || protectedArea.CenterZ <= 0 || protectedArea.CenterZ >= 15360 || protectedArea.Radius < 500 || protectedArea.Radius > 5000)
+                    return;
+            }
+        }
         string validHex = "0123456789abcdef";
         for (int index = 0; index < m_Request.RequestId.Length(); index++)
         {
@@ -101,6 +136,21 @@ class ServahzLootRefresh
                 return;
             if (!preview || preview.Status != "PreviewCompleted" || !preview.PreviewOnly || preview.RequestId != m_Request.PreviewRequestId || preview.PolicyHash != m_Request.PolicyHash)
                 return;
+            int requestedAreas = 0;
+            int previewAreas = 0;
+            if (m_Request.ExtraProtectedAreas)
+                requestedAreas = m_Request.ExtraProtectedAreas.Count();
+            if (preview.ExtraProtectedAreas)
+                previewAreas = preview.ExtraProtectedAreas.Count();
+            if (requestedAreas != previewAreas)
+                return;
+            for (int areaIndex = 0; areaIndex < requestedAreas; areaIndex++)
+            {
+                ServahzProtectedArea currentArea = m_Request.ExtraProtectedAreas[areaIndex];
+                ServahzProtectedArea oldArea = preview.ExtraProtectedAreas[areaIndex];
+                if (!oldArea || currentArea.CenterX != oldArea.CenterX || currentArea.CenterZ != oldArea.CenterZ || currentArea.Radius != oldArea.Radius)
+                    return;
+            }
             if (preview.CenterX != m_Request.CenterX || preview.CenterZ != m_Request.CenterZ || preview.Radius != m_Request.Radius)
                 return;
         }
@@ -121,6 +171,7 @@ class ServahzLootRefresh
         m_Report.CenterX = m_Request.CenterX;
         m_Report.CenterZ = m_Request.CenterZ;
         m_Report.Radius = m_Request.Radius;
+        m_Report.ExtraProtectedAreas = m_Request.ExtraProtectedAreas;
         foreach (string typeName : m_Request.AllowedTypes)
             m_Allowed.Insert(typeName, true);
         if (!SaveReport("Running", "Scanning in batches. Do not join the server."))
@@ -173,13 +224,13 @@ class ServahzLootRefresh
                 }
                 // Keep the whole root if an attachment lies across the protected
                 // boundary, even when the root itself is just outside the circle.
-                if (descendant && !ServahzLootRefreshPolicy.MayDelete(descendant.GetPosition(), m_Request.CenterX, m_Request.CenterZ, m_Request.Radius, true, false, false))
+                if (descendant && PositionProtected(descendant.GetPosition()))
                 {
                     hasStorage = true;
                     break;
                 }
             }
-            if (!ServahzLootRefreshPolicy.MayDelete(item.GetPosition(), m_Request.CenterX, m_Request.CenterZ, m_Request.Radius, true, hasParent, hasStorage))
+            if (PositionProtected(item.GetPosition()) || !ServahzLootRefreshPolicy.MayDelete(item.GetPosition(), m_Request.CenterX, m_Request.CenterZ, m_Request.Radius, true, hasParent, hasStorage))
             {
                 m_Report.Protected++;
                 continue;

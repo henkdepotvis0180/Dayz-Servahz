@@ -40,7 +40,7 @@ function Assert-LootChestConfig {
 }
 
 function New-LootChestConfig {
-    param([string]$PositionsPath, [string]$GroupsPath)
+    param([string]$PositionsPath, [string]$GroupsPath, [switch]$RareOnly)
     [xml]$positions = Get-Content -LiteralPath $PositionsPath -Raw
     [xml]$groups = Get-Content -LiteralPath $GroupsPath -Raw
     $recipe = Get-Content -LiteralPath (Join-Path $script:PackageRoot 'config/loot-chests.json') -Raw | ConvertFrom-Json
@@ -105,6 +105,7 @@ function New-LootChestConfig {
     }
     $selected = @(); $locations = @(); $definitions = @(); $weaponTables = @(); $weaponIndex = 0
     $weaponSets = @($balance.WeaponSets | Where-Object { $_.Magazine })
+    if ($RareOnly) { $weaponSets = @($weaponSets | Where-Object { $_.Weapon -in $balance.RareWeaponBoost.Weapons }) }
     foreach ($candidate in @($cells.Values | Sort-Object CellZ, CellX)) {
         $near = $false
         foreach ($previous in $selected) {

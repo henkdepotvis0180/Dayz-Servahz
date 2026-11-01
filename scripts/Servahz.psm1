@@ -3,6 +3,7 @@ $ErrorActionPreference = 'Stop'
 $script:PackageRoot = Split-Path $PSScriptRoot -Parent
 $script:MissionName = 'servahz.chernarusplus'
 . (Join-Path $PSScriptRoot 'LootChests.ps1')
+. (Join-Path $PSScriptRoot 'RareLoot.ps1')
 
 function Write-Utf8File {
     param([string]$Path, [string]$Text)
@@ -15,6 +16,10 @@ function Read-ServerSettings {
     param([string]$Path = (Join-Path $script:PackageRoot 'config/server.local.json'))
     if (!(Test-Path -LiteralPath $Path)) { throw 'Voer eerst 01-Instellen.cmd uit.' }
     $s = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($s.PSObject.Properties.Name -notcontains 'RareWeaponsOnly') {
+        $s | Add-Member -MemberType NoteProperty -Name RareWeaponsOnly -Value $true
+    }
+    if ($s.RareWeaponsOnly -isnot [bool]) { throw 'RareWeaponsOnly moet true of false zijn.' }
     if ($s.PSObject.Properties.Name -notcontains 'TestFastRestock') {
         $s | Add-Member -MemberType NoteProperty -Name TestFastRestock -Value $false
     }

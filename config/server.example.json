@@ -14,5 +14,6 @@
   "DayAcceleration": 6,
   "NightAcceleration": 4,
   "TestSuppliesEverywhere": false,
+  "RareWeaponsOnly": true,
   "TestFastRestock": false
 }

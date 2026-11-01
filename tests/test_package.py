@@ -30,6 +30,11 @@ class PackageTests(unittest.TestCase):
         self.package = self.root / "package with spaces"
         for name in ("scripts", "config"):
             shutil.copytree(ROOT / name, self.package / name)
+        # Historical balance tests explicitly exercise the configurable full pool.
+        example = self.package / 'config/server.example.json'
+        data = json.loads(example.read_text())
+        data['RareWeaponsOnly'] = False
+        example.write_text(json.dumps(data))
         self.server = self.root / "DayZ Server"
         self.baseline = self.server / "mpmissions/dayzOffline.chernarusplus"
         (self.baseline / "db").mkdir(parents=True)
