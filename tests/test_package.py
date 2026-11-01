@@ -331,7 +331,7 @@ class PackageTests(unittest.TestCase):
         stamina.update(sprintStaminaModifierErc=1.0, sprintStaminaModifierCro=1.0,
                        meleeStaminaModifier=1.0, obstacleTraversalStaminaModifier=1.0,
                        holdBreathStaminaModifier=1.0, staminaMax=100.0,
-                       staminaWeightLimitThreshold=6000.0, CustomSentinel=17)
+                       staminaWeightLimitThreshold=6000.0, staminaKgToStaminaPercentPenalty=1.75, CustomSentinel=17)
         path.write_text(json.dumps(gameplay))
         baseline = path.read_bytes()
         self.install()
@@ -341,7 +341,7 @@ class PackageTests(unittest.TestCase):
         self.run_ps('Install-Server.ps1', '-TestMode')
         current = json.loads((self.mission / 'cfggameplay.json').read_text())
         expected = dict(gameplay['PlayerData'])
-        expected['StaminaData'] = dict(stamina, sprintStaminaModifierErc=0.25)
+        expected['StaminaData'] = dict(stamina, sprintStaminaModifierErc=0.25, staminaKgToStaminaPercentPenalty=0.0)
         self.assertEqual(current['PlayerData'], expected)
         self.assertEqual(path.read_bytes(), baseline)
         self.assertEqual(world.read_bytes(), b'keep my save')
@@ -418,14 +418,14 @@ class PackageTests(unittest.TestCase):
         extra_path = self.mission / 'servahz_ce/extra_types.xml'
         first = extra_path.read_bytes()
         extra = ET.parse(extra_path)
-        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '180')
-        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '360')
+        self.assertEqual(extra.findtext("type[@name='Expansion_MP7']/nominal"), '240')
+        self.assertEqual(extra.findtext("type[@name='Mag_Expansion_MP7_40Rnd']/nominal"), '480')
         self.assertEqual(extra.findtext("type[@name='MMG_mmps_bag_black']/nominal"), '150')
         self.assertEqual(extra.findtext("type[@name='BF_DoorBarricadeKit']/nominal"), '80')
-        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '180')
-        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '360')
-        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '360')
-        self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '180')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_Black_GUN']/nominal"), '240')
+        self.assertEqual(extra.findtext("type[@name='Snafu_ScarH_25RND_Mag_BK']/nominal"), '480')
+        self.assertEqual(extra.findtext("type[@name='SNAFU_Ammo_338']/nominal"), '960')
+        self.assertEqual(extra.findtext("type[@name='Expansion_G36']/nominal"), '240')
         for node in extra.findall('type'):
             if int(node.findtext('nominal')) == 0:
                 continue
@@ -1345,6 +1345,45 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         result = self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False)
         self.assertIn('SNAFU_Ammo_338',result.stderr)
 
+    def test_general_ammo_floors_preserve_locations_and_exclusions(self):
+        baseline = self.baseline / 'db/types.xml'
+        tree = ET.parse(baseline)
+        cases = [('Ammo_22', 240), ('AmmoBox_22_50Rnd', 120), ('Mag_MKII_10Rnd', 120),
+                 ('Ammo_Disabled', 0), ('Ammo_Crafted', 2), ('Ammo_Event', 2)]
+        for name, goal in cases:
+            existing = tree.find(f"type[@name='{name}']")
+            if existing is not None:
+                tree.getroot().remove(existing)
+            item = ET.SubElement(tree.getroot(), 'type', name=name)
+            for field, value in [('nominal', 0 if goal == 0 else 2), ('min', 0), ('restock', 600),
+                                 ('lifetime', 14400), ('quantmin', 10), ('quantmax', 30)]:
+                ET.SubElement(item, field).text = str(value)
+            ET.SubElement(item, 'flags', crafted='1' if name.endswith('Crafted') else '0',
+                          deloot='1' if name.endswith('Event') else '0')
+            ET.SubElement(item, 'usage', name='Town')
+            ET.SubElement(item, 'value', name='Tier1')
+        tree.write(baseline)
+        before = baseline.read_bytes()
+        for test_mode, factor in [(False, 1), (True, 2)]:
+            self.install()
+            settings = json.loads(self.local.read_text())
+            settings.update(TestSuppliesEverywhere=test_mode, TestMilitaryEverywhere=False, TestFastRestock=False)
+            self.local.write_text(json.dumps(settings))
+            self.install()
+            generated = ET.parse(self.mission / 'db/types.xml')
+            for name, goal in cases:
+                item = generated.find(f"type[@name='{name}']")
+                if goal > 2:
+                    self.assertGreaterEqual(int(item.findtext('nominal')), goal * factor)
+                    self.assertGreaterEqual(int(item.findtext('min')), int(goal * factor * 0.9))
+                    self.assertEqual(item.findtext('restock'), '0')
+                    self.assertEqual([x.get('name') for x in item.findall('usage')], ['Town'])
+                else:
+                    self.assertEqual(item.findtext('restock'), '600')
+                    self.assertEqual(int(item.findtext('nominal')), 0 if goal == 0 else 10)
+                self.assertEqual(item.findtext('lifetime'), '14400')
+        self.assertEqual(baseline.read_bytes(), before)
+
     def test_rare_weapon_boost_matching_supplies_tiers_repeat_and_save_preservation(self):
         balance = json.loads((ROOT / 'config/loot-balance.json').read_text())
         rare = balance['RareWeaponBoost']
@@ -1382,8 +1421,8 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
             for name in rare['Weapons']:
                 gun = extra.find(f"type[@name='{name}']")
                 before = original.find(f"type[@name='{name}']")
-                self.assertEqual(int(gun.findtext('nominal')), 90 * factor)
-                self.assertEqual(int(gun.findtext('min')), 81 * factor)
+                self.assertEqual(int(gun.findtext('nominal')), 120 * factor)
+                self.assertEqual(int(gun.findtext('min')), 108 * factor)
                 self.assertEqual(gun.findtext('restock'), '0')
                 self.assertEqual({n.get('name') for n in gun.findall('value')}, {'Tier1', 'Tier2', 'Tier3', 'Tier4'})
                 self.assertIn('Military', {n.get('name') for n in gun.findall('usage')})
@@ -1398,15 +1437,15 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
                     if supply is None:
                         supply = extra.find(f"type[@name='{supply_name}']")
                     self.assertIsNotNone(supply)
-                    self.assertGreaterEqual(int(supply.findtext('nominal')), 180 * factor)
-                    self.assertGreaterEqual(int(supply.findtext('min')), 144 * factor)
+                    self.assertGreaterEqual(int(supply.findtext('nominal')), 240 * factor)
+                    self.assertGreaterEqual(int(supply.findtext('min')), 192 * factor)
                     self.assertEqual(supply.findtext('restock'), '0')
                     self.assertEqual(supply.findtext('quantmin'), '80')
                     self.assertEqual(supply.findtext('quantmax'), '100')
             self.assertEqual(int(extra.findtext("type[@name='Expansion_M9']/nominal")), 30 * factor)
             result = self.run_ps('Test-Server.ps1', '-StaticOnly')
-            self.assertIn('Zeldzame wapens 0.18.7: 12 typen', result.stdout)
-            self.assertIn(f'wereld-doel={1080 * factor}', result.stdout)
+            self.assertIn('Zeldzame wapens 0.18.10: 12 typen', result.stdout)
+            self.assertIn(f'wereld-doel={1440 * factor}', result.stdout)
             self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
             before_files = [(p, p.read_bytes()) for p in [self.mission / 'db/types.xml', self.mission / 'servahz_ce/extra_types.xml']]
             self.install()
@@ -1531,7 +1570,7 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
                     self.assertIsNone(updated.find(f"group[@name='{name}']/container[@name='lootFloor']/category[@name='food']"))
                 self.assertIn('floor',{n.get('name') for n in generated.find("type[@name='BakedBeansCan']").findall('tag')})
                 # Rare-weapon supply floors intentionally exceed the general ammo cap.
-                self.assertEqual(int(generated.findtext("type[@name='Ammo_308Win']/nominal")),360 if test_mode else 180)
+                self.assertEqual(int(generated.findtext("type[@name='Ammo_308Win']/nominal")),960 if test_mode else 480)
                 current = ((self.mission / 'db/types.xml').read_bytes(),(self.mission / 'mapgroupproto.xml').read_bytes())
                 if previous is not None:
                     self.assertEqual(current,previous)

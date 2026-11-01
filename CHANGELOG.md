@@ -4,6 +4,18 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.10] — 2026-11-01
+
+### Meer algemene munitie en geen gewichtsverkorting van stamina
+
+- Actieve losse munitie krijgt een wereldwijde doelvloer van 240/type, dozen en magazijnen 120/type, met testvoorraad dubbel. Algemene cap 240/480; passende voorraden mogen daarboven komen. Minimaal 90% van de algemene vloer en restock=0 voor deze actieve voorraad. Bestaande usages/tiers, levensduren en flags blijven behouden; disabled, crafted en event-only voorraad wordt niet aangezet. Geldt ook buiten militaire locaties.
+- Twaalf geselecteerde modwapens van 90/81 naar 120/108 per type (test dubbel); passende losse munitie minimaal viermaal en magazijnen tweemaal het wapendoel. Geen extra mods, kleding of kistwijzigingen. Wereldwijde doelen geven geen garantie op een wapen op één vliegveld; bestaande loot blijft liggen.
+- `staminaKgToStaminaPercentPenalty=0` voorkomt verkorting van de balk door draaggewicht, ook extra nat gewicht. Natheid/koude blijven bestaan. Rechtop sprinten blijft op 0.25; combat-actiekosten, herstel en overige stamina-instellingen blijven behouden. Meer beschikbare stamina betekent wel meer mogelijke acties achter elkaar; geen oneindige stamina.
+
+**Bijwerken:** normale shutdown, cumulatieve **Servahz-Update-v0.18.10.cmd** naast 01 uitvoeren, starten met 02. Bevat ook 0.18.9. Wijzigt `scripts/Servahz.psm1`, `scripts/Test-Server.ps1` en `config/loot-balance.json`; installer genereert actieve CE en cfggameplay opnieuw. Updater maakt eerst een wereld-/profielbackup. Saves, wachtwoorden, profielen, AI en lokale testvlaggen blijven behouden; geen wipe, automatische lootverversing of portable actie.
+
+**Controle:** regressies voor gewone/testvoorraad, civiele munitie, magazijnen/dozen, uitsluitingen, passende voorraad en ongewijzigde levensduren/locaties; stamina-velden en behoud van wereld/combatinstellingen; cumulatieve updater met officiële CE en foutpaden, plus volledige Windows PowerShell 5.1-suite vóór publicatie. Geen DayZ-engine uitgevoerd: daadwerkelijke aanvulling en staminabalk met zware/natte gear moeten in-game worden gecontroleerd.
+
 ## [0.18.9] — 2026-11-01
 
 ### Meer ontmoetingen met vooral losse AI

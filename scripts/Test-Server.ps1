@@ -116,7 +116,7 @@ try {
         }
         $rareGoal += [int]$weapon.nominal
     }
-    Write-Host "Zeldzame wapens 0.18.7: $(@($rare.Weapons).Count) typen, wereld-doel=$rareGoal, bijvulgrens $([int]$rare.Minimum * $rareFactor) per type, restock=0, militaire tiers 1-4. Configuratiedoelen; geen actuele telling of spawn-garantie per vliegveld."
+    Write-Host "Zeldzame wapens 0.18.10: $(@($rare.Weapons).Count) typen, wereld-doel=$rareGoal, bijvulgrens $([int]$rare.Minimum * $rareFactor) per type, restock=0, militaire tiers 1-4. Configuratiedoelen; geen actuele telling of spawn-garantie per vliegveld."
     # Only emit class names, never full RPT lines (which can contain player data).
     try {
         $rpt = Get-ChildItem -LiteralPath $layout.Profiles -Filter '*.RPT' -File | Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -153,6 +153,11 @@ try {
     foreach ($relative in @('cfggameplay.json', 'expansion/settings/AIPatrolSettings.json', 'expansion/settings/BaseBuildingSettings.json', 'expansion/settings/MapSettings.json')) {
         $null = Get-Content -LiteralPath (Join-Path $layout.Mission $relative) -Raw | ConvertFrom-Json
     }
+    $gameplay = Get-Content -LiteralPath (Join-Path $layout.Mission 'cfggameplay.json') -Raw | ConvertFrom-Json
+    if ($gameplay.PlayerData.StaminaData.staminaKgToStaminaPercentPenalty -ne 0 -or $gameplay.PlayerData.StaminaData.sprintStaminaModifierErc -ne 0.25) {
+        throw 'Stamina-instelling 0.18.10 ontbreekt. Voer 01-Instellen.cmd uit met gestopte server.'
+    }
+    Write-Host 'Stamina 0.18.10: geen gewichtsverkorting; rechtop sprinten op 25% verbruik. Actiekosten blijven ingesteld; geen oneindige stamina.'
     $patrols = Get-Content -LiteralPath (Join-Path $layout.Mission 'expansion/settings/AIPatrolSettings.json') -Raw | ConvertFrom-Json
     if (!$patrols.Enabled -or @($patrols.Patrols).Count -eq 0) { throw 'AI-patrouilles ontbreken of zijn uitgeschakeld.' }
     $map = Get-Content -LiteralPath (Join-Path $layout.Mission 'expansion/settings/MapSettings.json') -Raw | ConvertFrom-Json

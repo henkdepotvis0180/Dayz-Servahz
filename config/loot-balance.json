@@ -1,13 +1,18 @@
 {
   "FoodFactor": 8,
   "VanillaFirearmCap": 12,
-  "SupplyCap": 90,
+  "SupplyCap": 240,
   "AccessoryCap": 60,
   "RareWeaponBoost": {
-    "Nominal": 90,
-    "Minimum": 81,
+    "Nominal": 120,
+    "Minimum": 108,
     "RestockSeconds": 0,
-    "Tiers": ["Tier1", "Tier2", "Tier3", "Tier4"],
+    "Tiers": [
+      "Tier1",
+      "Tier2",
+      "Tier3",
+      "Tier4"
+    ],
     "Weapons": [
       "Expansion_G36",
       "Expansion_M16",
@@ -216,5 +221,8 @@
       "Magazine": "SNAFUHoneyBadger_30rdMag_Black",
       "Ammo": "SNAFU_Ammo_300ACC"
     }
-  ]
+  ],
+  "AmmoFloor": 240,
+  "MagazineFloor": 120,
+  "AmmoBoxFloor": 120
 }

@@ -25,6 +25,14 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Ruimere munitie en een staminabalk zonder gewichtstraf (v0.18.10)
+
+Actieve losse munitie krijgt wereldwijd een doelvloer van **240 per type**, munitiedozen en magazijnen **120**. Met de bestaande testvoorraad worden die aantallen verdubbeld. Bijvullen begint vanaf 90% van deze vloer en de restock-wachttijd is nul. Bestaande locatie-/tierregels blijven behouden: ook burgerlocaties krijgen meer passende voorraad. Disabled, crafted en event-only voorraad wordt niet aangezet. Voor de twaalf geselecteerde zeldzame wapens stijgt het doel van 90 naar **120** (test: 240), met minimaal viermaal het wapendoel aan passende losse munitie en tweemaal aan magazijnen. Dit zijn wereldwijde doelen: beschikbare lootplekken en de economie bepalen de werkelijke spawns. Er wordt niets gewist en kisten krijgen geen andere inhoud.
+
+Gewicht verkleint de maximale staminabalk niet meer: `staminaKgToStaminaPercentPenalty=0`. Dat geldt ook voor extra gewicht door natte spullen. Natte kleding blijft nat en kan je nog steeds afkoelen. Rechtop sprinten houdt zijn bestaande 75% korting. Kosten voor melee, klimmen, adem inhouden en overige acties en herstelinstellingen blijven behouden; een grotere beschikbare balk maakt wel meer opeenvolgende acties mogelijk. Dit is geen oneindige stamina.
+
+Stop normaal met `#shutdown`, voer **Servahz-Update-v0.18.10.cmd** naast 01 uit en start met 02. Je bestaande personage, base, spullen en wachtwoorden blijven behouden. De update bevat ook de solo-patrouilles uit 0.18.9. Geen portable kopie of lootverversing nodig. Test de balk na even rusten en beoordeel nieuw bijgevulde lootplekken.
+
 ## Complete kopie op een portable SSD en later terugzetten (v0.18.8)
 
 Download de zelfstandige [10-Portable-kopie.cmd](https://raw.githubusercontent.com/henkdepotvis0180/Dayz-Servahz/v0.18.8/10-Portable-kopie.cmd) en zet hem **naast 01** in je bestaande pakketmap. Alleen dit bestand is voldoende; je hoeft voor de kopie geen update/installatie uit te voeren. Het zit ook in de gewone cumulatieve update 0.18.8, die de kopieeractie niet automatisch start.
@@ -273,7 +281,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\Install-Server
 
 ## Langer sprinten (v0.10.0)
 
-Rechtop sprinten kost **75% minder stamina**, zonder extra mod. De installer zet alleen `PlayerData.StaminaData.sprintStaminaModifierErc` op `0.25` in de eigen `cfggameplay.json`. Dit maakt ook rechtop sprinten tijdens een gevecht goedkoper. Melee, ontwijken, springen/klimmen, adem inhouden, zwemmen, hurkend sprinten, regeneratie en gewicht houden hun bestaande instellingen. Een zware rugzak kan je maximale staminabalk dus nog steeds verkleinen.
+Rechtop sprinten kost **75% minder stamina**, zonder extra mod. De installer zet `PlayerData.StaminaData.sprintStaminaModifierErc` op `0.25` in de eigen `cfggameplay.json`. Dit maakt ook rechtop sprinten tijdens een gevecht goedkoper. Melee, ontwijken, springen/klimmen, adem inhouden, zwemmen, hurkend sprinten, en regeneratie houden hun bestaande instellingen. Vanaf 0.18.10 is de gewichtsverkorting van de balk uitgeschakeld.
 
 Bijwerken: server stoppen, wereldbackup maken, `scripts` vervangen, **`04-Teststand.cmd`** uitvoeren en starten met **`02-Start-server.cmd`**. `01-Instellen.cmd` past dezelfde sprintaanpassing toe met behoud van je huidige lootinstellingen. Saves en wachtwoorden blijven staan. De aanpassing wordt bij iedere installatie opnieuw toegepast; voor herstel van normaal sprintverbruik zet je de waarde in `Set-EasyBuilding` in `scripts/Servahz.psm1` op `1.0` en voer je de installer opnieuw uit.
 

@@ -318,8 +318,13 @@ function Set-SurvivalLoot {
             $name = $type.GetAttribute('name')
             $flags = $type.SelectSingleNode('flags')
             if ($null -eq $flags -or $flags.GetAttribute('crafted') -eq '1' -or $flags.GetAttribute('deloot') -eq '1') { continue }
+            $supplyFloor = 0
             if ($name -match '^(Ammo_|AmmoBox_|Mag_|Expansion_Ammo|SNAFU_Ammo_|GCGN_Ammo_)' -or $name -match '(_Mag|_Mag_BK|rdMag_Black)$') {
                 $limit = $supplyCap
+                if ($name -match 'AmmoBox') { $supplyFloor = [int]$balance.AmmoBoxFloor }
+                elseif ($name -match '^(Ammo_|Expansion_Ammo|SNAFU_Ammo_|GCGN_Ammo_)') { $supplyFloor = [int]$balance.AmmoFloor }
+                else { $supplyFloor = [int]$balance.MagazineFloor }
+                if ($TestSupplies) { $supplyFloor *= 2 }
                 if ($name -notmatch 'AmmoBox') {
                     foreach ($key in @('quantmin','quantmax')) {
                         $quantity = $type.SelectSingleNode($key)
@@ -334,6 +339,14 @@ function Set-SurvivalLoot {
                 $nominal.InnerText = [string]$limit
                 $minimum = $type.SelectSingleNode('min')
                 if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Min([int]$minimum.InnerText, [int]($limit * 0.8)) }
+            }
+            if ($supplyFloor -gt 0) {
+                $nominal.InnerText = [string][Math]::Max([int]$nominal.InnerText, $supplyFloor)
+                $minimum = $type.SelectSingleNode('min')
+                if ($null -ne $minimum) { $minimum.InnerText = [string][Math]::Max([int]$minimum.InnerText, [int]($supplyFloor * 0.9)) }
+                $restock = $type.SelectSingleNode('restock')
+                if ($null -eq $restock) { $restock = $type.OwnerDocument.CreateElement('restock'); $type.AppendChild($restock) | Out-Null }
+                $restock.InnerText = '0'
             }
         }
     }
@@ -371,7 +384,9 @@ function Set-SurvivalLoot {
             if ($null -eq $flags -or $flags.GetAttribute('deloot') -eq '1' -or $flags.GetAttribute('crafted') -eq '1') { continue }
             $nominal = $type.SelectSingleNode('nominal')
             if ($null -eq $nominal -or [int]$nominal.InnerText -le 0) { continue }
-            $floor = [int]$weapon.SelectSingleNode('nominal').InnerText * 2
+            $multiplier = 2
+            if ($name -eq $set.Ammo) { $multiplier = 4 }
+            $floor = [int]$weapon.SelectSingleNode('nominal').InnerText * $multiplier
             $nominal.InnerText = [string][Math]::Max([int]$nominal.InnerText, $floor)
             if ($set.Weapon -in $rare.Weapons) {
                 $restock = $type.SelectSingleNode('restock')
@@ -506,8 +521,9 @@ function Set-EasyBuilding {
     if ($gameplay.PlayerData.PSObject.Properties.Name -notcontains 'StaminaData') {
         $gameplay.PlayerData | Add-Member -MemberType NoteProperty -Name StaminaData -Value ([pscustomobject]@{})
     }
-    # Only standing sprint drain changes; combat actions, recovery and weight stay as configured.
+    # Keep action costs/recovery; carried weight no longer shortens the maximum bar.
     $gameplay.PlayerData.StaminaData | Add-Member -MemberType NoteProperty -Name sprintStaminaModifierErc -Value 0.25 -Force
+    $gameplay.PlayerData.StaminaData | Add-Member -MemberType NoteProperty -Name staminaKgToStaminaPercentPenalty -Value 0.0 -Force
     foreach ($name in @('disableIsCollidingBBoxCheck', 'disableIsClippingRoofCheck',
             'disableIsBaseViableCheck', 'disableIsCollidingGPlotCheck', 'disableIsCollidingAngleCheck',
             'disableIsPlacementPermittedCheck', 'disableHeightPlacementCheck')) {
