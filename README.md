@@ -284,7 +284,7 @@ Bijwerken: server stoppen, wereldbackup maken, `scripts` vervangen, **`04-Testst
 | Map / spelers | Chernarus, 12 slots, eerste en derde persoon |
 | Lootconditie | Nieuw gespawnde CE-loot standaard 0–15% beginschade; teststand 0–10% |
 | Loot | Vanilla `nominal` en `min` ×5; Military-loot extra ×2, dus standaard ×10 |
-| AI | 17 routes, 43 bots verdeeld over de routes; maximaal 12 actieve groepen, hoogstens 31 patrouillebots |
+| AI | 40 routes, 47 bots verdeeld over de routes; 34 solo, vijf duo’s, één drietal; maximaal 28 actieve routes en 35 patrouillebots |
 | Moeilijkheid | Nauwkeurigheid 0,15–0,35, 65% uitgaande schade, normale gezondheid; bots zijn lootbaar |
 | AI-spawning | Spelers circa 125–900 m van de patrouille; despawn buiten 1100 m |
 | AI-benadering | Patrouilles joggen; dreigingen tot 450 m, geluidsonderzoek tot 350 m |
@@ -297,15 +297,9 @@ Bijwerken: server stoppen, wereldbackup maken, `scripts` vervangen, **`04-Testst
 | Tijd | Dag 6× versneld, nacht extra 4× versneld |
 | Integriteit | BattlEye standaard actief, `verifySignatures=2`, gelijke gamebuild verplicht |
 
-De wereld heeft een mix van kleine vijandige patrouilles, neutrale overlevenden en bewakers:
+De wereld heeft 40 routes: **34 solo’s, vijf duo’s en één drietal op NWAF**. Tisy, Kamensk, Gorka en de twee bewakersroutes houden een duo. Er zijn 30 vijandige routes, acht routes met overlevenden en twee met bewakers. Nieuwe korte routes liggen bij 23 extra plaatsen, waaronder Kamenka, Pavlovo, Staroye, Polana, Grishino, Gvozdno en Severograd.
 
-| Soort | Gebieden | Ingesteld | Maximaal actief |
-| --- | --- | --- | --- |
-| Vijandig (`West`/`East`) | Balota, Zelenogorsk, Stary Sobor, NWAF, Tisy, Krasnostav airfield, Vybor, Novy Sobor, Kamensk, Myshkino | 10 groepen, samen 28 bots | 6 groepen, hoogstens 18 bots |
-| Overlevenden (`Civilian`) | Chernogorsk, Elektrozavodsk, Berezino, Gorka, Novodmitrovsk | 5 groepen, samen 11 bots | 4 groepen, hoogstens 9 bots |
-| Bewakers (`Guards`) | Berezino, Solnichniy | 2 groepen van 2 | 2 groepen, 4 bots |
-
-Dit zijn **43 ingestelde bots**, maar hoogstens **31 gelijktijdig actieve patrouillebots** in twaalf groepen. Ze spawnen alleen nabij spelers, dus bij een solospeler zijn meestal minder groepen actief. Zelf via het adminmenu gespawnde bots tellen niet mee voor deze patrouillelimieten. Het budget is nu zes vijandige groepen, vier groepen overlevenden en twee groepen bewakers. Bij een host die ook de game draait kan dit merkbaar CPU kosten; verlaag bij haperingen eerst de aantallen in `LoadBalancingCategories`.
+Samen zijn dit **47 ingestelde bots**, met maximaal **35 gelijktijdig actieve patrouillebots** op 28 routes. Het budget is 22 vijandige routes, vier overlevendenroutes en twee bewakersroutes; maximaal 26 vijandige bots. Alleen routes in de buurt van spelers activeren: dit is geen garantie op 35 bots rond één speler of een vaste ontmoetingskans. Losse routes kunnen elkaar tegenkomen en samen reageren op schoten. Zelf gespawnde adminbots vallen buiten deze limieten. Meer zelfstandige routes kunnen CPU kosten; verlaag bij haperingen eerst de aantallen in `LoadBalancingCategories`.
 
 Overlevenden zijn normaal neutraal maar kunnen zichzelf verdedigen; bewakers kunnen agressief reageren als je wapens richt/heft of hen aanvalt. Bewakers zijn geen garantie op een veilige zone. West en East zijn verschillende vijandige factions en kunnen ook elkaar bevechten. De bestaande accuratesse en 65% uitgaande schade blijven behouden; de respawninstelling is 15 minuten. De groepen gebruiken de bijbehorende standaardloadouts die Expansion zelf aanmaakt.
 

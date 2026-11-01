@@ -1881,25 +1881,28 @@ class ConfigTests(unittest.TestCase):
         self.assertGreater(ai['ThreatDistanceLimit'], 250)
         self.assertGreater(ai['NoiseInvestigationDistanceLimit'], 150)
         patrols = ai["Patrols"]
-        self.assertEqual(len(patrols), 17)
-        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 43)
+        self.assertEqual(len(patrols), 40)
+        self.assertEqual(sum(p['NumberOfAI'] for p in patrols), 47)
         self.assertEqual(len({p["Name"] for p in patrols}), len(patrols))
         caps = {name: rules[0]['MaxPatrols'] for name, rules in ai['LoadBalancingCategories'].items()}
-        from itertools import combinations
+        from itertools import product
         from collections import Counter
-        max_active = 0
-        max_hostile = 0
-        for size in range(1, caps['Global'] + 1):
-            for active in combinations(patrols, size):
-                counts = Counter(p['LoadBalancingCategory'] for p in active)
-                if any(count > caps[category] for category, count in counts.items()):
-                    continue
-                max_active = max(max_active, sum(p['NumberOfAI'] for p in active))
-                max_hostile = max(max_hostile, sum(p['NumberOfAI'] for p in active if p['LoadBalancingCategory'] == 'Hostile'))
-        self.assertEqual(max_active, 31)
-        self.assertLessEqual(max_hostile, 18)
+        self.assertEqual(Counter(p['NumberOfAI'] for p in patrols), {1: 34, 2: 5, 3: 1})
+        self.assertEqual(caps, {'Global': 28, 'Hostile': 22, 'Survivor': 4, 'Guards': 2})
+        categories = ['Hostile', 'Survivor', 'Guards']
+        strongest = {cat: sorted((p['NumberOfAI'] for p in patrols
+                                 if p['LoadBalancingCategory'] == cat), reverse=True)
+                     for cat in categories}
+        # For any category count its largest groups give the exact upper bound.
+        # Enumerate category counts, avoiding exponential route subsets.
+        max_active = max(sum(sum(strongest[cat][:n]) for cat, n in zip(categories, counts))
+                         for counts in product(*(range(min(caps[cat], len(strongest[cat])) + 1)
+                                                 for cat in categories))
+                         if sum(counts) <= caps['Global'])
+        self.assertEqual(max_active, 35)
+        self.assertEqual(sum(strongest['Hostile'][:caps['Hostile']]), 26)
         self.assertEqual(Counter(p['LoadBalancingCategory'] for p in patrols),
-                         {'Hostile': 10, 'Survivor': 5, 'Guards': 2})
+                         {'Hostile': 30, 'Survivor': 8, 'Guards': 2})
         self.assertLessEqual(ai['DamageMultiplier'], 0.65)
         self.assertLessEqual(ai['AccuracyMax'], 0.35)
         loadouts = {'West': 'WestLoadout', 'East': 'EastLoadout', 'Civilian': 'SurvivorLoadout', 'Guards': 'PoliceLoadout'}

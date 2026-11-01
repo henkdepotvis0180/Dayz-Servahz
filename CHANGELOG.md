@@ -4,6 +4,18 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.9] — 2026-11-01
+
+### Meer ontmoetingen met vooral losse AI
+
+- Van 17 naar 40 routes en van 43 naar 47 ingestelde bots: 34 solo’s, vijf duo’s en één drietal op NWAF. Bestaande routes/posities blijven behouden; Tisy, Kamensk, Gorka en twee bewakersroutes houden duo’s. 23 extra korte routes bij andere plaatsen verbreden de spreiding.
+- Actief budget van twaalf naar 28 routes en maximaal 31 naar 35 bots: 22 vijandige routes, vier overlevendenroutes en twee bewakersroutes. Exact maximaal 26 vijandige bots. Afstand, spelersverdeling, terrein en Expansion bepalen de werkelijke activiteit; losse routes kunnen elkaar ontmoeten. Geen gegarandeerde ontmoetingsfrequentie.
+- Geen wijziging aan schade, nauwkeurigheid, detectie, timers, loadouts, mods, loot, wereldsave, territory of wachtwoorden. Meer zelfstandige routes kunnen wel extra CPU kosten.
+
+**Bijwerken:** normaal afsluiten met `#shutdown`, wachten tot de server uit is, `Servahz-Update-v0.18.9.cmd` naast 01 uitvoeren en starten met 02. De cumulatieve update bewaart lokale instellingen/saves en maakt eerst een wereld-/profielbackup. Geen wipe, portable kopie of lootverversing nodig. De gewijzigde `config/mission/expansion/settings/AIPatrolSettings.json` wordt bij instellen naar de actieve missie gekopieerd.
+
+**Controle:** aantallen, unieke namen, routepunten, exacte actieve AI-budgetten en behoud van gevechtsinstellingen; pakketsuite inclusief save-/wachtwoordbehoud en updaterfoutpaden op Windows PowerShell 5.1 vóór publicatie. Geen DayZ-engine uitgevoerd: de nieuwe terreinroutes, obstakels, feitelijke ontmoetingen en CPU-belasting moeten in-game worden gecontroleerd.
+
 ## [0.18.8] — 2026-10-30
 
 ### Complete portable kopie en gecontroleerd terugzetten
