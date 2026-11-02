@@ -3,7 +3,7 @@
   "SpawnLocations": [
     {
       "Name": "Normale kustspawn",
-      "Positions": ["0 0 0"],
+      "Positions": [[0, 0, 0]],
       "UseCooldown": 0
     }
   ],

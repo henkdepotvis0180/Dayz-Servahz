@@ -25,6 +25,10 @@ Saves, wachtwoorden, eigen serverpaden, testloot en de keuze voor snelle bijvull
 
 Vanaf een oudere versie dan 0.13.0 werk je eerst bij met het volledige basispakket volgens de 0.13.0-instructies hieronder. Kies daarbij `01-Instellen.cmd` om je huidige lootinstellingen te behouden.
 
+## Respawnconfiguratie herstellen (v0.18.12)
+
+Een pakketfout in de eerdere persoonlijke respawnconfiguratie gebruikte tekstposities zoals `["0 0 0"]`; DayZ verwacht `[[0,0,0]]`. Dit kan bij starten de melding `SpawnSettings.json: Expecting vector / Is not json array` veroorzaken. **Servahz-Update-v0.18.12.cmd** converteert geldige tekstposities, bewaart hun coördinaten en overige eigen voorkeuren en maakt eerst een backup. Ongeldige posities worden geweigerd. Stop normaal, voer de update naast 01 uit en start met 02. Bestaande personages/saves/wachtwoorden worden niet gereset; geen lootverversing nodig. Controleer na starten het nieuwe serverlog en later het persoonlijke respawnmenu. Dit is geen bewezen reparatie of herstel van verdwenen RaG-bouwdelen.
+
 ## Alleen de geselecteerde wapens als loot (v0.18.11)
 
 Standaard worden alleen de twaalf geselecteerde modwapens als wereldloot aangeboden: **G36, M16, HK416, Vector, SCAR-H, SR-25, M110, MP7, AWM, M24, T-5000 en Honey Badger**, met hun passende magazijnen en munitie. Ruime doelen, alle tiers en ook dorps-/stads-/politie-/jacht-/farm-/industriële locaties maken ze gewone vondsten binnen deze pool. Andere bekende vuurwapens en niet-passende voorraad krijgen nuldoelen; hun persistentiedeclaraties blijven bestaan en opgeslagen spullen worden niet gewist. Wereldtelling en vrije lootpunten blijven bepalen wat je daadwerkelijk vindt. Geselecteerde wapens en hun ammo delen locatiecategorieën; een exact passend stapeltje op elke vloer is niet gegarandeerd.

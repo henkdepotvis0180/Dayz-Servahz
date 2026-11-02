@@ -4,6 +4,18 @@ Elke versie beschrijft het pakket op dat moment. Instellingen in latere versies 
 
 **Bestaande installatie:** stop de server en behoud `config/server.local.json` en je wereldsave. Maak een wereldbackup voordat je bijwerkt. De hieronder genoemde bestanden vervang je in de uitgepakte pakketmap, naast `01-Instellen.cmd`.
 
+## [0.18.12] — 2026-11-02
+
+### Respawnposities als echte JSON-vectoren
+
+- Corrigeert een pakketfout: `SpawnLocations[].Positions` bevat nu numerieke vectorarrays zoals `[[0,0,0]]`, in plaats van `['0 0 0']`. De DayZ-engine meldde bij het oude formaat een JSON-fout met `Expecting vector / Is not json array` tijdens Expansion-initialisatie. De eerdere pakketcontrole accepteerde de onjuiste tekenreeks; dit was geen geteste enginegarantie.
+- Migreert geldige bestaande driedelige tekstposities zonder ze te verplaatsen. Alle spawnlocaties, onbekende velden, loadouts, cooldowns en bestaande overige voorkeuren blijven behouden; alleen het vectorformaat en de bestaande twee respawn-inschakelopties worden toegepast. Back-upt het oude actieve bestand vóór schrijven. Geldige numerieke arrays blijven bytegelijk bij herhalen; ongeldige/niet-eindige posities worden vóór live missie-/modwijzigingen geweigerd. 03 vraagt bij het oude formaat eerst om instellen.
+- Geen wijziging aan RaG-levensduur, territory, wereldopslag of loot/AI. Deze reparatie herstelt geen verdwenen bouwdelen en is geen bewezen verklaring voor het gemelde RaG-verlies. Een gedeeld serverlog of andere privégegevens worden niet meegeleverd.
+
+**Bijwerken:** normale shutdown, **Servahz-Update-v0.18.12.cmd** naast 01 uitvoeren, starten met 02 en controleren met 03. Cumulatief inclusief 0.18.11; geen nieuwe mods, wipe of lootverversing. Wijzigt `config/expansion/SpawnSettings.json` en `scripts/Servahz.psm1`; updater maakt eerst een wereld-/profielbackup. De actieve spawninstellingen worden zo nodig na een extra configuratiebackup geconverteerd. Bestaande personages, base, wachtwoorden en profielen blijven behouden.
+
+**Controle:** numerieke vectorvorm bij eerste installatie, gemengde oude/nieuwe posities, behoud van coördinaten/voorkeuren/wereld, backup, alleen-lezen weigeren, herhaalbaarheid en vooraf weigeren van ongeldige componenten; cumulatieve updater met officiële CE en save-/wachtwoordbehoud; volledige Windows PowerShell 5.1-suite vóór publicatie. Geen DayZ-engine uitgevoerd: laden zonder de gemelde JSON-fout en de persoonlijke respawn moeten na bijwerken lokaal gecontroleerd worden. Het verdwijnen van RaG-bouwdelen vraagt afzonderlijke log-/backupanalyse.
+
 ## [0.18.11] — 2026-11-01
 
 ### Alleen de geselecteerde modwapens als wereldloot en gerichte opruiming

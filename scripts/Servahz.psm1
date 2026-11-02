@@ -599,15 +599,40 @@ function Get-RespawnSettingsPlan {
         foreach ($name in @('EnableSpawnSelection', 'SpawnOnTerritory', 'UseLoadouts', 'SpawnHealthValue', 'SpawnEnergyValue', 'SpawnWaterValue', 'EnableRespawnCooldowns')) {
             if ($config.PSObject.Properties.Name -notcontains $name) { throw 'Incomplete configuration' }
         }
+        $positionsChanged = $false
+        $culture = [Globalization.CultureInfo]::InvariantCulture
         foreach ($location in $config.SpawnLocations) {
             if ($location -isnot [pscustomobject] -or [string]::IsNullOrWhiteSpace($location.Name) -or $location.Positions -isnot [array] -or $location.Positions.Count -eq 0) { throw 'Invalid spawn location' }
+            $locationChanged = $false
+            $vectors = New-Object 'System.Collections.Generic.List[object]'
+            foreach ($position in $location.Positions) {
+                $legacy = $position -is [string]
+                if ($legacy) {
+                    $components = @($position.Trim() -split '\s+')
+                    $locationChanged = $true
+                } elseif ($position -is [array]) { $components = $position }
+                else { throw 'Invalid vector' }
+                if ($components.Count -ne 3) { throw 'Invalid vector size' }
+                $vector = @()
+                foreach ($value in $components) {
+                    if (!$legacy -and ($value -isnot [ValueType] -or $value -is [bool])) { throw 'Invalid vector component' }
+                    $number = 0.0
+                    if (![double]::TryParse([string]$value, [Globalization.NumberStyles]::Float, $culture, [ref]$number) -or [double]::IsNaN($number) -or [double]::IsInfinity($number)) { throw 'Invalid vector number' }
+                    $vector += $number
+                }
+                $vectors.Add([object]$vector)
+            }
+            if ($locationChanged) {
+                $location.Positions = $vectors.ToArray()
+                $positionsChanged = $true
+            }
         }
     } catch {
         throw 'SpawnSettings.json is ongeldig, onvolledig of geen ondersteund schema 7. Bewaar eigen instellingen; laat Expansion een actuele volledige configuratie maken voordat je instelt. Geen live bestanden gewijzigd.'
     }
-    # Only the two explicitly requested switches change in an existing config.
+    # Normalize legacy string vectors without moving points; retain all other preferences.
     # Keep custom spawn points, loadouts, cooldowns and unknown fields.
-    $write = !$existing -or !$config.EnableSpawnSelection -or !$config.SpawnOnTerritory
+    $write = !$existing -or !$config.EnableSpawnSelection -or !$config.SpawnOnTerritory -or $positionsChanged
     $config.EnableSpawnSelection = 1
     $config.SpawnOnTerritory = 1
     return [pscustomobject]@{ Path = $target; Config = $config; Write = $write }

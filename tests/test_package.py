@@ -188,7 +188,7 @@ class PackageTests(unittest.TestCase):
         self.assertFalse(config['StartingGear']['EnableStartingGear'])
         self.assertFalse(config['UseLoadouts'])
         self.assertFalse(config['EnableRespawnCooldowns'])
-        self.assertEqual(config['SpawnLocations'][0]['Positions'], ['0 0 0'])
+        self.assertEqual(config['SpawnLocations'][0]['Positions'], [[0, 0, 0]])
         self.assertEqual((self.mission / 'init.c').read_bytes(), init)
         self.assertEqual(world.read_bytes(), b'keep character, gear and base')
         self.assertEqual(self.local.read_bytes(), local)
@@ -204,7 +204,7 @@ class PackageTests(unittest.TestCase):
         config.update(EnableSpawnSelection=0, SpawnOnTerritory=0,
                       EnableRespawnCooldowns=1, TerritoryRespawnCooldown=750,
                       PrivateUnknownField='PRIVATE-spawn-data')
-        config['SpawnLocations'] = [dict(Name='PRIVATE-location', Positions=['1200 15 2500'], UseCooldown=1)]
+        config['SpawnLocations'] = [dict(Name='PRIVATE-location', Positions=[[1200, 15, 2500]], UseCooldown=1)]
         config['StartingGear']['UpperGear'] = [dict(ClassName='Apple', Quantity=2)]
         path.write_text(json.dumps(config))
         before = path.read_bytes()
@@ -220,6 +220,41 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(path.read_bytes(), stable)
         result = self.run_ps('Test-Server.ps1', '-StaticOnly')
         self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
+
+    def test_respawn_string_vectors_migrate_without_moving_points_or_resetting_preferences(self):
+        self.install()
+        path = self.mission / 'expansion/settings/SpawnSettings.json'
+        config = json.loads(path.read_text())
+        config['SpawnLocations'] = [dict(Name='PRIVATE-spawn', Positions=['0 0 0', '1200.5 -1.25 2500', [3100, 10, 4900]], UseCooldown=1)]
+        config['PrivateSentinel'] = 'PRIVATE-keep'
+        config['EnableRespawnCooldowns'] = 1
+        config['TerritoryRespawnCooldown'] = 751
+        path.write_text(json.dumps(config))
+        old = path.read_bytes()
+        world = self.mission / 'storage_1/players.db'
+        world.parent.mkdir()
+        world.write_bytes(b'PRIVATE-world')
+        self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False)
+        self.assertEqual(path.read_bytes(), old)
+        self.install()
+        expected = dict(config)
+        expected['SpawnLocations'] = [dict(config['SpawnLocations'][0], Positions=[[0,0,0], [1200.5,-1.25,2500], [3100,10,4900]])]
+        self.assertEqual(json.loads(path.read_text()), expected)
+        backups = list((self.server / 'Servahz/Backups').glob('config-*/mission/expansion/settings/SpawnSettings.json'))
+        self.assertTrue(any(p.read_bytes() == old for p in backups))
+        self.assertEqual(world.read_bytes(), b'PRIVATE-world')
+        stable = path.read_bytes()
+        self.install()
+        self.assertEqual(path.read_bytes(), stable)
+        # Malformed vectors must be rejected before replacing live mods or config.
+        for point in ['0 0', '0 x 0', 'NaN 0 0', [0, True, 0], [0, '1', 0], [0,0,0,0], 0]:
+            invalid = dict(expected)
+            invalid['SpawnLocations'] = [dict(Name='bad', Positions=[point])]
+            path.write_text(json.dumps(invalid))
+            before = path.read_bytes()
+            self.assertIn('SpawnSettings.json', self.install(ok=False).stderr)
+            self.assertEqual(path.read_bytes(), before)
+        path.write_bytes(stable)
 
     def test_personal_respawn_refuses_bad_or_legacy_settings_before_live_changes(self):
         self.install()
