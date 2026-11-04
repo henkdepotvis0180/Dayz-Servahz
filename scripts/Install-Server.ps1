@@ -137,6 +137,17 @@ try {
         }
         Write-Utf8File (Join-Path $layout.Mission '.servahz-managed') 'Managed by Dayz-Servahz.'
     }
+    # A mod unload can discard objects at the next engine load. Back up the
+    # complete current world/profiles once, including when 01 is used directly.
+    $ragDisabledMarker = Join-Path $layout.Runtime '.rag-basebuilding-disabled'
+    $ragRemovalBackup = ''
+    $ragEnabled = @(Get-ModManifest | Where-Object { $_.Id -eq '3157695626' }).Count -gt 0
+    if (!$ragEnabled -and (Test-Path -LiteralPath (Join-Path $layout.Runtime 'Mods/@RaG_BaseBuilding')) -and !(Test-Path -LiteralPath $ragDisabledMarker)) {
+        $ragRemovalBackup = Join-Path $root ('.local/Backups/disable-rag-' + [guid]::NewGuid().ToString('N'))
+        $engine = (Get-Process -Id $PID).Path
+        & $engine -NoLogo -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'Backup-World.ps1') -Destination $ragRemovalBackup
+        if ($LASTEXITCODE -ne 0) { throw 'Wereldbackup voor RaG-uitschakeling mislukt. Er zijn nog geen modkopieën gewijzigd.' }
+    }
     Save-ManagedBackup $layout
     # Each target is an owned mod directory. Stage a full copy so obsolete PBOs
     # disappear on updates; do not merge new and old Workshop versions.
@@ -186,7 +197,7 @@ try {
     # Seed RaG defaults once. Existing server preferences and unknown fields stay intact.
     $ragRelative = 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
     $ragTarget = Join-Path $layout.Profiles $ragRelative
-    if (!(Test-Path -LiteralPath $ragTarget)) {
+    if ($ragEnabled -and !(Test-Path -LiteralPath $ragTarget)) {
         $ragSource = Join-Path $root ('config/profiles/' + $ragRelative)
         $null = Get-Content -LiteralPath $ragSource -Raw | ConvertFrom-Json
         New-Item -ItemType Directory -Path (Split-Path $ragTarget -Parent) -Force | Out-Null
@@ -208,6 +219,8 @@ try {
     if ($settings.TestFastRestock) { Write-Host 'Testaanvulling: 2x gebouwcapaciteit, RestartSpawn=50%, sneller bijvullen en 50 m afstand. Geen wereldwipe; geen garantie per gebouw.' }
     Write-Host 'Lootbalans: lagere vanilla-/munitiedoelen, 8x houdbare voeding, food-only schappen en extra voedselruimte in winkels/huizen.'
     Write-Host 'Zeldzame modwapens 0.18.7: 12 geselecteerde typen op 3x hun oude doel, bijvulgrens 90%, restock 0 en militaire tiers 1-4; passende voorraad schaalt mee. Geen verwijdering van bestaande loot.'
+    if ($ragRemovalBackup) { Write-Utf8File $ragDisabledMarker ($ragRemovalBackup) }
+    Write-Host 'RaG BaseBuilding staat uit. RaG Core blijft actief. Bestaande RaG-objecten kunnen bij laden verdwijnen; Expansion en Building Fortifications blijven beschikbaar.'
     Write-Host 'Start met 02-Start-server.cmd. Configuratie: config/server.local.json.'
     if (!$settings.ServerPassword) { Write-Warning 'Geen serverwachtwoord ingesteld. Stel ServerPassword in voordat je poorten opent en voer deze installer opnieuw uit.' }
 } catch {

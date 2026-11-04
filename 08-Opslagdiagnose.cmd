@@ -52,6 +52,7 @@ function Get-StorageSignalDetail {
     foreach ($key in $words.Keys) {
         if ($Line -match ('(?i)' + $words[$key])) { $labels.Add($key) }
     }
+    if ($Line -match '(?i)SpawnSettings\.json') { $labels.Add('config:SpawnSettings.json') }
     foreach ($tag in @('CE', 'Storage', 'Hive', 'StorageDirs')) {
         if ($Line -match ('(?i)\[' + $tag + '\]')) { $labels.Add('engine:' + $tag) }
     }
@@ -185,11 +186,32 @@ try {
     $expectedConfig = Join-Path $serverRoot 'Servahz/serverDZ.cfg'
     $expectedProfiles = Join-Path $serverRoot 'Servahz/Profiles'
     $report = New-Object 'System.Collections.Generic.List[string]'
-    $report.Add('Servahz opslagdiagnose 0.18.3')
+    $report.Add('Servahz opslagdiagnose 0.18.13')
     $report.Add('Alleen lezen: geen serverstop/start, schrijftest, instelling, herstel of wijziging van saves.')
     $report.Add('Tijd UTC: ' + [DateTime]::UtcNow.ToString('s'))
     $report.Add('Paden, startopdrachten, wachtwoorden en volledige logregels worden niet opgenomen.')
     Add-ConfigSummary $expectedConfig 'Pakketconfig' $report
+    try {
+        $territory = Get-Content -LiteralPath (Join-Path $expectedProfiles 'ExpansionMod/Settings/TerritorySettings.json') -Raw -ErrorAction Stop | ConvertFrom-Json
+        foreach ($field in @('EnableTerritories', 'TerritorySize')) {
+            $value = 'onbekend'
+            if ($territory.PSObject.Properties.Name -contains $field -and $territory.$field -is [ValueType]) {
+                $number = [double]$territory.$field
+                if (![double]::IsNaN($number) -and ![double]::IsInfinity($number)) { $value = $number.ToString([Globalization.CultureInfo]::InvariantCulture) }
+            }
+            $report.Add('Expansion ' + $field + '=' + $value)
+        }
+    } catch { $report.Add('Expansion TerritorySettings.json: niet veilig leesbaar; geen actieve waarden afgeleid') }
+    try {
+        $flagGlobals = Read-DiagnosticXml (Join-Path $serverRoot 'mpmissions/servahz.chernarusplus/db/globals.xml')
+        foreach ($field in @('FlagRefreshFrequency', 'FlagRefreshMaxDuration', 'CleanupLifetimeRuined')) {
+            $node = $flagGlobals.SelectSingleNode('/variables/var[@name="' + $field + '"]')
+            $value = 'onbekend'
+            if ($null -ne $node -and $node.GetAttribute('value') -match '^\d{1,10}$') { $value = $node.GetAttribute('value') }
+            $report.Add('Wereld ' + $field + '=' + $value + ' seconden')
+        }
+    } catch { $report.Add('Vlag-/opruimtimers niet veilig leesbaar') }
+    $report.Add('Een territory en de aanwezigheid van een vlag bewijzen niet dat haar levensduurverversing actief is. Vlaghoogte/resterende tijd/gezondheid moeten in-game worden gecontroleerd.')
     $serverRoots = @($serverRoot)
     $profileRoots = @($expectedProfiles)
     $storageRoots = @()
@@ -269,15 +291,25 @@ try {
         $profileIndex++
         try {
             $logs = @(Get-ChildItem -LiteralPath $profileRoot -Recurse -File -ErrorAction Stop | Where-Object { $_.Extension -in @('.RPT', '.log', '.ADM') } | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 8)
-            $report.Add("Profiel #${profileIndex}: onderzochte logstaarten=" + $logs.Count)
+            $report.Add("Profiel #${profileIndex}: onderzochte logbestanden=" + $logs.Count)
             if ($logs.Count -gt 0) { $report.Add("Profiel #${profileIndex}: nieuwste log UTC=" + $logs[0].LastWriteTimeUtc.ToString('s')) }
             $signals = 0
+            $ordinaryLoads = 0
+            $placementWarnings = 0
             $logIndex = 0
             foreach ($log in $logs) {
                 $logIndex++
-                foreach ($line in @(Get-Content -LiteralPath $log.FullName -Tail 2000 -ErrorAction Stop)) {
-                    if ($line -notmatch '(?i)storage|persisten|hive|save|\.bin\b|\.db\b|\bCE\b|economy|types\.xml|cfgIgnoreList|RaG_BB_|corrupted (inventory|stream)|scripted variables') { continue }
-                    if ($line -notmatch '(?i)error|fail|corrupt|denied|cannot|can.t|read.only|repair|recover|restor|invalid') { continue }
+                # Include startup errors even when thousands of model warnings
+                # push them out of the tail. Bound reads of unusually large logs.
+                if ($log.Length -le 8388608) { $lines = @(Get-Content -LiteralPath $log.FullName -ErrorAction Stop) }
+                else { $lines = @(Get-Content -LiteralPath $log.FullName -TotalCount 2000 -ErrorAction Stop) + @(Get-Content -LiteralPath $log.FullName -Tail 2000 -ErrorAction Stop) }
+                foreach ($line in $lines) {
+                    $hasError = $line -match '(?i)\b(error|failed|corrupt\w*|invalid|denied)\b|valid:\s*no'
+                    if (!$hasError -and $line -match '(?i)\[CE\]\[Storage\].*(?:\bver:\d+.*\bvalid:\s*yes|Restoring file)|\[CE\]\[Hive\].*Storage load took:') { $ordinaryLoads++; continue }
+                    if ($line -match '(?i)\[CE\]\[LootRespawner\].*(?:search overtime|hard to place)') { $placementWarnings++; continue }
+                    if ($line -match '(?i)SCRIPT\s*:\s*Module:') { continue }
+                    if ($line -notmatch '(?i)storage|persisten|hive|save|\.bin\b|\.db\b|\bCE\b|economy|types\.xml|cfgIgnoreList|RaG_BB_|SpawnSettings\.json|corrupted (inventory|stream)|scripted variables') { continue }
+                    if ($line -notmatch '(?i)\b(?:error|fail\w*|corrupt\w*|denied|cannot|can.t|read.only|repair\w*|recover\w*|restor\w*|invalid)\b') { continue }
                     $category = 'mogelijke opslagfout'
                     if ($line -match '(?i)denied|read.only|cannot.*writ|can.t.*writ') { $category = 'toegang/schrijven' }
                     elseif ($line -match '(?i)corrupt|repair|recover|restor') { $category = 'beschadiging/herstel' }
@@ -288,6 +320,7 @@ try {
                 }
                 if ($signals -ge 20) { break }
             }
+            $report.Add("Profiel #${profileIndex}: normale opslaglaadmeldingen overgeslagen=$ordinaryLoads; aparte lootplaatsingsmeldingen=$placementWarnings")
             if ($signals -eq 0) { $report.Add("Profiel #${profileIndex}: geen herkende opslagfoutsignalen; dit sluit een fout niet uit") }
         } catch { $report.Add("Profiel #${profileIndex}: logs niet volledig leesbaar") }
     }

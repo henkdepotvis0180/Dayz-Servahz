@@ -486,8 +486,15 @@ class PackageTests(unittest.TestCase):
         core.write(core_path)
         self.assertIn('extra_types.xml', self.run_ps('Test-Server.ps1', '-StaticOnly', ok=False).stderr)
 
-    def test_rag_profile_seed_preserve_backup_and_testloot(self):
+    def seed_legacy_rag_profile(self):
+        path = self.server / 'Servahz/Profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes((ROOT / 'config/profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json').read_bytes())
+        return path
+
+    def test_retired_rag_profile_preserved_backed_up_without_kit_loot(self):
         self.install()
+        self.seed_legacy_rag_profile()
         relative = 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
         profile = self.server / 'Servahz/Profiles' / relative
         default = json.loads((ROOT / 'config/profiles' / relative).read_text())
@@ -514,8 +521,7 @@ class PackageTests(unittest.TestCase):
         loot = ET.parse(self.mission / 'servahz_ce/building_types.xml')
         for name in ('RaG_BB_WallKit', 'RaG_BB_FloorKit', 'RaG_BB_Book'):
             node = loot.find(f"type[@name='{name}']")
-            self.assertEqual(int(node.findtext('nominal')), 80 if name.endswith('Book') else 60)
-            self.assertEqual(len(node.findall('usage')), 17)
+            self.assertIsNone(node)
         self.run_ps('Test-Server.ps1', '-StaticOnly')
         destination = self.root / 'rag world backup'
         self.run_ps('Backup-World.ps1', '-Destination', destination)
@@ -523,6 +529,7 @@ class PackageTests(unittest.TestCase):
 
     def test_build_diagnostic_preserves_world_profile_and_filters_private_logs(self):
         self.install()
+        self.seed_legacy_rag_profile()
         profiles = self.server / 'Servahz/Profiles'
         world = self.mission / 'storage_1/players.db'
         world.parent.mkdir()
@@ -547,7 +554,7 @@ File: RaG_BB_Door.c
         before = {p.relative_to(self.server).as_posix(): p.read_bytes() for p in self.server.rglob('*') if p.is_file()}
         local_before = self.local.read_bytes()
         result = self.run_ps('Test-Building.ps1')
-        self.assertIn('bouwdiagnose 0.18.1', result.stdout)
+        self.assertIn('bouwdiagnose 0.18.13', result.stdout)
         self.assertIn('RaG_Core: GELIJK', result.stdout)
         self.assertIn('BaseInfiniteLifetime=0', result.stdout)
         self.assertIn('PLANKS=2, NAILS=0, LOGS=0, METALSHEETS=0', result.stdout)
@@ -565,18 +572,19 @@ File: RaG_BB_Door.c
 
     def test_build_diagnostic_detects_stale_and_missing_mod_copies(self):
         self.install()
-        workshop = self.workshop / '3157695626/Addons/test.pbo'
+        workshop = self.workshop / '3556131153/Addons/test.pbo'
         workshop.write_bytes(b'new workshop script version')
         result = self.run_ps('Test-Building.ps1')
-        self.assertIn('RaG_BaseBuilding: WIJKT AF', result.stdout)
-        server_pbo = self.server / 'Servahz/Mods/@RaG_BaseBuilding/Addons/test.pbo'
+        self.assertIn('RaG_Core: WIJKT AF', result.stdout)
+        server_pbo = self.server / 'Servahz/Mods/@RaG_Core/Addons/test.pbo'
         server_pbo.unlink()
         result = self.run_ps('Test-Building.ps1')
-        self.assertIn('RaG_BaseBuilding: ONVOLLEDIG', result.stdout)
+        self.assertIn('RaG_Core: ONVOLLEDIG', result.stdout)
         self.assertFalse(server_pbo.exists())
 
     def test_build_diagnostic_reports_invalid_profile_without_replacing_it(self):
         self.install()
+        self.seed_legacy_rag_profile()
         profile = self.server / 'Servahz/Profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
         profile.write_text('{ invalid json PRIVATE-INVALID-CONTENT')
         previous = profile.read_bytes()
@@ -688,7 +696,6 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         economy.write_text('<economy><building load="1" save="0"/><dynamic load="1" save="1"/><vehicles load="1" save="1"/></economy>')
         result = self.run_storage_probe()
         for token in ['koppelingen naar servahz_ce/building_types.xml=1',
-                      'RaG_BB_DoorKit aantal=1 lifetime=14400', 'RaG_BB_Low_WallKit aantal=1 lifetime=14400',
                       'ignorelijst actieve cheatCheck-regels=1; bouwgerelateerde regels=2',
                       'db/economy.xml building save=0']:
             self.assertIn(token, result.stdout)
@@ -732,7 +739,8 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         self.assertIn('engine:CE,engine:Storage', result.stdout)
         self.assertIn('bestand:dynamic_000.bin', result.stdout)
         self.assertIn('valid:yes,bestand:vehicles.002', result.stdout)
-        self.assertIn('restore,engine:CE,engine:Storage,bestand:building.bin', result.stdout)
+        self.assertNotIn('bestand:building.bin', result.stdout)
+        self.assertIn('normale opslaglaadmeldingen overgeslagen=1', result.stdout)
         self.assertIn('corrupt,stream,code:RaG_BB_Low_Wall', result.stdout)
         self.assertIn('recover/restore alleen bewijst geen beschadiging', result.stdout)
         self.assertNotIn('PRIVATE-', result.stdout + result.stderr)
@@ -749,11 +757,12 @@ $body = $lines[($marker + 1)..($lines.Length - 1)] -join [Environment]::NewLine
         result = subprocess.run(['cmd.exe', '/d', '/c', command.name], cwd=self.package,
                                 input='', capture_output=True, text=True, timeout=45)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn('opslagdiagnose 0.18.3', result.stdout)
+        self.assertIn('opslagdiagnose 0.18.13', result.stdout)
         self.assertEqual(len(list((self.package / '.local/StorageDiagnostics').glob('*.txt'))), 1)
 
     def prepare_delivery(self):
         self.install()
+        self.seed_legacy_rag_profile()
         (self.mission / 'init.c').write_text('class CustomMission: MissionServer {};\nMission CreateCustomMission(string path) { return new CustomMission(); }\n')
         return '76561198000000123'  # Synthetic recipient, never a user's ID.
 
@@ -1868,7 +1877,7 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
 class ConfigTests(unittest.TestCase):
     def test_new_mods_loot_attachments_and_no_duplicate_types(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
-        self.assertEqual([m['Id'] for m in mods[9:12]], ['2670506982', '2663169692', '2792985069'])
+        self.assertEqual([m['Id'] for m in mods[8:11]], ['2670506982', '2663169692', '2792985069'])
         extra = ET.parse(ROOT / 'config/mission/servahz_ce/extra_types.xml')
         names = [n.get('name') for n in extra.findall('type')]
         self.assertEqual(len(names), 67)
@@ -1902,10 +1911,10 @@ class ConfigTests(unittest.TestCase):
             magazine = node.find('attachments/item').get('name')
             self.assertTrue(magazine in names or magazine in ('Mag_MP5_30Rnd', 'Mag_STANAG_30Rnd'))
 
-    def test_rag_dependencies_materials_and_economy(self):
+    def test_rag_retirement_keeps_core_and_archived_settings(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
-        self.assertEqual([(m['Name'], m['Id']) for m in mods[7:9]],
-                         [('RaG_Core', '3556131153'), ('RaG_BaseBuilding', '3157695626')])
+        self.assertEqual([(m['Name'], m['Id']) for m in mods if m['Name'].startswith('RaG')],
+                         [('RaG_Core', '3556131153')])
         config = json.loads((ROOT / 'config/profiles/RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json').read_text())
         self.assertEqual(config['Version'], 2)
         self.assertEqual(config['PlanksPerKitCraft'], 2)
@@ -1919,19 +1928,19 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(config['DisableAllDamage'], 0)
         loot = ET.parse(ROOT / 'config/mission/servahz_ce/building_types.xml')
         names = {n.get('name') for n in loot.findall('type') if n.get('name').startswith('RaG_')}
-        self.assertEqual(len(names), 22)
+        self.assertEqual(len(names), 0)
         self.assertTrue(all(n.endswith('Kit') or n == 'RaG_BB_Book' for n in names))
 
     def test_navigation_manifest_preset_and_settings(self):
         mods = json.loads((ROOT / 'config/mods.json').read_text())
-        self.assertEqual(mods[12], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
-        self.assertEqual(mods[13], {'Name': 'BaseBuildingItemStackandRepair', 'Id': '1896597833', 'Folder': '@BaseBuildingItemStackandRepair'})
+        self.assertEqual(mods[11], {'Name': 'GoreZ', 'Id': '1648967877', 'Folder': '@GoreZ'})
+        self.assertEqual(mods[12], {'Name': 'BaseBuildingItemStackandRepair', 'Id': '1896597833', 'Folder': '@BaseBuildingItemStackandRepair'})
         self.assertFalse(any('bleedtrail' in m['Name'].lower() for m in mods))
-        self.assertEqual(mods[14], {'Name': 'SNAFU Weapons', 'Id': '2443122116', 'Folder': '@SNAFUWeapons'})
-        self.assertEqual(mods[15], {'Name': 'MMG - Half Mega Inventory Size', 'Id': '2895332994', 'Folder': '@MMGHalfMegaInventory'})
-        self.assertEqual(mods[16], {'Name': 'CJ187-LootChest', 'Id': '2345073965', 'Folder': '@CJ187LootChest'})
-        self.assertEqual(mods[17], {'Name': 'DayZ-Expansion-Spawn-Selection', 'Id': '2804241648', 'Folder': '@ExpansionSpawnSelection'})
-        self.assertEqual(len(mods), 18)
+        self.assertEqual(mods[13], {'Name': 'SNAFU Weapons', 'Id': '2443122116', 'Folder': '@SNAFUWeapons'})
+        self.assertEqual(mods[14], {'Name': 'MMG - Half Mega Inventory Size', 'Id': '2895332994', 'Folder': '@MMGHalfMegaInventory'})
+        self.assertEqual(mods[15], {'Name': 'CJ187-LootChest', 'Id': '2345073965', 'Folder': '@CJ187LootChest'})
+        self.assertEqual(mods[16], {'Name': 'DayZ-Expansion-Spawn-Selection', 'Id': '2804241648', 'Folder': '@ExpansionSpawnSelection'})
+        self.assertEqual(len(mods), 17)
         navigation = [m for m in mods if m['Id'] == '2792984722']
         self.assertEqual(len(navigation), 1)
         self.assertEqual(navigation[0]['Name'], 'DayZ-Expansion-Navigation')

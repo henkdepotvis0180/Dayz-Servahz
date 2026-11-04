@@ -31,8 +31,10 @@ try {
         } catch { Write-Warning 'Codeslotlevering kon niet veilig worden gecontroleerd; geen ID of inhoud afgedrukt.' }
     }
     $ragPath = Join-Path $layout.Profiles 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json'
-    $rag = Get-Content -LiteralPath $ragPath -Raw | ConvertFrom-Json
-    if (@($rag.PartCosts).Count -eq 0) { throw 'RaG-bouwkosten ontbreken in het profiel.' }
+    if (@(Get-ModManifest | Where-Object { $_.Id -eq '3157695626' }).Count -gt 0) {
+        $rag = Get-Content -LiteralPath $ragPath -Raw | ConvertFrom-Json
+        if (@($rag.PartCosts).Count -eq 0) { throw 'RaG-bouwkosten ontbreken in het profiel.' }
+    } else { Write-Host 'RaG BaseBuilding 0.18.13: uit de modlijst; geen RaG-kitloot. RaG Core blijft voor digitale codesloten.' }
     foreach ($file in @($layout.Marker, $layout.Config, (Join-Path $layout.Server 'DayZServer_x64.exe'),
             (Join-Path $layout.Mission 'init.c'), (Join-Path $layout.Mission 'db/types.xml'),
             (Join-Path $layout.Mission 'cfgeconomycore.xml'))) {

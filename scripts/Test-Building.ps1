@@ -33,7 +33,7 @@ try {
     $layout = Get-ServerLayout $settings
     if (!(Test-Path -LiteralPath $layout.Marker)) { throw 'Geen beheerde installatie.' }
     $report = New-Object 'System.Collections.Generic.List[string]'
-    $report.Add('Servahz bouwdiagnose 0.18.1')
+    $report.Add('Servahz bouwdiagnose 0.18.13')
     $report.Add('Alleen lezen: geen herstelactie, installatie, serverherstart of wijziging aan wereld/profielen.')
     $report.Add('Tijd UTC: ' + [DateTime]::UtcNow.ToString('s'))
     $version = (Get-Item -LiteralPath (Join-Path $layout.Server 'DayZServer_x64.exe')).VersionInfo.FileVersion
@@ -55,6 +55,9 @@ try {
     }
     $report.Add('GELIJK bevestigt geen actuele Steam-versie en geen overeenkomst met de mods van spelers.')
 
+    if (@(Get-ModManifest | Where-Object { $_.Id -eq '3157695626' }).Count -eq 0) {
+        $report.Add('RaG BaseBuilding: UITGESCHAKELD in pakket; eventuele oude profielwaarden hieronder zijn historisch, geen actieve bouwinstellingen.')
+    }
     try {
         $rag = Get-Content -LiteralPath (Join-Path $layout.Profiles 'RaG_Core/Configs/RaG_BaseBuilding/RaG_BaseBuilding.json') -Raw | ConvertFrom-Json
         foreach ($name in @('Version', 'BaseInfiniteLifetime', 'DisableAllDamage', 'DisableDismantle', 'EnableBookKitCrafting', 'PlanksPerKitCraft', 'NailsPerKitCraft')) {
