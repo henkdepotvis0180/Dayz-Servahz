@@ -1,0 +1,18 @@
+diff --git a/src/sign.rs b/src/sign.rs
+index ab04133..bc67c93 100644
+--- a/src/sign.rs
++++ b/src/sign.rs
+@@ -96,10 +96,9 @@ fn filehash(pbo: &PBO, version: BISignVersion) -> DigestBytes {
+                     ext == "wrp" { continue; }
+             },
+             BISignVersion::V3 => {
+-                if ext != "sqf" && ext != "inc" && ext != "bikb" &&
+-                    ext != "ext" && ext != "fsm" && ext != "sqm" &&
+-                    ext != "hpp" && ext != "cfg" && ext != "sqs" &&
+-                    ext != "h" { continue; }
++                if ext != "bikb" && ext != "c" && ext != "ext" &&
++                    ext != "hpp" && ext != "cfg" && ext != "h" &&
++                    ext != "inc" { continue; }
+             }
+         }
+ 

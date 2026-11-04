@@ -86,9 +86,11 @@ def verify_signature(pbo, key, signature):
     sha1 = lambda x: hashlib.sha1(x).digest()
     names = sha1(b''.join(name.lower().encode() for name in sorted(files, key=str.lower) if files[name]))
     prefix = extensions['prefix'].rstrip('\\').encode() + b'\\'
-    # This config-only addon has no v3 script extensions. Its complete bytes
-    # are nevertheless authenticated through the first and second hashes.
-    hashes = [checksum, sha1(checksum + names + prefix), sha1(sha1(b'gnihton') + names + prefix)]
+    # DayZ v3 includes Enforce .c scripts. Arma's extension list differs;
+    # a signature created with that policy must fail this independent check.
+    selected = [data for name, data in files.items() if name.rsplit('.', 1)[-1].lower() in {'bikb', 'c', 'ext', 'hpp', 'cfg', 'h', 'inc'} and data]
+    file_hash = sha1(b''.join(selected) if selected else b'gnihton')
+    hashes = [checksum, sha1(checksum + names + prefix), sha1(file_hash + names + prefix)]
     for sig, digest in zip(signatures, hashes):
         padded = b'\0\x01' + b'\xff' * (bits // 8 - 38) + bytes.fromhex('003021300906052b0e03021a05000414') + digest
         if pow(sig, exponent, modulus).to_bytes(bits // 8, 'big') != padded:
