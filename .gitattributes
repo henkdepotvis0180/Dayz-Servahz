@@ -1,0 +1,2 @@
+# Keep the readable addon source byte-identical to its signed PBO on Windows.
+config/local-mods/@ServahzPlanks/source/** text eol=lf
