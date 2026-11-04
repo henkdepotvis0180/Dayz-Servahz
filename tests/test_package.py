@@ -1302,7 +1302,7 @@ Import-Module (Join-Path $PSScriptRoot 'Servahz.psm1') -Force
     }
 }
 $mods = @(Get-ModManifest)
-if ($mods.Count -ne 18) { throw 'Expected eighteen individual mod objects' }
+if ($mods.Count -ne 17) { throw 'Expected seventeen individual mod objects' }
 foreach ($mod in $mods) {
     if ($mod -is [array] -or $mod.Folder -isnot [string]) { throw 'Nested mod array' }
 }
