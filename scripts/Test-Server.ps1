@@ -176,6 +176,10 @@ try {
     if (!$map.EnableMap -or !$map.EnableHUDGPS -or !$map.CanOpenMapWithKeyBinding -or $map.NeedGPSItemForKeyBinding -or $map.NeedMapItemForKeyBinding) {
         throw 'Kaart/minimap is uitgeschakeld of vereist nog een kaart/GPS-item. Controleer MapSettings.json.'
     }
+    Assert-PlanksAddon (Join-Path $layout.Runtime 'Mods/@ServahzPlanks')
+    $planksKey = Join-Path $layout.Server 'keys/ServahzPlanks01814.bikey'
+    if (!(Test-Path -LiteralPath $planksKey) -or (Get-FileHash -LiteralPath $planksKey).Hash -ne (Get-FileHash -LiteralPath (Join-Path (Get-PlanksAddonSource) 'Keys/ServahzPlanks01814.bikey')).Hash) { throw 'Servahz Planken-serversleutel ontbreekt of wijkt af. Voer 01 uit.' }
+    Write-Host 'Expansion Planken 0.18.14: ondertekende serveraanvulling aanwezig; ook @ServahzPlanks laden op iedere spelclient. Werkelijk bouwen in-game controleren.'
     $respawn = Get-RespawnSettingsPlan $layout
     if ($respawn.Write) { throw 'Persoonlijke respawn is nog niet ingesteld. Voer 01-Instellen.cmd uit met gestopte server.' }
     Write-Host 'Persoonlijke respawn: selectie en eigen territory ingeschakeld; alleen na overlijden/nieuw personage. Territorylidmaatschap en werkelijke spawn in-game controleren.'

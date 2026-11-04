@@ -1277,7 +1277,8 @@ Write-Utf8File (Join-Path $PSScriptRoot 'arguments.json') (ConvertTo-Json @(Get-
         self.assertEqual(len(mods), 1)
         self.assertTrue(mods[0].endswith('"'))
         self.assertEqual(mods[0][len('"-mod='):-1].split(';'),
-                         [str(self.server / 'Servahz/Mods' / mod['Folder']) for mod in self.mods])
+                         [str(self.server / 'Servahz/Mods' / mod['Folder']) for mod in self.mods] +
+                         [str(self.server / 'Servahz/Mods/@ServahzPlanks')])
         for mod in self.mods:
             self.assertIn(str(self.server / 'Servahz/Mods' / mod['Folder']), mods[0])
         config = (self.server / 'Servahz/serverDZ.cfg').read_text()
@@ -1317,7 +1318,8 @@ Write-Utf8File (Join-Path $PSScriptRoot 'legacy-arguments.json') (ConvertTo-Json
         args = json.loads((probe.parent / 'legacy-arguments.json').read_text())
         mod_arg = next(arg for arg in args if arg.startswith('"-mod='))
         paths = mod_arg[len('"-mod='):-1].split(';')
-        self.assertEqual(len(paths), len(self.mods))
+        self.assertEqual(len(paths), len(self.mods) + 1)
+        self.assertTrue(paths[-1].endswith('@ServahzPlanks'))
         for path, mod in zip(paths, self.mods):
             self.assertTrue(path.endswith(mod['Folder']))
             self.assertEqual(path.count('steam installatie'), 1)

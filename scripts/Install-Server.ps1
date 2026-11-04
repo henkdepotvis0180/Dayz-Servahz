@@ -103,6 +103,7 @@ try {
             throw "Handtekeningsleutel ontbreekt voor $($mod.Name). Laat Steam de mod opnieuw downloaden."
         }
     }
+    Assert-PlanksAddon
     $respawnPlan = Get-RespawnSettingsPlan $layout
     # Prepare and validate the new profile before changing the live mission/mods.
     $chestPath = Join-Path $layout.Profiles 'CJ_LootChests/LootChests_V106.json'
@@ -168,6 +169,8 @@ try {
         }
     }
     $count = Set-LootMultiplier -Source (Join-Path $baseline 'db/types.xml') -Destination (Join-Path $layout.Mission 'db/types.xml') -Multiplier $settings.LootMultiplier -MilitaryMultiplier $settings.MilitaryLootMultiplier -MilitaryEverywhere:$settings.TestMilitaryEverywhere -FastRestock:$settings.TestFastRestock
+    Install-PlanksAddon $layout
+    Write-Host ('Expansion Planken 0.18.14: planken voor Expansion, vanilla-funderingen en BF-deuren; geen stammen/lumber vereist. Client ook laden via DayZ Launcher > Mods > Local mod: ' + (Get-PlanksAddonSource))
     $globals = Join-Path $layout.Mission 'db/globals.xml'
     if (!(Test-Path -LiteralPath $globals)) { Copy-Item -LiteralPath (Join-Path $baseline 'db/globals.xml') -Destination $globals }
     Set-LootCondition -Path $globals -MaximumDamage $settings.LootDamageMax

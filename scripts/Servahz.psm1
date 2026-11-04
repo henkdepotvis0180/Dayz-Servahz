@@ -4,6 +4,7 @@ $script:PackageRoot = Split-Path $PSScriptRoot -Parent
 $script:MissionName = 'servahz.chernarusplus'
 . (Join-Path $PSScriptRoot 'LootChests.ps1')
 . (Join-Path $PSScriptRoot 'RareLoot.ps1')
+. (Join-Path $PSScriptRoot 'BuildingPlanks.ps1')
 
 function Write-Utf8File {
     param([string]$Path, [string]$Text)
@@ -641,6 +642,7 @@ function Get-RespawnSettingsPlan {
 function Get-LaunchArguments {
     param($Settings, $Layout)
     $paths = @(Get-ModManifest | ForEach-Object { Join-Path $Layout.Runtime ('Mods/' + $_.Folder) })
+    $paths += Join-Path $Layout.Runtime 'Mods/@ServahzPlanks'
     return @(
         ('"-config=' + $Layout.Config + '"'),
         ('"-profiles=' + $Layout.Profiles + '"'),
